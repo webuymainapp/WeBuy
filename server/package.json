@@ -1,0 +1,38 @@
+{
+  "name": "webuy-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Webuy backend — owns auth, payments, QR passes, collections and notifications.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "prestart": "npm run build",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:setup": "node scripts/apply-schema.mjs",
+    "db:clean": "node scripts/clean-test-data.mjs",
+    "db:clear-users": "node scripts/clear-users.mjs",
+    "db:reset": "node scripts/reset-db.mjs",
+    "test:e2e": "node scripts/e2e-test.mjs"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.16.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^4.17.23",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^22.14.0",
+    "@types/pg": "^8.15.6",
+    "tsx": "^4.21.0",
+    "typescript": "~5.8.2"
+  }
+}

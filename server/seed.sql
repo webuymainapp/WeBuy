@@ -1,0 +1,17 @@
+-- Webuy seed data. Paste into the Supabase SQL editor after schema.sql.
+--
+-- NOTE: Public signups can NEVER become course reps (the API forces
+-- role='student'). Rep access is granted ONLY by:
+--   1. inserting rows here, OR
+--   2. an existing rep calling PATCH /api/rep/users/:id/role.
+--
+-- The chief admin account is NOT created here. `npm run db:setup`
+-- (scripts/apply-schema.mjs) creates it with a password taken from the
+-- ADMIN_PASSWORD env var — or a freshly generated one that is printed once to
+-- the console. No known password is ever committed to this repository.
+--
+-- Insert any additional course-rep accounts below (email_verified = true),
+-- e.g.:
+--   insert into students (reg_no, full_name, email, department, level, password_hash, role, email_verified)
+--   values ('REP-REG-NO', 'Rep Name', 'rep@example.com', 'Department', '200', '<bcrypt hash>', 'class_rep', true)
+--   on conflict (reg_no) do nothing;

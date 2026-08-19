@@ -1,0 +1,6 @@
+{
+  "name": "Webuy — Digital Textbook Platform",
+  "description": "Mobile-first university textbook payment and QR pickup pass platform for students, departments, and class representatives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
