@@ -274,7 +274,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                             >
                               <option value="">No chief yet (pick later)</option>
                               {users
-                                .filter((u) => u.id !== currentUserId)
+                                .filter((u) => u.id !== currentUserId || isChief)
                                 .map((u) => (
                                   <option key={u.id} value={u.id}>
                                     {u.fullName} — {u.regNo}
