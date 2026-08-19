@@ -1,0 +1,40 @@
+# Render Blueprint for the Webuy backend.
+#
+# Deploy:  Render dashboard -> New -> Blueprint -> pick webuymainapp/WeBuy.
+# After first deploy: fill every `sync: false` secret in the service's
+# Environment tab with the matching value from server/.env, then click
+# "Manual Deploy -> Deploy latest commit" (or Restart).
+# Finally register the PocketFi webhook at <this service's URL>/api/pocketfi
+# using POCKETFI_SECRET_KEY as the signing secret.
+services:
+  - type: web
+    name: webuy-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # ---- Secrets: copy from server/.env (values are not stored in git) ----
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: WEBUY_FRONTEND_URL
+        sync: false
+      - key: POCKETFI_SECRET_KEY
+        sync: false
+      - key: POCKETFI_BUSINESS_ID
+        sync: false
+      # ---- Optional (server/.env already provides working defaults) ----
+      - key: POCKETFI_BASE_URL
+        value: https://api.pocketfi.ng/api/v1
+      - key: POCKETFI_BANK
+        value: kuda
