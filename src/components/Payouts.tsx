@@ -293,7 +293,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                             className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
                           />
                           <span className="mt-1 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
-                            {paidCount} student{paidCount === 1 ? '' : 's'} ha{paidCount === 1 ? 's' : 've'} paid for this course — you can request up to {paidCount} cop{paidCount === 1 ? 'y' : 'ies'}.
+                            {paidCount} cop{paidCount === 1 ? 'y' : 'ies'} still available for this course (copies you've already requested are deducted) — request up to {paidCount}.
                           </span>
                         </label>
 

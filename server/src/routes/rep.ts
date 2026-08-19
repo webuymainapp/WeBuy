@@ -370,19 +370,25 @@ const resolveAccountSchema = z.object({
 });
 
 /**
- * How many copies of a textbook students have already paid for (via points).
- * The rep cannot request more than this.
+ * How many copies of a textbook the rep can still request money for: students
+ * who have paid, minus copies already requested in non-failed payouts.
  */
 router.get(
   '/textbooks/:id/paid-count',
   asyncHandler(async (req, res) => {
     const result = await query(
-      `select count(*)::int as n
-         from student_textbooks
-        where textbook_id = $1 and status in ('paid', 'collected')`,
+      `select greatest(
+         (select count(*) from student_textbooks
+           where textbook_id = $1 and status in ('paid', 'collected'))::int
+         - coalesce((
+             select sum(p.copies) from payouts p
+              where p.textbook_id = $1 and p.status <> 'failed'
+           ), 0)::int,
+         0
+       )::int as available`,
       [req.params.id],
     );
-    res.json({ paid: result.rows[0].n });
+    res.json({ paid: result.rows[0].available });
   }),
 );
 
@@ -437,18 +443,27 @@ router.post(
 
     const perBook = Math.max((book.rows[0].price as number) - POCKETFEE_NGN, 0);
     // Reps can only request copies that students have already paid for (via
-    // points). This prevents asking for more books than have been bought.
-    const paidRes = await query(
-      `select count(*)::int as n
-         from student_textbooks
-        where textbook_id = $1 and status in ('paid', 'collected')`,
+    // points), MINUS any copies already requested in a payout (pending,
+    // processing or settled). A failed payout frees its copies back up. This
+    // stops a rep requesting the same copies twice — total requested copies for
+    // a course can never exceed how many students actually paid for it.
+    const availableRes = await query(
+      `select greatest(
+         (select count(*) from student_textbooks
+           where textbook_id = $1 and status in ('paid', 'collected'))::int
+         - coalesce((
+             select sum(p.copies) from payouts p
+              where p.textbook_id = $1 and p.status <> 'failed'
+           ), 0)::int,
+         0
+       )::int as available`,
       [textbookId],
     );
-    const available = paidRes.rows[0].n as number;
+    const available = availableRes.rows[0].available as number;
     if (copies > available) {
       throw new HttpError(
         400,
-        `Only ${available} student${available === 1 ? '' : 's'} ha${available === 1 ? 's' : 've'} paid for this course. You can request up to ${available} cop${available === 1 ? 'y' : 'ies'}.`,
+        `Only ${available} cop${available === 1 ? 'y' : 'ies'} still available for this course (${available} left after copies you've already requested). You can request up to ${available}.`,
       );
     }
 
