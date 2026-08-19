@@ -14,7 +14,7 @@ export const BottomNav: React.FC<BottomNavProps> = ({
   onOpenSettings,
 }) => {
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 md:hidden">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
       <div className="flex items-center gap-1.5 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/90 dark:border-slate-700 p-1.5 shadow-2xl shadow-slate-900/10 dark:shadow-black/40">
         {/* Dashboard */}
         <button
