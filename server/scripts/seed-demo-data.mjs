@@ -54,15 +54,21 @@ const run = async () => {
   const bookIdFor = async (code) =>
     (await client.query('select id from textbooks where course_code = $1', [code])).rows[0].id;
 
-  // Reps: Ogemdi (chief) + Chinedu exist; add one demo rep for a third view.
+  // Reps: the platform admin (chief) exists; add demo reps for extra views.
   await client.query(
     `insert into students (reg_no, full_name, email, department, level, password_hash, role, email_verified)
      values ('WEBUY-REP-DEMO', 'Demo Rep', 'demo.rep@webuy.demo', 'General Studies', '200', $1, 'class_rep', true)
      on conflict (reg_no) do nothing`,
     [PWHASH],
   );
-  const R1 = await id('20241450652'); // chief (Ogemdi)
-  const R2 = await id('20241450622'); // Chinedu
+  await client.query(
+    `insert into students (reg_no, full_name, email, department, level, password_hash, role, email_verified)
+     values ('WEBUY-REP-DEMO2', 'Demo Rep Two', 'demo.rep2@webuy.demo', 'Mechanical Engineering', '400', $1, 'class_rep', true)
+     on conflict (reg_no) do nothing`,
+    [PWHASH],
+  );
+  const R1 = await id('20241450652'); // platform admin (chief)
+  const R2 = await id('WEBUY-REP-DEMO2'); // demo rep
   const R3 = await id('WEBUY-REP-DEMO'); // demo rep
 
   // Buyers
@@ -152,7 +158,7 @@ const run = async () => {
   // Payout requests. Amount = copies × (price − fee).
   const payouts = [
     // [course, copies, status]
-    ['CSC311', 2, 'completed'], // settled -> subtract from Ogemdi revenue + platform total
+    ['CSC311', 2, 'completed'], // settled -> subtract from platform admin revenue
     ['EEE311', 3, 'pending'],   // requested, not yet subtracted
     ['GNS201', 1, 'completed'], // settled -> subtract from Demo Rep
   ];

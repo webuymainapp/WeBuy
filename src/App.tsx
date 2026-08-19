@@ -77,7 +77,7 @@ function readCart(): string[] {
 const DEMO_PROFILE: StudentProfile = {
   id: 'demo',
   regNo: 'ENG/2022/88219',
-  fullName: 'Victor Ogemdi',
+  fullName: 'Ada Obi',
   department: 'Computer & Electrical Engineering',
   faculty: 'Faculty of Engineering & Tech',
   level: '300 Level',

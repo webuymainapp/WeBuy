@@ -516,7 +516,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Victor Ogemdi"
+                    placeholder="e.g. Ada Obi"
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>

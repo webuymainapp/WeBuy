@@ -1,16 +1,42 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Download, X, Smartphone, Sparkles } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 export const PwaInstallPrompt: React.FC = () => {
+  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const [installed, setInstalled] = useState(false);
 
-  if (dismissed || installed) return null;
+  useEffect(() => {
+    const onPrompt = (e: Event) => {
+      e.preventDefault(); // Chrome would show its own mini-infobar; we show ours.
+      setDeferred(e as BeforeInstallPromptEvent);
+    };
+    const onInstalled = () => setDeferred(null);
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
 
-  const handleInstall = () => {
+  if (dismissed || !deferred) return null;
+
+  const handleInstall = async () => {
     soundEffects.playSuccessChime();
-    setInstalled(true);
+    try {
+      await deferred.prompt();
+      const choice = await deferred.userChoice;
+      if (choice.outcome === 'accepted') setDeferred(null);
+      else setDismissed(true);
+    } catch {
+      setDismissed(true);
+    }
   };
 
   return (

@@ -27,8 +27,9 @@ const client = new pg.Client({
   ssl: { rejectUnauthorized: false },
 });
 
-const ADMIN_REG_NO = '20241450652';
-const ADMIN_EMAIL = 'ogemdivictor1@gmail.com';
+const ADMIN_REG_NO = process.env.ADMIN_REG_NO || '20241450652';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@webuy.name.ng';
+const ADMIN_NAME = process.env.ADMIN_NAME || 'Platform Admin';
 
 function randomPassword() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
@@ -58,7 +59,7 @@ try {
       `insert into students (reg_no, full_name, email, department, level, password_hash, role, email_verified)
        values ($1, $2, $3, $4, $5, $6, 'chief_admin', true)
        on conflict (reg_no) do nothing`,
-      [ADMIN_REG_NO, 'Ogemdi Victor Chinedu', ADMIN_EMAIL, 'Computer Science', '200', passwordHash],
+      [ADMIN_REG_NO, ADMIN_NAME, ADMIN_EMAIL, 'Computer Science', '200', passwordHash],
     );
     if (process.env.ADMIN_PASSWORD) {
       console.log(`Chief admin created (${ADMIN_REG_NO}) — password taken from ADMIN_PASSWORD.`);
