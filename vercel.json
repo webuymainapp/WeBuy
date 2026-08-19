@@ -4,7 +4,7 @@
   "outputDirectory": "dist",
   "functions": {
     "api/send-verification.ts": {
-      "runtime": "nodejs20.x"
+      "runtime": "nodejs@22.x"
     }
   }
 }
