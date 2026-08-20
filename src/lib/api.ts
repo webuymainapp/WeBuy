@@ -287,10 +287,14 @@ interface TransactionRow {
   status: string;
   createdAt: string;
   books: { courseCode: string; bookTitle: string; amount: number }[];
+  category?: 'purchase' | 'topup' | 'refund';
+  direction?: 'in' | 'out';
   note?: string | null;
 }
 
 export function toTransaction(r: TransactionRow, regNo: string): PaymentTransaction {
+  const isDeposit = r.method === 'points_deposit';
+  const isRefund = r.method === 'points_refund';
   return {
     id: r.reference,
     textbookId: r.reference,
@@ -311,6 +315,8 @@ export function toTransaction(r: TransactionRow, regNo: string): PaymentTransact
           ? 'bank_transfer'
           : 'wallet'
     ) as PaymentTransaction['method'],
+    category: r.category ?? (isDeposit ? 'topup' : isRefund ? 'refund' : 'purchase'),
+    direction: r.direction ?? (isDeposit || isRefund ? 'in' : 'out'),
     studentRegNo: regNo,
     books: r.books,
     note: r.note ?? null,

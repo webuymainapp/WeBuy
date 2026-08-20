@@ -179,6 +179,8 @@ router.get(
         fee: t.fee,
         total: t.total,
         method: t.method ?? 'card',
+        category: 'purchase' as const,
+        direction: 'out' as const,
         status: t.status === 'success' ? 'successful' : t.status,
         createdAt: t.created_at,
         books,
@@ -191,6 +193,8 @@ router.get(
       fee: number;
       total: number;
       method: string;
+      category: 'purchase' | 'topup' | 'refund';
+      direction: 'in' | 'out';
       status: string;
       createdAt: string;
       books: { courseCode: string; bookTitle: string; amount: number }[];
@@ -213,6 +217,8 @@ router.get(
         fee: 0,
         total: Math.abs(w.amount),
         method: w.kind === 'deposit' ? 'points_deposit' : isPurchase ? 'points' : 'points_refund',
+        category: w.kind === 'deposit' ? 'topup' : isPurchase ? 'purchase' : 'refund',
+        direction: isPurchase ? 'out' : 'in',
         status: 'successful',
         createdAt: w.created_at,
         books: isPurchase ? (walletBookMap.get(w.reference) ?? []) : [],

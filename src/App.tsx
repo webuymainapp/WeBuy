@@ -128,7 +128,7 @@ export default function App() {
   const [settings, setSettings] = useState<AppSettings>(readSettings);
   const [profile, setProfile] = useState<StudentProfile | null>(null);
   const [textbooks, setTextbooks] = useState<Textbook[]>([]);
-  const [transactions, setTransactions] = useState<PaymentTransaction[]>([]);
+  const [transactions, setTransactions] = useState<PaymentTransaction[] | null>(null);
   const [wallet, setWallet] = useState<{
     points: number;
     accountNumber: string;
@@ -217,6 +217,7 @@ export default function App() {
         setAuthenticated(false);
         setProfile(null);
       } else {
+        setTransactions((prev) => prev ?? []);
         setDataError(err instanceof Error ? err.message : 'Could not load your data');
       }
     }
@@ -679,7 +680,12 @@ export default function App() {
         )}
 
         {/* Tab 2: Transaction History */}
-        {activeTab === 'history' && <TransactionHistory transactions={transactions} />}
+        {activeTab === 'history' && (
+          <TransactionHistory
+            transactions={transactions ?? []}
+            loading={transactions === null}
+          />
+        )}
 
         {/* Tab 3: Class Rep Portal — only for class reps / chief admin */}
         {activeTab === 'class_rep' && isRep && (

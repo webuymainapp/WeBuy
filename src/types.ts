@@ -40,6 +40,9 @@ export interface Textbook {
 
 export type PaymentMethod = 'wallet' | 'bank_transfer' | 'card' | 'ussd';
 
+export type TransactionCategory = 'purchase' | 'topup' | 'refund';
+export type TransactionDirection = 'in' | 'out';
+
 export interface PaymentTransaction {
   id: string;
   textbookId: string;
@@ -53,6 +56,8 @@ export interface PaymentTransaction {
   reference: string;
   method: PaymentMethod;
   studentRegNo: string;
+  category: TransactionCategory;
+  direction: TransactionDirection;
   books?: { courseCode: string; bookTitle: string; amount: number }[];
   note?: string | null;
 }
