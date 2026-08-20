@@ -510,7 +510,7 @@ export default function App() {
 
         {/* Tab 1: Student Dashboard */}
         {activeTab === 'dashboard' && activeRole === 'student' && (
-          <div className="space-y-6">
+          <div className="space-y-4">
             <SummaryCard
               profile={currentProfile}
               textbooks={textbooks}
@@ -573,9 +573,8 @@ export default function App() {
               </div>
             )}
 
-            {/* Compulsory Textbooks — fixed header + internally-scrolling list */}
-            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-xs flex flex-col overflow-hidden">
-              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800 space-y-4">
+            {/* Compulsory Textbooks — flush sticky header */}
+            <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -708,12 +707,12 @@ export default function App() {
                   </>
                 )}
               </div>
-              </div>
+            </div>
 
-              {/* Textbook list — compact cards, no internal scrolling */}
-              <div className="p-4 sm:p-5 pt-4 space-y-3">
+            {/* Textbook list — flat rows, no card background */}
+            <div className="divide-y divide-slate-200/70 dark:divide-neutral-800">
               {filteredTextbooks.length === 0 ? (
-                <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-6">
+                <div className="text-center py-10 px-6">
                   <BookCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">No textbooks found</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
@@ -743,7 +742,6 @@ export default function App() {
                 ))
               )}
               </div>
-            </div>
           </div>
         )}
 

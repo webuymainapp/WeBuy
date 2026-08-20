@@ -124,12 +124,12 @@ export const Settings: React.FC<SettingsPageProps> = ({
     'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100';
 
   return (
-    <div className="space-y-5">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
+    <div className="space-y-0">
+      {/* Page header — flush strip */}
+      <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 py-3 border-b border-slate-200/60 dark:border-neutral-800 flex items-center gap-3">
         <button
           onClick={onBack}
-          className="p-2 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 hover:bg-slate-50 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
+          className="p-2 rounded-xl hover:bg-slate-200/60 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
           aria-label="Back"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -144,9 +144,9 @@ export const Settings: React.FC<SettingsPageProps> = ({
         </div>
       </div>
 
-      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200/90 dark:border-neutral-700 shadow-xs space-y-5">
+      <div className="divide-y divide-slate-200/70 dark:divide-neutral-800">
         {/* Theme Toggle */}
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800">
+        <div className="flex items-center justify-between gap-3 py-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
               {settings.theme === 'light' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -173,7 +173,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Sound Toggle */}
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800">
+        <div className="flex items-center justify-between gap-3 py-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-300 flex items-center justify-center">
               {settings.soundEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
@@ -202,7 +202,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         </div>
 
         {/* Account */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 space-y-2">
+        <div className="py-4 space-y-2">
           <div className="flex items-center gap-2">
             <BadgeCheck className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
             <p className="font-bold text-xs">Account</p>
@@ -224,7 +224,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         {/* Phone number — required to generate the funding account */}
         <form
           onSubmit={handlePhoneSubmit}
-          className="p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 space-y-2.5"
+          className="py-4 space-y-2.5"
         >
           <div>
             <p className="font-bold text-xs flex items-center gap-1.5">
@@ -270,7 +270,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         </form>
 
         {/* Profile Picture */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 space-y-3">
+        <div className="py-4 space-y-3">
           <div className="flex items-center gap-3">
             <div className="relative shrink-0">
               <img
@@ -304,7 +304,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         {/* Change Password */}
         <form
           onSubmit={handlePasswordSubmit}
-          className="p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 space-y-3"
+          className="py-4 space-y-3"
         >
           <div className="flex items-center gap-2">
             <Lock className="w-4 h-4 text-indigo-600 dark:text-indigo-300" />
@@ -356,7 +356,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
         </form>
 
         {/* Security note */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 space-y-2">
+        <div className="py-4 space-y-2">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             <p className="font-bold text-xs">Security</p>

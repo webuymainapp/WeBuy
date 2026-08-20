@@ -98,6 +98,10 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<HistoryFilter>('all');
 
+  // Exactly this many transactions are shown at once; the list scrolls when there are more.
+  const MAX_VISIBLE = 6;
+  const ROW_HEIGHT = 64; // px per transaction row
+
   const counts = useMemo(() => {
     const c = { all: transactions.length, purchase: 0, topup: 0, refund: 0, issues: 0 };
     for (const t of transactions) {
@@ -346,9 +350,20 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           'Try a different search or filter — no transactions fit that combination.',
         )}
 
-      {/* Grouped list — scrolls once it exceeds ~6 rows */}
+      {/* Grouped list — only scrolls once it exceeds 6 transactions */}
       {!loading && filtered.length > 0 && (
-        <div className="space-y-4 max-h-[calc(100dvh-15rem)] lg:max-h-[520px] overflow-y-auto overscroll-contain pr-0.5">
+        <div
+          className="space-y-4 pr-0.5"
+          style={
+            filtered.length > MAX_VISIBLE
+              ? {
+                  maxHeight: groups.length * 28 + MAX_VISIBLE * ROW_HEIGHT,
+                  overflowY: 'auto',
+                  overscrollBehaviorY: 'contain',
+                }
+              : undefined
+          }
+        >
           {groups.map(([key, list]) => {
             const { spent, received } = monthTotals(list);
             return (

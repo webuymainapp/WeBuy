@@ -41,12 +41,12 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const completionPercentage = totalAssigned > 0 ? Math.round((paidBooks.length / totalAssigned) * 100) : 0;
 
   return (
-    <div className="bg-slate-900 text-white rounded-2xl px-4 py-3 border border-slate-800 flex flex-col gap-2.5">
+    <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 py-3 border-b border-slate-200/70 dark:border-neutral-800 flex flex-col gap-2.5">
       {/* Top Row: Session + Pay All */}
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 min-w-0">
-          <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-          <span className="text-[11px] font-semibold text-slate-300 tracking-wide uppercase truncate">
+          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse shrink-0" />
+          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 tracking-wide uppercase truncate">
             {profile.academicSession}
           </span>
         </div>
@@ -66,60 +66,60 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
       {/* Points balance row */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-2.5">
         <div className="flex items-baseline gap-2 shrink-0">
-          <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Webuy Points
           </span>
-          <span className="text-xl font-extrabold tracking-tight text-white font-mono">
+          <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
             {showBalance ? points.toLocaleString() : '••••••'}
           </span>
           <button
             onClick={() => setShowBalance(!showBalance)}
-            className="text-slate-400 hover:text-white transition-colors p-1 rounded-md hover:bg-slate-800"
+            className="text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors p-1 rounded-md hover:bg-slate-100 dark:hover:bg-neutral-800"
             aria-label="Toggle points visibility"
           >
             {showBalance ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
           </button>
           {unpaidBooks.length > 0 && (
-            <span className="text-[11px] font-semibold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20 shrink-0">
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-200 dark:border-amber-400/20 shrink-0">
               {unpaidBooks.length} Unpaid
             </span>
           )}
           {unpaidBooks.length === 0 && booksAllPaid && (
-            <span className="text-[11px] font-semibold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-md border border-emerald-400/20 shrink-0">
+            <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-400/10 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-400/20 shrink-0">
               Fully Paid 🎉
             </span>
           )}
         </div>
 
         <div className="flex-1 flex items-center gap-2.5 min-w-0">
-          <span className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">
             {paidBooks.length}/{totalAssigned} collected & ready
           </span>
-          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
+          <div className="flex-1 h-1.5 bg-slate-200 dark:bg-neutral-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-500"
               style={{ width: `${completionPercentage}%` }}
             />
           </div>
-          <span className="text-[10px] font-mono font-bold text-emerald-400 shrink-0">
+          <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 shrink-0">
             {completionPercentage}%
           </span>
         </div>
       </div>
 
-      {/* Virtual account sub-card — where students fund their points */}
+      {/* Virtual account sub-block — where students fund their points */}
       {accountNumber ? (
-        <div className="rounded-xl bg-slate-800/70 border border-slate-700/60 px-3 py-2.5 flex items-center justify-between gap-2">
+        <div className="rounded-xl bg-slate-100 dark:bg-neutral-800/60 border border-slate-200 dark:border-neutral-700 px-3 py-2.5 flex items-center justify-between gap-2">
           <div className="min-w-0">
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-1">
-              <Banknote className="w-3 h-3 text-emerald-400" />
+            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 flex items-center gap-1">
+              <Banknote className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
               Fund your points — transfer to
             </p>
-            <p className="text-xs font-bold text-slate-200 truncate">{accountName || profile.fullName}</p>
-            <p className="text-sm font-mono font-bold text-emerald-300 tracking-wide truncate">
+            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{accountName || profile.fullName}</p>
+            <p className="text-sm font-mono font-bold text-emerald-600 dark:text-emerald-300 tracking-wide truncate">
               {accountNumber}
             </p>
-            <p className="text-[10px] text-slate-400 truncate">via {bankName || 'PocketFi'}</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">via {bankName || 'PocketFi'}</p>
           </div>
           <button
             onClick={async () => {
@@ -131,7 +131,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}
-            className="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-950 text-emerald-300 font-bold text-[10px] flex items-center gap-1 border border-slate-700 transition-colors"
+            className="shrink-0 px-2.5 py-1.5 rounded-lg bg-white dark:bg-neutral-900 hover:bg-slate-50 dark:hover:bg-neutral-800 text-emerald-600 dark:text-emerald-300 font-bold text-[10px] flex items-center gap-1 border border-slate-200 dark:border-neutral-700 transition-colors"
           >
             {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
             {copied ? 'Copied' : 'Copy'}
@@ -147,7 +147,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           </button>
         </div>
       ) : (
-        <p className="text-[10px] text-slate-500">Funding account unavailable.</p>
+        <p className="text-[10px] text-slate-500 dark:text-slate-400">Funding account unavailable.</p>
       )}
     </div>
   );

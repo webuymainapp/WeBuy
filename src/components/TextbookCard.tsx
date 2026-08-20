@@ -193,7 +193,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
 
   return (
     <>
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl p-3 border border-slate-200/90 dark:border-neutral-700 shadow-xs hover:shadow-sm transition-all flex items-center gap-2.5 relative group overflow-hidden">
+      <div className="flex items-center gap-2.5 p-3 hover:bg-slate-50/60 dark:hover:bg-neutral-800/40 transition-colors relative group">
         {/* Mini vertical book cover */}
         <BookCover textbook={textbook} size="mini" />
 
