@@ -146,7 +146,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
       return (
         <button
           onClick={() => onViewPass(textbook)}
-          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 transition-all"
+          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
         >
           <QrCode className="w-3.5 h-3.5" />
           QR Pass
@@ -158,7 +158,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
         return (
           <button
             onClick={() => onRemoveFromCart(textbook)}
-            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 transition-all"
+            className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
           >
             <Check className="w-3.5 h-3.5" />
             In Cart
@@ -168,7 +168,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
       return (
         <button
           onClick={() => onAddToCart(textbook)}
-          className="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-sky-200 transition-all"
+          className="px-2.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-sky-200 whitespace-nowrap transition-all"
         >
           <ShoppingCart className="w-3.5 h-3.5" />
           Add to Cart
@@ -216,13 +216,13 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
             <span className="truncate">{textbook.pickupLocation}</span>
           </p>
 
-          {/* Status + actions */}
-          <div className="mt-2 flex items-center justify-between gap-2 flex-wrap">
+          {/* Status + actions — all on one horizontal row, never stacking */}
+          <div className="mt-2 flex items-center justify-between gap-1.5">
             {statusBadge()}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setShowDetails(true)}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1.5 transition-colors"
+                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors"
               >
                 <Info className="w-3.5 h-3.5" />
                 Details

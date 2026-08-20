@@ -78,7 +78,7 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
 
   return (
     <div className="w-[300px] sm:w-[330px] rounded-[2.5rem] bg-slate-900 dark:bg-slate-800 p-2.5 shadow-2xl shadow-indigo-900/25 border border-slate-700/60">
-      <div className="relative rounded-[2rem] overflow-hidden bg-white dark:bg-slate-950 flex flex-col h-[600px]">
+      <div className="relative rounded-[2rem] overflow-hidden bg-white dark:bg-black flex flex-col h-[600px]">
         {/* Notch */}
         <div className="absolute left-1/2 -translate-x-1/2 top-2 w-20 h-4 bg-slate-900 dark:bg-slate-800 rounded-full z-20" />
 
@@ -278,9 +278,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
   ];
 
   return (
-    <div className="min-h-dvh bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans overflow-x-clip">
+    <div className="min-h-dvh bg-white dark:bg-black text-slate-900 dark:text-slate-100 font-sans overflow-x-clip">
       {/* Landing Nav */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <BrandMark />

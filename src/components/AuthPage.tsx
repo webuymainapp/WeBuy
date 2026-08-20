@@ -235,7 +235,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
   if (otpScreen) {
     return (
-      <div className="min-h-dvh bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
+      <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
         <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
           <div className="p-6 bg-slate-900 text-white space-y-1">
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
@@ -358,7 +358,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   }
 
   return (
-    <div className="min-h-dvh bg-slate-100 dark:bg-slate-950 flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
+    <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
       <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
         {/* Header */}
         <div className="p-6 bg-slate-900 text-white space-y-1">
