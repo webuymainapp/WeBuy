@@ -710,8 +710,8 @@ export default function App() {
               </div>
               </div>
 
-              {/* Textbook list — scrolls inside the fixed card */}
-              <div className="p-4 sm:p-5 pt-4 space-y-3 overflow-y-auto overscroll-contain max-h-[50dvh] lg:max-h-[520px]">
+              {/* Textbook list — compact cards, no internal scrolling */}
+              <div className="p-4 sm:p-5 pt-4 space-y-3">
               {filteredTextbooks.length === 0 ? (
                 <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-6">
                   <BookCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />

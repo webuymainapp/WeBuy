@@ -82,7 +82,7 @@ const BookCover: React.FC<{ textbook: Textbook; size?: 'mini' | 'full' }> = ({
 
   return (
     <div
-      className={`relative w-14 h-20 rounded-lg overflow-hidden bg-gradient-to-br ${gradient} flex flex-col justify-between p-1.5 select-none shadow-sm`}
+      className={`relative w-12 h-[68px] sm:w-14 sm:h-20 rounded-lg overflow-hidden bg-gradient-to-br ${gradient} flex flex-col justify-between p-1.5 select-none shadow-sm`}
     >
       <div className="absolute inset-y-0 left-0 w-1 bg-black/20" />
       <div className="absolute inset-y-0 left-1 w-px bg-white/20" />
@@ -116,7 +116,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
   const statusBadge = (large = false) => {
     const base = large
       ? 'text-[11px] px-2.5 py-1 rounded-lg inline-flex items-center gap-1 font-bold'
-      : 'text-[10px] px-2 py-0.5 rounded-md inline-flex items-center gap-1 font-bold';
+      : 'text-[9px] px-1.5 py-0.5 rounded-md inline-flex items-center gap-1 font-bold';
     if (textbook.status === 'paid') {
       return (
         <span className={`${base} bg-emerald-600 text-white shadow-xs`}>
@@ -146,9 +146,9 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
       return (
         <button
           onClick={() => onViewPass(textbook)}
-          className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
+          className="px-2 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
         >
-          <QrCode className="w-3.5 h-3.5" />
+          <QrCode className="w-3 h-3" />
           QR Pass
         </button>
       );
@@ -158,9 +158,9 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
         return (
           <button
             onClick={() => onRemoveFromCart(textbook)}
-            className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
+            className="px-2 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm shadow-emerald-200 whitespace-nowrap transition-all"
           >
-            <Check className="w-3.5 h-3.5" />
+            <Check className="w-3 h-3" />
             In Cart
           </button>
         );
@@ -168,9 +168,9 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
       return (
         <button
           onClick={() => onAddToCart(textbook)}
-          className="px-2.5 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-[11px] font-bold flex items-center gap-1.5 shadow-sm shadow-sky-200 whitespace-nowrap transition-all"
+          className="px-2 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-600 active:scale-95 text-white text-[10px] font-bold flex items-center gap-1 shadow-sm shadow-sky-200 whitespace-nowrap transition-all"
         >
-          <ShoppingCart className="w-3.5 h-3.5" />
+          <ShoppingCart className="w-3 h-3" />
           Add to Cart
         </button>
       );
@@ -193,16 +193,14 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
 
   return (
     <>
-      <div className="bg-white dark:bg-neutral-900 rounded-2xl p-3 border border-slate-200/90 dark:border-neutral-700 shadow-xs hover:shadow-sm transition-all flex items-center gap-3 relative group">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl p-3 border border-slate-200/90 dark:border-neutral-700 shadow-xs hover:shadow-sm transition-all flex items-center gap-2.5 relative group overflow-hidden">
         {/* Mini vertical book cover */}
         <BookCover textbook={textbook} size="mini" />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100 font-mono tracking-tight">
-              {textbook.courseCode}
-            </span>
+            {statusBadge()}
             <span className="text-sm font-extrabold text-slate-900 dark:text-slate-100 font-mono">
               {formatNaira(textbook.price)}
             </span>
@@ -216,19 +214,16 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
             <span className="truncate">{textbook.pickupLocation}</span>
           </p>
 
-          {/* Status + actions — all on one horizontal row, never stacking */}
-          <div className="mt-2 flex items-center justify-between gap-1.5">
-            {statusBadge()}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={() => setShowDetails(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors"
-              >
-                <Info className="w-3.5 h-3.5" />
-                Details
-              </button>
-              {primaryAction()}
-            </div>
+          {/* Actions — Details + Add to Cart */}
+          <div className="mt-2 flex items-center justify-end gap-1.5">
+            <button
+              onClick={() => setShowDetails(true)}
+              className="px-2 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold flex items-center gap-1 whitespace-nowrap transition-colors"
+            >
+              <Info className="w-3 h-3" />
+              Details
+            </button>
+            {primaryAction()}
           </div>
         </div>
       </div>
