@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Textbook } from '../types';
-import { CheckCircle2, Clock, MapPin, User, ShieldCheck, ZoomIn, X, QrCode, ShoppingCart, Check } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, User, ShieldCheck, QrCode, ShoppingCart, Check } from 'lucide-react';
 
 interface TextbookCardProps {
   textbook: Textbook;
@@ -10,6 +10,29 @@ interface TextbookCardProps {
   onViewPass?: (textbook: Textbook) => void;
 }
 
+/** Cover palettes — a book's cover color is picked deterministically from its
+ *  course code, so it looks "random" per book but never flickers on re-render. */
+const COVER_GRADIENTS = [
+  'from-indigo-600 via-indigo-500 to-violet-600',
+  'from-emerald-600 via-emerald-500 to-teal-600',
+  'from-rose-600 via-rose-500 to-pink-600',
+  'from-amber-600 via-amber-500 to-orange-600',
+  'from-sky-600 via-sky-500 to-blue-600',
+  'from-fuchsia-600 via-fuchsia-500 to-purple-600',
+  'from-cyan-600 via-cyan-500 to-sky-600',
+  'from-orange-600 via-amber-500 to-yellow-600',
+  'from-violet-600 via-purple-500 to-indigo-600',
+  'from-teal-600 via-teal-500 to-cyan-600',
+];
+
+function coverGradient(courseCode: string): string {
+  let h = 0;
+  for (let i = 0; i < courseCode.length; i++) {
+    h = (h * 31 + courseCode.charCodeAt(i)) >>> 0;
+  }
+  return COVER_GRADIENTS[h % COVER_GRADIENTS.length];
+}
+
 export const TextbookCard: React.FC<TextbookCardProps> = ({
   textbook,
   onAddToCart,
@@ -17,8 +40,6 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
   isInCart,
   onViewPass,
 }) => {
-  const [showImageZoom, setShowImageZoom] = useState(false);
-
   const formatNaira = (amount: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
@@ -27,24 +48,51 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
     }).format(amount).replace('NGN', '₦');
   };
 
+  // The product name the rep entered when adding the book — the rep's add form
+  // collects course code + course title, so that's what a cover should show.
+  const coverTitle = textbook.courseTitle?.trim() || textbook.bookTitle;
+  const gradient = coverGradient(textbook.courseCode);
+
   return (
     <>
       <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-md transition-all flex flex-col sm:flex-row gap-4 sm:gap-5 relative group">
-        {/* Textbook Cover Image Container */}
-        <div className="relative w-full sm:w-28 h-36 sm:h-36 shrink-0 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-          <img
-            src={textbook.coverUrl}
-            alt={textbook.bookTitle}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            referrerPolicy="no-referrer"
-          />
-          <button
-            onClick={() => setShowImageZoom(true)}
-            className="absolute bottom-2 right-2 p-1.5 rounded-lg bg-black/60 text-white backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity"
-            title="Zoom Cover"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
+        {/* CSS Textbook Cover */}
+        <div
+          className={`relative w-full sm:w-28 h-36 sm:h-36 shrink-0 rounded-xl overflow-hidden bg-gradient-to-br ${gradient} flex flex-col justify-between p-2.5 select-none shadow-sm`}
+        >
+          {/* spine highlight */}
+          <div className="absolute inset-y-0 left-0 w-1.5 bg-black/20" />
+          <div className="absolute inset-y-0 left-1.5 w-px bg-white/20" />
+
+          {/* Top row: brand + level */}
+          <div className="relative flex items-center justify-between">
+            <span className="text-[8px] font-black tracking-[0.22em] text-white/85 uppercase">
+              Webuy
+            </span>
+            <span className="text-[8px] font-bold text-white/70 font-mono">
+              {textbook.level}
+            </span>
+          </div>
+
+          {/* Center: course code + product title */}
+          <div className="relative text-center px-0.5">
+            <p className="text-white font-black text-base sm:text-lg font-mono tracking-tight drop-shadow-sm leading-none">
+              {textbook.courseCode}
+            </p>
+            <p className="text-[9px] font-bold text-white/95 mt-1.5 line-clamp-2 leading-tight">
+              {coverTitle}
+            </p>
+          </div>
+
+          {/* Bottom: price */}
+          <div className="relative flex items-end justify-between">
+            <span className="text-[10px] font-extrabold text-white font-mono drop-shadow-sm">
+              {formatNaira(textbook.price)}
+            </span>
+            <span className="text-[6px] font-bold text-white/60 uppercase tracking-[0.18em]">
+              UniPass
+            </span>
+          </div>
 
           {/* Status Overlay Badge on Cover */}
           <div className="absolute top-2 left-2">
@@ -169,33 +217,6 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Cover Zoom Modal */}
-      {showImageZoom && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative max-w-sm w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden p-4 text-slate-900 dark:text-slate-100 text-center">
-            <button
-              onClick={() => setShowImageZoom(false)}
-              className="absolute top-3 right-3 p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="h-80 rounded-2xl overflow-hidden mb-3 bg-slate-100 dark:bg-slate-800">
-              <img
-                src={textbook.coverUrl}
-                alt={textbook.bookTitle}
-                className="w-full h-full object-contain"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-mono">
-              {textbook.courseCode}
-            </span>
-            <h4 className="font-bold text-sm mt-1">{textbook.bookTitle}</h4>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{textbook.author}</p>
-          </div>
-        </div>
-      )}
     </>
   );
 };
