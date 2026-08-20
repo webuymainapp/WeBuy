@@ -35,6 +35,9 @@ import {
   Sparkles,
   X,
   AlertCircle,
+  ChevronDown,
+  Check,
+  LayoutGrid,
 } from 'lucide-react';
 import { soundEffects } from './utils/audio';
 import {
@@ -155,6 +158,7 @@ export default function App() {
   const [activeRole, setActiveRole] = useState<'student' | 'class_rep'>('student');
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'class_rep'>('dashboard');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unpaid' | 'paid' | 'collected'>('all');
+  const [filterOpen, setFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Cart (persisted) + checkout modal
@@ -381,6 +385,8 @@ export default function App() {
 
   // Derived counts
   const unpaidBooks = textbooks.filter((b) => b.status === 'unpaid');
+  const paidBooks = textbooks.filter((b) => b.status === 'paid');
+  const collectedBooks = textbooks.filter((b) => b.status === 'collected');
   const paidPassesCount = textbooks.filter((b) => b.status === 'paid' || b.status === 'collected').length;
 
   // Search and Filter logic
@@ -592,54 +598,115 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Status Filter Buttons */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+              {/* Status Filter Dropdown */}
+              <div className="relative inline-block">
                 <button
-                  onClick={() => setActiveFilter('all')}
-                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all ${
+                  type="button"
+                  onClick={() => {
+                    soundEffects.playTap();
+                    setFilterOpen((o) => !o);
+                  }}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                     activeFilter === 'all'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                      ? 'bg-slate-900 text-white'
+                      : activeFilter === 'unpaid'
+                        ? 'bg-rose-600 text-white'
+                        : activeFilter === 'paid'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-indigo-600 text-white'
                   }`}
                 >
-                  All Books ({textbooks.length})
+                  {activeFilter === 'all' ? (
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                  ) : activeFilter === 'unpaid' ? (
+                    <Clock className="w-3.5 h-3.5" />
+                  ) : activeFilter === 'paid' ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <BookCheck className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {activeFilter === 'all'
+                      ? 'All Books'
+                      : activeFilter === 'unpaid'
+                        ? 'Unpaid'
+                        : activeFilter === 'paid'
+                          ? 'Ready for Pickup'
+                          : 'Collected'}{' '}
+                    (
+                    {activeFilter === 'all'
+                      ? textbooks.length
+                      : activeFilter === 'unpaid'
+                        ? unpaidBooks.length
+                        : activeFilter === 'paid'
+                          ? paidBooks.length
+                          : collectedBooks.length}
+                    )
+                  </span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform ${filterOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
 
-                <button
-                  onClick={() => setActiveFilter('unpaid')}
-                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
-                    activeFilter === 'unpaid'
-                      ? 'bg-rose-600 text-white shadow-xs'
-                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300 dark:hover:bg-rose-950/70'
-                  }`}
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>Unpaid ({unpaidBooks.length})</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveFilter('paid')}
-                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
-                    activeFilter === 'paid'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300 dark:hover:bg-emerald-950/70'
-                  }`}
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Ready for Pickup ({textbooks.filter((b) => b.status === 'paid').length})</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveFilter('collected')}
-                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1 ${
-                    activeFilter === 'collected'
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:text-indigo-300 dark:hover:bg-indigo-950/70'
-                  }`}
-                >
-                  <BookCheck className="w-3.5 h-3.5" />
-                  <span>Collected ({textbooks.filter((b) => b.status === 'collected').length})</span>
-                </button>
+                {filterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-20" onClick={() => setFilterOpen(false)} />
+                    <div className="absolute left-0 top-full mt-1.5 z-30 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5">
+                      {(
+                        [
+                          {
+                            key: 'all',
+                            label: 'All Books',
+                            count: textbooks.length,
+                            icon: <LayoutGrid className="w-4 h-4 text-slate-500" />,
+                            activeCls: 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100',
+                          },
+                          {
+                            key: 'unpaid',
+                            label: 'Unpaid',
+                            count: unpaidBooks.length,
+                            icon: <Clock className="w-4 h-4 text-rose-500" />,
+                            activeCls: 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300',
+                          },
+                          {
+                            key: 'paid',
+                            label: 'Ready for Pickup',
+                            count: paidBooks.length,
+                            icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />,
+                            activeCls: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300',
+                          },
+                          {
+                            key: 'collected',
+                            label: 'Collected',
+                            count: collectedBooks.length,
+                            icon: <BookCheck className="w-4 h-4 text-indigo-500" />,
+                            activeCls: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300',
+                          },
+                        ] as const
+                      ).map((o) => (
+                        <button
+                          key={o.key}
+                          type="button"
+                          onClick={() => {
+                            soundEffects.playTap();
+                            setActiveFilter(o.key);
+                            setFilterOpen(false);
+                          }}
+                          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors text-left cursor-pointer ${
+                            activeFilter === o.key
+                              ? o.activeCls
+                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          {o.icon}
+                          <span className="flex-1">{o.label}</span>
+                          <span className="text-[10px] font-semibold opacity-60">{o.count}</span>
+                          {activeFilter === o.key && <Check className="w-3.5 h-3.5" />}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 

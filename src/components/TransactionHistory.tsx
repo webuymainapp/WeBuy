@@ -277,7 +277,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+      <div className="flex flex-wrap items-center gap-1.5">
         {filterPills.map((p) => {
           const active = filter === p.key;
           return (
