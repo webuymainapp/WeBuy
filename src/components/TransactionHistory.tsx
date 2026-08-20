@@ -252,10 +252,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   return (
     <section className="space-y-4">
-      {/* Header card — title, live-month Spent/Received, search and filters all in one div */}
-      <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-xs overflow-hidden">
-        <div className="p-4 sm:p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Sticky header — flush with the page, no separate card */}
+      <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
+        <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
                 Transactions
@@ -329,7 +328,6 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
               );
             })}
           </div>
-        </div>
       </div>
 
       {/* Loading skeleton */}
@@ -348,9 +346,9 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
           'Try a different search or filter — no transactions fit that combination.',
         )}
 
-      {/* Grouped list */}
+      {/* Grouped list — scrolls once it exceeds ~6 rows */}
       {!loading && filtered.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[calc(100dvh-15rem)] lg:max-h-[520px] overflow-y-auto overscroll-contain pr-0.5">
           {groups.map(([key, list]) => {
             const { spent, received } = monthTotals(list);
             return (
