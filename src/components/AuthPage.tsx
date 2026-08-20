@@ -236,7 +236,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   if (otpScreen) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
-        <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+        <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
           <div className="p-6 bg-slate-900 text-white space-y-1">
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
               W
@@ -290,12 +290,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         onKeyDown={(e) => handleOtpBoxKeyDown(i, e)}
                         onPaste={handleOtpBoxPaste}
                         aria-label={`Digit ${i + 1}`}
-                        className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border text-center text-2xl font-mono font-black focus:outline-indigo-600 focus:border-indigo-500 bg-slate-50 dark:bg-slate-800 dark:text-slate-100 ${
+                        className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border text-center text-2xl font-mono font-black focus:outline-indigo-600 focus:border-indigo-500 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 ${
                           otpStage === 'success'
                             ? 'border-emerald-500 dark:border-emerald-500 text-emerald-600 dark:text-emerald-400'
                             : otpStage === 'failure'
                               ? 'border-rose-500 dark:border-rose-500 text-rose-600 dark:text-rose-400'
-                              : 'border-slate-200 dark:border-slate-700'
+                              : 'border-slate-200 dark:border-neutral-700'
                         }`}
                       />
                     ))}
@@ -359,7 +359,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
   return (
     <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
-      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
         {/* Header */}
         <div className="p-6 bg-slate-900 text-white space-y-1">
           {onBack && (
@@ -387,7 +387,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
         {/* Mode Toggle */}
         <div className="px-6 pt-5">
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center p-1 bg-slate-100 dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-neutral-700">
             <button
               type="button"
               onClick={() => {
@@ -397,7 +397,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signin'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -412,7 +412,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               }}
               className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                 mode === 'signup'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -443,7 +443,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={signInEmailOrRegNo}
                     onChange={(e) => setSignInEmailOrRegNo(e.target.value)}
                     placeholder="e.g. ENG/2022/88219 or you@uni.edu.ng"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -460,7 +460,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={signInPassword}
                     onChange={(e) => setSignInPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -497,7 +497,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value)}
                     placeholder="Ask your class chief for this code"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100 uppercase"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 uppercase"
                   />
                 </div>
                 <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">
@@ -517,7 +517,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="e.g. Ada Obi"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -535,7 +535,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       value={regNo}
                       onChange={(e) => setRegNo(e.target.value)}
                       placeholder="ENG/2022/88219"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100 uppercase"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 uppercase"
                     />
                   </div>
                 </div>
@@ -549,7 +549,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <select
                       value={level}
                       onChange={(e) => setLevel(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                     >
                       <option value="100 Level">100 Level</option>
                       <option value="200 Level">200 Level</option>
@@ -573,7 +573,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@university.edu.ng"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -591,7 +591,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       placeholder="0803 000 0000"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                     />
                   </div>
                 </div>
@@ -605,7 +605,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     <select
                       value={department}
                       onChange={(e) => setDepartment(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                     >
                       {DEPARTMENTS.map((d) => (
                         <option key={d} value={d}>{d}</option>
@@ -628,7 +628,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 8 characters"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono bg-slate-50 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
               </div>

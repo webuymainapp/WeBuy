@@ -37,7 +37,7 @@ export const NotificationIsland: React.FC<NotificationIslandProps> = ({
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: -60, opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-            className="pointer-events-auto w-full max-w-md flex items-start gap-3 px-4 py-3 rounded-3xl bg-slate-900/95 dark:bg-slate-800/95 backdrop-blur-xl text-white shadow-2xl border border-white/10"
+            className="pointer-events-auto w-full max-w-md flex items-start gap-3 px-4 py-3 rounded-3xl bg-slate-900/95 dark:bg-neutral-800/95 backdrop-blur-xl text-white shadow-2xl border border-white/10"
           >
             <div className="w-9 h-9 shrink-0 rounded-2xl bg-white/10 flex items-center justify-center">
               {ICONS[notification.type] ?? ICONS.default}

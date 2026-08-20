@@ -63,10 +63,10 @@ export const CartModal: React.FC<CartModalProps> = ({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 60, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-            className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[85dvh] flex flex-col"
+            className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden max-h-[85dvh] flex flex-col"
           >
             {/* Header */}
-            <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between">
+            <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-sky-500/20 flex items-center justify-center">
                   <ShoppingCart className="w-5 h-5 text-sky-400" />
@@ -104,9 +104,9 @@ export const CartModal: React.FC<CartModalProps> = ({
                 items.map((b) => (
                   <div
                     key={b.id}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700"
                   >
-                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
+                    <div className="w-12 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-neutral-700 shrink-0">
                       <img
                         src={b.coverUrl}
                         alt={b.bookTitle}
@@ -142,7 +142,7 @@ export const CartModal: React.FC<CartModalProps> = ({
 
             {/* Footer */}
             {items.length > 0 && (
-              <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-700 space-y-3">
+              <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-neutral-700 space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     Total Points
@@ -157,7 +157,7 @@ export const CartModal: React.FC<CartModalProps> = ({
                       soundEffects.playTap();
                       onClear();
                     }}
-                    className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Clear Cart

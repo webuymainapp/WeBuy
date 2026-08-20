@@ -159,9 +159,9 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden text-slate-900 dark:text-slate-100 flex flex-col">
+      <div className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden text-slate-900 dark:text-slate-100 flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
               <ScanLine className="w-4 h-4" />
@@ -175,7 +175,7 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -183,12 +183,12 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
 
         {/* Mode Tabs */}
         <div className="px-5 pt-4">
-          <div className="flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center p-1 bg-slate-100 dark:bg-neutral-800 rounded-xl border border-slate-200 dark:border-neutral-700">
             <button
               onClick={() => setMode('camera')}
               className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 mode === 'camera'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -199,7 +199,7 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
               onClick={() => setMode('manual')}
               className={`flex-1 py-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 mode === 'manual'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                  ? 'bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
             >
@@ -233,7 +233,7 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
           )}
 
           {scanResult === 'already' && (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-4 text-center">
+            <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 p-4 text-center">
               <CheckCircle2 className="w-8 h-8 text-slate-500 mx-auto" />
               <p className="text-sm font-extrabold text-slate-700 dark:text-slate-300 mt-1">
                 This pass was already collected
@@ -276,7 +276,7 @@ export const ScanQrModal: React.FC<ScanQrModalProps> = ({ isOpen, onClose, onDec
                 onChange={(e) => setManualInput(e.target.value)}
                 rows={3}
                 placeholder="Paste the full pass code copied from the student app here"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono focus:outline-indigo-600 bg-slate-50 dark:bg-slate-800 dark:text-slate-100 resize-none"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 resize-none"
               />
               {manualError && (
                 <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 flex items-center gap-1">

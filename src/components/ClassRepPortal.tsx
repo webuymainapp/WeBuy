@@ -341,7 +341,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
       />
 
       {/* Course Selection Tabs Bar */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-indigo-600" />
@@ -371,7 +371,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                   setSelectedCourse(e.target.value);
                 }}
                 aria-label="Select course roster"
-                className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600 appearance-none cursor-pointer"
+                className="w-full pl-9 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-bold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600 appearance-none cursor-pointer"
               >
                 {courses.map((course) => (
                   <option key={course} value={course}>
@@ -384,7 +384,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
 
             <button
               onClick={() => handleExportCSV(selectedCourse)}
-              className="shrink-0 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+              className="shrink-0 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
               Export CSV
@@ -424,7 +424,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
 
           {/* Right Metrics Cards */}
           <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3 min-w-0">
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Paid Students</span>
                 <Users className="w-4 h-4 text-indigo-600" />
@@ -435,7 +435,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Collected</span>
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
@@ -446,7 +446,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Pending</span>
                 <Clock className="w-4 h-4 text-amber-500" />
@@ -457,7 +457,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col justify-between">
+            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Total Paid</span>
                 <Banknote className="w-4 h-4 text-indigo-600" />
@@ -472,12 +472,12 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="col-span-2 sm:col-span-4 bg-white dark:bg-slate-900 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-4">
+            <div className="col-span-2 sm:col-span-4 bg-white dark:bg-neutral-900 p-3.5 rounded-2xl border border-slate-200 dark:border-neutral-700 flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 shrink-0">
                 <TrendingUp className="w-4 h-4 text-indigo-600" />
                 <span>Collection Progress:</span>
               </div>
-              <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-3 rounded-full overflow-hidden">
+              <div className="flex-1 bg-slate-100 dark:bg-neutral-800 h-3 rounded-full overflow-hidden">
                 <div
                   className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${collectionPercentage}%` }}
@@ -492,7 +492,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
       )}
 
       {/* Roster trigger card — opens the roster modal */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
         <button
           onClick={() => {
             soundEffects.playTap();
@@ -534,10 +534,10 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[85dvh] flex flex-col"
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden max-h-[85dvh] flex flex-col"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
                     <ClipboardList className="w-5 h-5 text-indigo-400" />
@@ -577,14 +577,14 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                     </span>
                   </div>
                 ) : isChief ? (
-                  <div className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 p-2">
+                  <div className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-2">
                     <input
                       type="number"
                       min="1"
                       value={grantCopies}
                       onChange={(e) => setGrantCopies(e.target.value)}
                       placeholder="Slots to grant"
-                      className="w-24 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                      className="w-24 px-3 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-white dark:bg-neutral-900 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
                     />
                     <button
                       onClick={handleGrant}
@@ -606,7 +606,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                     placeholder="Search name, Reg No or Ref..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                   />
                 </div>
 
@@ -617,7 +617,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                     className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer ${
                       rosterFilter === 'all'
                         ? 'bg-slate-900 text-white'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                        : 'bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-neutral-700'
                     }`}
                   >
                     All ({totalPaidCount})
@@ -658,7 +658,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                     <span>{rosterError}</span>
                   </div>
                 ) : filteredRoster.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-4">
+                  <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-4">
                     <FileCheck2 className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                     <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No paid students yet</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500">Paid students for this course appear here automatically.</p>
@@ -675,14 +675,14 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                         className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                           isCol
                             ? 'bg-emerald-50/40 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+                            : 'bg-white dark:bg-neutral-900 border-slate-200 dark:border-neutral-700 hover:border-slate-300 dark:hover:border-neutral-600'
                         }`}
                       >
                         {/* Left: Student Information */}
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-11 h-11 rounded-2xl flex items-center justify-center font-black text-sm shrink-0 ${
-                              isCol ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              isCol ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300'
                             }`}
                           >
                             {item.fullName
@@ -711,7 +711,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                         </div>
 
                         {/* Right: Toggle Switch Action */}
-                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-neutral-800">
                           <div className="text-right">
                             <span
                               className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider inline-flex items-center gap-1 ${

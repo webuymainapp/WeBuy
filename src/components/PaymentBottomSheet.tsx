@@ -111,10 +111,10 @@ export const PaymentBottomSheet: React.FC<PaymentBottomSheetProps> = ({
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100 max-h-[90vh] flex flex-col z-10"
+          className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden border border-slate-200 dark:border-neutral-800 text-slate-900 dark:text-slate-100 max-h-[90vh] flex flex-col z-10"
         >
           {/* Top Handle / Points Header */}
-          <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-900 dark:bg-black text-white">
+          <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between bg-slate-900 dark:bg-black text-white">
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl bg-emerald-400/10 border border-emerald-400/30 flex items-center justify-center text-emerald-400">
                 <ShieldCheck className="w-5 h-5" />
@@ -195,7 +195,7 @@ export const PaymentBottomSheet: React.FC<PaymentBottomSheetProps> = ({
 
             {/* Insufficient points -> show funding account */}
             {!canAfford && accountNumber && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 space-y-2">
                 <div className="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
                   <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                   <p>
@@ -203,7 +203,7 @@ export const PaymentBottomSheet: React.FC<PaymentBottomSheetProps> = ({
                     <strong>{points.toLocaleString()}</strong>. Fund your account by transferring to:
                   </p>
                 </div>
-                <div className="flex items-center justify-between gap-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2">
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 px-3 py-2">
                   <div className="min-w-0">
                     <p className="font-mono font-black text-sm text-emerald-700 dark:text-emerald-300">
                       {accountNumber}
@@ -226,7 +226,7 @@ export const PaymentBottomSheet: React.FC<PaymentBottomSheetProps> = ({
           </div>
 
           {/* Bottom Action Footer */}
-          <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
+          <div className="p-4 sm:p-5 border-t border-slate-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 space-y-2">
             <button
               onClick={handlePayWithPoints}
               disabled={busy || !canAfford}

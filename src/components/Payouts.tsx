@@ -177,7 +177,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
         <button
           onClick={() => {
             soundEffects.playTap();
@@ -217,9 +217,9 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[88dvh]"
+              className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden flex flex-col max-h-[88dvh]"
             >
-              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
                     <Wallet className="w-5 h-5 text-indigo-400" />
@@ -251,7 +251,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
 
                 <form
                   onSubmit={handleRequest}
-                  className="rounded-2xl border border-slate-200 dark:border-slate-700 p-4 space-y-3"
+                  className="rounded-2xl border border-slate-200 dark:border-neutral-700 p-4 space-y-3"
                 >
                   <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100">
                     New Request
@@ -269,7 +269,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                           <select
                             value={bookId}
                             onChange={(e) => setBookId(e.target.value)}
-                            className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                            className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                           >
                             {myBooks.map((b) => (
                               <option key={b.id} value={b.id}>
@@ -290,7 +290,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                             value={copies}
                             onChange={(e) => setCopies(e.target.value)}
                             placeholder="e.g. 30"
-                            className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                            className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                           />
                           <span className="mt-1 block text-[10px] font-semibold text-slate-500 dark:text-slate-400">
                             {paidCount} cop{paidCount === 1 ? 'y' : 'ies'} still available for this course (copies you've already requested are deducted) — request up to {paidCount}.
@@ -298,7 +298,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                         </label>
 
                         {/* Where the money should be sent */}
-                        <div className="rounded-2xl border border-slate-200 dark:border-slate-700 p-3 space-y-2">
+                        <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 p-3 space-y-2">
                           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                             Where should the money go?
                           </p>
@@ -308,7 +308,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                               value={bankCode}
                               onChange={(e) => { setBankCode(e.target.value); setResolved(null); setConfirming(false); }}
                               disabled={confirming}
-                              className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                              className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                             >
                               <option value="">Select bank</option>
                               {banks.map((b) => (
@@ -326,7 +326,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                               onChange={(e) => { setAccountNumber(e.target.value.replace(/\D/g, '')); setResolved(null); setConfirming(false); }}
                               disabled={confirming}
                               placeholder="10-digit account number"
-                              className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                              className="mt-1 w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                             />
                           </label>
 
@@ -335,7 +335,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                               type="button"
                               onClick={handleVerify}
                               disabled={verifying || !bankCode || accountNumber.length < 10}
-                              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors cursor-pointer"
+                              className="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold hover:bg-slate-200 dark:hover:bg-neutral-700 disabled:opacity-50 transition-colors cursor-pointer"
                             >
                               {verifying ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Verify account name'}
                             </button>
@@ -352,7 +352,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                                   <button
                                     type="button"
                                     onClick={() => { setConfirming(false); setResolved(null); }}
-                                    className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
+                                    className="flex-1 py-2 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-200 text-xs font-bold transition-colors cursor-pointer"
                                   >
                                     Not mine
                                   </button>
@@ -413,7 +413,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                       <span className="text-xs font-semibold">Loading…</span>
                     </div>
                   ) : payouts.length === 0 ? (
-                    <div className="text-center py-8 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="text-center py-8 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700">
                       <Wallet className="w-7 h-7 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                       <p className="font-bold text-slate-600 dark:text-slate-300 text-sm">No requests yet</p>
                     </div>
@@ -423,7 +423,7 @@ export const Payouts: React.FC<PayoutsProps> = ({ isChief, myBooks, onChanged, o
                       return (
                         <div
                           key={p.id}
-                          className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 p-3 space-y-1.5"
+                          className="rounded-2xl border border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50 p-3 space-y-1.5"
                         >
                           <div className="flex items-center justify-between gap-2">
                             <div className="min-w-0">

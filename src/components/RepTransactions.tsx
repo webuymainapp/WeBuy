@@ -110,7 +110,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
         <button
           onClick={() => setOpen(true)}
           className="w-full flex items-center gap-2 text-left cursor-pointer group"
@@ -145,10 +145,10 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col max-h-[88dvh]"
+              className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden flex flex-col max-h-[88dvh]"
             >
               {/* Fixed header — stays put; only the list scrolls below. */}
-              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
                   <ReceiptText className="w-5 h-5 text-indigo-400" />
@@ -231,7 +231,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
             )}
 
               {/* Filters — also fixed */}
-              <div className="p-4 sm:p-5 pb-3 border-b border-slate-200 dark:border-slate-800 space-y-2.5">
+              <div className="p-4 sm:p-5 pb-3 border-b border-slate-200 dark:border-neutral-800 space-y-2.5">
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input
@@ -239,7 +239,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                     placeholder="Search by name or Reg No…"
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                   />
                 </div>
                 <div className="flex items-center gap-2">
@@ -249,7 +249,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                     value={from}
                     onChange={(e) => { setFrom(e.target.value); setOffset(0); }}
                     aria-label="From date"
-                    className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                   />
                   <span className="text-slate-400 text-xs">–</span>
                   <input
@@ -257,7 +257,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                     value={to}
                     onChange={(e) => { setTo(e.target.value); setOffset(0); }}
                     aria-label="To date"
-                    className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                    className="flex-1 min-w-0 px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                   />
                 </div>
               </div>
@@ -277,7 +277,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                     <span className="text-xs font-semibold">Loading transactions…</span>
                   </div>
                 ) : txs.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-4">
+                  <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-4">
                     <ReceiptText className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                     <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">
                       No transactions found
@@ -297,7 +297,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                     return (
                       <div
                         key={`${t.kind}-${t.reference}-${t.created_at}`}
-                        className="flex items-center justify-between gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
+                        className="flex items-center justify-between gap-2 text-xs p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800/60 border border-slate-100 dark:border-neutral-800"
                       >
                         <div className="min-w-0">
                           <span
@@ -366,7 +366,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
 
               {/* Pagination — fixed footer */}
               {total > PAGE && (
-                <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+                <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-neutral-800 flex items-center justify-between gap-2">
                   <span className="text-[10px] font-mono font-semibold text-slate-500 dark:text-slate-400">
                     Page {currentPage} of {totalPages}
                   </span>
@@ -376,7 +376,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                         if (offset > 0) load(offset - PAGE, debouncedQ, from, to, view, repId);
                       }}
                       disabled={offset === 0 || loading}
-                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-40 cursor-pointer"
+                      className="p-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors disabled:opacity-40 cursor-pointer"
                       aria-label="Previous page"
                     >
                       <ChevronLeft className="w-4 h-4" />
@@ -386,7 +386,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                         if (offset + PAGE < total) load(offset + PAGE, debouncedQ, from, to, view, repId);
                       }}
                       disabled={offset + PAGE >= total || loading}
-                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:opacity-60 transition-colors disabled:opacity-40 cursor-pointer"
+                      className="p-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-slate-600 dark:text-slate-300 hover:opacity-60 transition-colors disabled:opacity-40 cursor-pointer"
                       aria-label="Next page"
                     >
                       <ChevronRight className="w-4 h-4" />

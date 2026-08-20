@@ -8,7 +8,7 @@ interface NavbarProps {
   isRep: boolean;
   onRoleChange: (role: 'student' | 'class_rep') => void;
   onSignOut: () => void;
-  onSelectTab: (tab: 'dashboard' | 'history' | 'class_rep') => void;
+  onSelectTab: (tab: 'dashboard' | 'history' | 'class_rep' | 'settings') => void;
   activeTab: string;
   notifications: NotificationItem[];
   onMarkAllRead: () => void;
@@ -30,7 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-700 shadow-xs">
+    <header className="sticky top-0 z-30 bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border-b border-slate-200/80 dark:border-neutral-700 shadow-xs">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         {/* Brand & Identity */}
         <div className="flex items-center gap-3 min-w-0">
@@ -59,14 +59,14 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Center Mode Selector Pill — only for class reps */}
         {isRep && (
-          <div className="hidden md:flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700">
+          <div className="hidden md:flex items-center p-1 bg-slate-100 dark:bg-neutral-800 rounded-xl border border-slate-200/80 dark:border-neutral-700">
             {activeRole === 'class_rep' ? (
               <button
                 onClick={() => {
                   onRoleChange('student');
                   onSelectTab('dashboard');
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs"
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                 Back to Dashboard
@@ -80,7 +80,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     activeRole === 'student'
-                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-xs'
+                      ? 'bg-white dark:bg-neutral-900 text-slate-900 dark:text-slate-100 shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                 >
@@ -94,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     activeRole === 'class_rep'
-                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
+                      ? 'bg-white dark:bg-neutral-900 text-indigo-700 dark:text-indigo-300 shadow-xs'
                       : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100'
                   }`}
                 >
@@ -117,7 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 if (newRole === 'class_rep') onSelectTab('class_rep');
                 if (newRole === 'student') onSelectTab('dashboard');
               }}
-              className="md:hidden text-xs font-bold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1 shrink-0"
+              className="md:hidden text-xs font-bold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-neutral-700 flex items-center gap-1 shrink-0"
             >
               {activeRole === 'student' ? (
                 <>
@@ -138,7 +138,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setNotificationsOpen(!notificationsOpen)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors relative"
+              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors relative"
               aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
@@ -148,8 +148,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {notificationsOpen && (
-              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 z-50 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-2 mb-2">
+              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-200 dark:border-neutral-700 p-3 z-50 text-xs">
+                <div className="flex items-center justify-between border-b border-slate-100 dark:border-neutral-700 pb-2 mb-2">
                   <span className="font-bold text-slate-900 dark:text-slate-100">Notifications</span>
                   <button
                     onClick={onMarkAllRead}
@@ -170,7 +170,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                         key={n.id}
                         className={`p-2.5 rounded-xl border ${
                           n.read
-                            ? 'bg-slate-50 dark:bg-slate-800 border-slate-100 dark:border-slate-700'
+                            ? 'bg-slate-50 dark:bg-neutral-800 border-slate-100 dark:border-neutral-700'
                             : 'bg-indigo-50/60 dark:bg-indigo-950/40 border-indigo-100/80'
                         }`}
                       >
@@ -198,7 +198,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="relative">
             <button
               onClick={() => setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-colors border border-slate-200/80 dark:border-slate-700"
+              className="flex items-center gap-2 p-1 sm:px-2.5 sm:py-1 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200/80 dark:hover:bg-neutral-700 transition-colors border border-slate-200/80 dark:border-neutral-700"
             >
               <img
                 src={profile.avatarUrl}
@@ -218,12 +218,12 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-3 z-50 text-xs space-y-2">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+              <div className="absolute right-0 mt-2 w-64 max-w-[calc(100vw-1.5rem)] bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-200 dark:border-neutral-700 p-3 z-50 text-xs space-y-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-100 dark:border-neutral-700">
                   <p className="font-bold text-slate-900 dark:text-slate-100">{profile.fullName}</p>
                   <p className="text-[11px] font-mono text-indigo-600 dark:text-indigo-400 font-semibold">{profile.regNo}</p>
                   <div className="mt-1.5 flex flex-wrap gap-1">
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-white dark:bg-neutral-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-neutral-700">
                       {profile.level}
                     </span>
                     <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-100">

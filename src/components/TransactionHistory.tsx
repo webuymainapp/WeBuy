@@ -156,6 +156,14 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       { spent: 0, received: 0 },
     );
 
+  // Summary for the CURRENT calendar month, shown in the header card — the
+  // label is derived from the date so it always shows the live month.
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const currentMonthTotals = monthTotals(
+    transactions.filter((t) => new Date(t.date).toISOString().slice(0, 7) === currentMonthKey),
+  );
+
   const handleExportCSV = () => {
     soundEffects.playTap();
     const headers = ['Reference', 'Category', 'Book / Note', 'Amount (₦)', 'Date', 'Status'];
@@ -185,23 +193,23 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   };
 
   const renderSkeleton = () => (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs overflow-hidden">
+    <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-xs overflow-hidden">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 px-4 py-4">
-          <div className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-700 animate-pulse shrink-0" />
+          <div className="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-neutral-700 animate-pulse shrink-0" />
           <div className="flex-1 space-y-2 min-w-0">
-            <div className="h-3 w-2/5 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
-            <div className="h-2.5 w-3/5 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse" />
+            <div className="h-3 w-2/5 rounded-md bg-slate-200 dark:bg-neutral-700 animate-pulse" />
+            <div className="h-2.5 w-3/5 rounded-md bg-slate-200 dark:bg-neutral-700 animate-pulse" />
           </div>
-          <div className="h-3.5 w-16 rounded-md bg-slate-200 dark:bg-slate-700 animate-pulse shrink-0" />
+          <div className="h-3.5 w-16 rounded-md bg-slate-200 dark:bg-neutral-700 animate-pulse shrink-0" />
         </div>
       ))}
     </div>
   );
 
   const renderEmpty = (title: string, body: string) => (
-    <div className="text-center py-14 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700 px-6">
-      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+    <div className="text-center py-14 bg-white dark:bg-neutral-900 rounded-3xl border border-dashed border-slate-200 dark:border-neutral-700 px-6">
+      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-neutral-800 flex items-center justify-center mx-auto mb-3">
         <ReceiptText className="w-7 h-7 text-slate-400 dark:text-slate-500" />
       </div>
       <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">{title}</h3>
@@ -214,7 +222,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       key: 'all',
       label: 'All',
       active: 'bg-slate-900 text-white shadow-xs',
-      idle: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700',
+      idle: 'bg-slate-100 text-slate-600 dark:bg-neutral-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-neutral-700',
     },
     {
       key: 'purchase',
@@ -244,57 +252,84 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
 
   return (
     <section className="space-y-4">
-      {/* Page header */}
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
-            Transactions
-          </h2>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
-            Payments, points &amp; refunds
-          </p>
-        </div>
-        <button
-          onClick={handleExportCSV}
-          disabled={filtered.length === 0}
-          className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-200 disabled:opacity-50 disabled:hover:text-slate-600 dark:disabled:hover:text-slate-300 disabled:cursor-not-allowed text-xs font-bold transition-colors"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Export CSV</span>
-        </button>
-      </div>
-
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
-        <input
-          type="text"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search books, courses, or references..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-indigo-600 shadow-xs"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-1.5">
-        {filterPills.map((p) => {
-          const active = filter === p.key;
-          return (
+      {/* Header card — title, live-month Spent/Received, search and filters all in one div */}
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-xs overflow-hidden">
+        <div className="p-4 sm:p-5 space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">
+                Transactions
+              </h2>
+              <p className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                Payments, points &amp; refunds
+              </p>
+            </div>
             <button
-              key={p.key}
-              onClick={() => {
-                soundEffects.playTap();
-                setFilter(p.key);
-              }}
-              className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all text-xs ${
-                active ? p.active : p.idle
-              }`}
+              onClick={handleExportCSV}
+              disabled={filtered.length === 0}
+              className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-200 disabled:opacity-50 disabled:hover:text-slate-600 dark:disabled:hover:text-slate-300 disabled:cursor-not-allowed text-xs font-bold transition-colors"
             >
-              {p.label} <span className="opacity-70 font-semibold">({counts[p.key]})</span>
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export CSV</span>
             </button>
-          );
-        })}
+          </div>
+
+          {/* Current month Spent / Received */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-1">
+            <h3 className="text-[11px] font-extrabold tracking-[0.15em] text-slate-400 dark:text-slate-500 uppercase">
+              {monthLabel(currentMonthKey)}
+            </h3>
+            {currentMonthTotals.spent > 0 && (
+              <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
+                Spent{' '}
+                <span className="text-slate-900 dark:text-slate-100 font-mono font-bold">
+                  {formatNaira(currentMonthTotals.spent)}
+                </span>
+              </span>
+            )}
+            {currentMonthTotals.received > 0 && (
+              <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                Received{' '}
+                <span className="font-mono font-bold">
+                  {formatNaira(currentMonthTotals.received)}
+                </span>
+              </span>
+            )}
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search books, courses, or references..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50 dark:bg-neutral-800 text-xs font-semibold text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-indigo-600 shadow-xs"
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            {filterPills.map((p) => {
+              const active = filter === p.key;
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => {
+                    soundEffects.playTap();
+                    setFilter(p.key);
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all text-xs ${
+                    active ? p.active : p.idle
+                  }`}
+                >
+                  {p.label} <span className="opacity-70 font-semibold">({counts[p.key]})</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Loading skeleton */}
@@ -342,7 +377,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                   </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-xs overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="divide-y divide-slate-200/70 dark:divide-neutral-800">
                   {list.map((t) => {
                     const status = normalizeStatus(t.status);
                     const meta = CATEGORY_META[t.category] ?? CATEGORY_META.purchase;

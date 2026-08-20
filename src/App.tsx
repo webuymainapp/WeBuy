@@ -18,7 +18,7 @@ import { PaymentBottomSheet } from './components/PaymentBottomSheet';
 import { ClassRepPortal } from './components/ClassRepPortal';
 import { TransactionHistory } from './components/TransactionHistory';
 import { AuthPage } from './components/AuthPage';
-import { SettingsModal } from './components/SettingsModal';
+import { Settings } from './components/Settings';
 import { BottomNav } from './components/BottomNav';
 import { LandingPage } from './components/LandingPage';
 import { QrPassModal } from './components/QrPassModal';
@@ -156,7 +156,7 @@ export default function App() {
   const [dataError, setDataError] = useState<string | null>(null);
 
   const [activeRole, setActiveRole] = useState<'student' | 'class_rep'>('student');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'class_rep'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'class_rep' | 'settings'>('dashboard');
   const [activeFilter, setActiveFilter] = useState<'all' | 'unpaid' | 'paid' | 'collected'>('all');
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -167,7 +167,6 @@ export default function App() {
   const [cartCheckoutOpen, setCartCheckoutOpen] = useState(false);
 
   // Modals & Bottom sheets
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [passBook, setPassBook] = useState<Textbook | null>(null);
 
   // Persist local preferences
@@ -564,7 +563,7 @@ export default function App() {
                   <button
                     onClick={() => {
                       soundEffects.playTap();
-                      setIsSettingsOpen(true);
+                      setActiveTab('settings');
                     }}
                     className="shrink-0 px-3 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-colors cursor-pointer"
                   >
@@ -574,8 +573,9 @@ export default function App() {
               </div>
             )}
 
-            {/* Filter Tabs & Search Header */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            {/* Compulsory Textbooks — fixed header + internally-scrolling list */}
+            <div className="bg-white dark:bg-neutral-900 rounded-3xl border border-slate-200 dark:border-neutral-800 shadow-xs flex flex-col overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -593,7 +593,7 @@ export default function App() {
                     placeholder="Search by course code or title..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600"
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                   />
                 </div>
               </div>
@@ -651,7 +651,7 @@ export default function App() {
                 {filterOpen && (
                   <>
                     <div className="fixed inset-0 z-20" onClick={() => setFilterOpen(false)} />
-                    <div className="absolute left-0 top-full mt-1.5 z-30 w-60 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5">
+                    <div className="absolute left-0 top-full mt-1.5 z-30 w-60 bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-200 dark:border-neutral-700 p-1.5">
                       {(
                         [
                           {
@@ -659,7 +659,7 @@ export default function App() {
                             label: 'All Books',
                             count: textbooks.length,
                             icon: <LayoutGrid className="w-4 h-4 text-slate-500" />,
-                            activeCls: 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100',
+                            activeCls: 'bg-slate-100 dark:bg-neutral-800 text-slate-900 dark:text-slate-100',
                           },
                           {
                             key: 'unpaid',
@@ -695,7 +695,7 @@ export default function App() {
                           className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors text-left cursor-pointer ${
                             activeFilter === o.key
                               ? o.activeCls
-                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
                           }`}
                         >
                           {o.icon}
@@ -708,12 +708,12 @@ export default function App() {
                   </>
                 )}
               </div>
-            </div>
+              </div>
 
-            {/* Textbook List Grid */}
-            <div className="space-y-3">
+              {/* Textbook list — scrolls inside the fixed card */}
+              <div className="p-4 sm:p-5 pt-4 space-y-3 overflow-y-auto overscroll-contain max-h-[50dvh] lg:max-h-[520px]">
               {filteredTextbooks.length === 0 ? (
-                <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-3xl border border-dashed border-slate-200 dark:border-slate-700 p-6">
+                <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-6">
                   <BookCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
                   <h3 className="font-bold text-slate-800 dark:text-slate-200 text-base">No textbooks found</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
@@ -742,6 +742,7 @@ export default function App() {
                   />
                 ))
               )}
+              </div>
             </div>
           </div>
         )}
@@ -805,44 +806,44 @@ export default function App() {
         }}
       />
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onUpdateSettings={setSettings}
-        profile={currentProfile}
-        onUpdateProfile={(p) => {
-          const prevPhone = profile?.phone ?? '';
-          setProfile(p);
-          // Phone may have just been added/changed — refresh the wallet so the
-          // funding account (re)provisions, the account name/bank appear, and
-          // the "Add phone number" banner disappears.
-          if (p.phone && p.phone !== prevPhone) {
-            walletApi
-              .get()
-              .then(setWallet)
-              .catch(() => undefined);
-          }
-        }}
-      />
+      {/* Tab 4: Settings */}
+        {activeTab === 'settings' && (
+          <Settings
+            settings={settings}
+            onUpdateSettings={setSettings}
+            profile={currentProfile}
+            onUpdateProfile={(p) => {
+              const prevPhone = profile?.phone ?? '';
+              setProfile(p);
+              // Phone may have just been added/changed — refresh the wallet so the
+              // funding account (re)provisions, the account name/bank appear, and
+              // the "Add phone number" banner disappears.
+              if (p.phone && p.phone !== prevPhone) {
+                walletApi
+                  .get()
+                  .then(setWallet)
+                  .catch(() => undefined);
+              }
+            }}
+            onBack={() => setActiveTab('dashboard')}
+          />
+        )}
 
-      {/* QR Pickup Pass Modal */}
-      <QrPassModal
-        textbook={passBook}
-        profile={currentProfile}
-        onClose={() => setPassBook(null)}
-      />
-
-      {/* Mobile Bottom Navigation — student view only */}
-      {activeRole === 'student' && (
-        <BottomNav
-          activeTab={activeTab}
-          onSelectTab={setActiveTab}
-          onOpenSettings={() => setIsSettingsOpen(true)}
-          paidPassesCount={paidPassesCount}
+        {/* QR Pickup Pass Modal */}
+        <QrPassModal
+          textbook={passBook}
+          profile={currentProfile}
+          onClose={() => setPassBook(null)}
         />
-      )}
-    </div>
-  );
-}
+
+        {/* Mobile Bottom Navigation — student view only */}
+        {activeRole === 'student' && (
+          <BottomNav
+            activeTab={activeTab}
+            onSelectTab={setActiveTab}
+            paidPassesCount={paidPassesCount}
+          />
+        )}
+      </div>
+    );
+  }

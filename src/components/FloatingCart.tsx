@@ -84,7 +84,7 @@ export const FloatingCart: React.FC<FloatingCartProps> = ({ count, onOpen }) => 
       onClick={() => {
         if (!dragging) onOpen();
       }}
-      className="fixed z-40 flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-slate-900 shadow-2xl shadow-slate-900/20 dark:shadow-black/50 border border-slate-200 dark:border-slate-700 transition-shadow hover:shadow-lg active:scale-95 cursor-grab touch-none"
+      className="fixed z-40 flex items-center justify-center w-14 h-14 rounded-full bg-white dark:bg-neutral-900 shadow-2xl shadow-slate-900/20 dark:shadow-black/50 border border-slate-200 dark:border-neutral-700 transition-shadow hover:shadow-lg active:scale-95 cursor-grab touch-none"
       style={{ left: pos.x, top: pos.y, cursor: dragging ? 'grabbing' : 'grab' }}
       aria-label="Open cart"
     >

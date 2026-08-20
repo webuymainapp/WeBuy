@@ -193,7 +193,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200/90 dark:border-slate-700 shadow-xs hover:shadow-sm transition-all flex items-center gap-3 relative group">
+      <div className="bg-white dark:bg-neutral-900 rounded-2xl p-3 border border-slate-200/90 dark:border-neutral-700 shadow-xs hover:shadow-sm transition-all flex items-center gap-3 relative group">
         {/* Mini vertical book cover */}
         <BookCover textbook={textbook} size="mini" />
 
@@ -222,7 +222,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setShowDetails(true)}
-                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                className="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-[11px] font-bold flex items-center gap-1.5 whitespace-nowrap transition-colors"
               >
                 <Info className="w-3.5 h-3.5" />
                 Details
@@ -240,7 +240,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
           onClick={() => setShowDetails(false)}
         >
           <div
-            className="w-full sm:max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl overflow-hidden p-5 sm:p-6 max-h-[92dvh] overflow-y-auto"
+            className="w-full sm:max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl overflow-hidden p-5 sm:p-6 max-h-[92dvh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -249,7 +249,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
               </h3>
               <button
                 onClick={() => setShowDetails(false)}
-                className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+                className="p-2 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -263,7 +263,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
               {details.map((d) => (
                 <div
                   key={d.label}
-                  className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-2 last:border-0"
+                  className="flex items-start justify-between gap-3 border-b border-slate-100 dark:border-neutral-800 pb-2 last:border-0"
                 >
                   <dt className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 shrink-0 w-28">
                     {d.label}
@@ -275,7 +275,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
               ))}
             </dl>
 
-            <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between gap-2">
+            <div className="mt-5 pt-3 border-t border-slate-200 dark:border-neutral-700 flex items-center justify-between gap-2">
               {statusBadge(true)}
               <div className="flex items-center gap-2">
                 {primaryAction()}

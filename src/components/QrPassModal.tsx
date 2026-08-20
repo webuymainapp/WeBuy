@@ -53,9 +53,9 @@ export const QrPassModal: React.FC<QrPassModalProps> = ({ textbook, profile, onC
 
   return (
     <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center px-4 py-6">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden text-slate-900 dark:text-slate-100 flex flex-col">
+      <div className="w-full max-w-sm bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden text-slate-900 dark:text-slate-100 flex flex-col">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-neutral-800 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white">
               <QrCode className="w-4 h-4" />
@@ -69,7 +69,7 @@ export const QrPassModal: React.FC<QrPassModalProps> = ({ textbook, profile, onC
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
+            className="p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -77,11 +77,11 @@ export const QrPassModal: React.FC<QrPassModalProps> = ({ textbook, profile, onC
 
         <div className="p-5 space-y-4 overflow-y-auto">
           {/* Ticket body */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
             {/* QR area */}
             <div className="bg-white p-5 flex flex-col items-center">
               {isCollected ? (
-                <div className="w-44 h-44 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="w-44 h-44 flex flex-col items-center justify-center bg-slate-100 dark:bg-neutral-800 rounded-2xl border border-slate-200 dark:border-neutral-700">
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                   <p className="text-xs font-extrabold text-emerald-700 dark:text-emerald-300 mt-2">
                     Pass Used
@@ -93,9 +93,9 @@ export const QrPassModal: React.FC<QrPassModalProps> = ({ textbook, profile, onC
               ) : qrDataUrl ? (
                 <img src={qrDataUrl} alt="QR Pass" className="w-44 h-44 rounded-2xl" />
               ) : passToken ? (
-                <div className="w-44 h-44 rounded-2xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+                <div className="w-44 h-44 rounded-2xl bg-slate-100 dark:bg-neutral-800 animate-pulse" />
               ) : (
-                <div className="w-44 h-44 flex flex-col items-center justify-center bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <div className="w-44 h-44 flex flex-col items-center justify-center bg-slate-100 dark:bg-neutral-800 rounded-2xl border border-slate-200 dark:border-neutral-700">
                   <ShieldCheck className="w-8 h-8 text-slate-400" />
                   <p className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 mt-2">
                     Pass not issued yet
@@ -149,7 +149,7 @@ export const QrPassModal: React.FC<QrPassModalProps> = ({ textbook, profile, onC
           {!isCollected && (
             <button
               onClick={handleCopy}
-              className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+              className="w-full py-2.5 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
             >
               {copied ? (
                 <>

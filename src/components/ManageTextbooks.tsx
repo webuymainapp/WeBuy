@@ -234,12 +234,12 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
   };
 
   const inputCls =
-    'w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-slate-50 dark:bg-slate-800 dark:text-slate-100 focus:outline-indigo-600';
+    'w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600';
 
   return (
     <>
       {/* Trigger card — opens the textbooks modal */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
         <button
           onClick={() => {
             soundEffects.playTap();
@@ -279,10 +279,10 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[85dvh] flex flex-col"
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden max-h-[85dvh] flex flex-col"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
                     <BookOpen className="w-5 h-5 text-indigo-400" />
@@ -317,7 +317,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                     loadRecycled();
                     setRecycleOpen(true);
                   }}
-                  className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold flex items-center gap-2 transition-all cursor-pointer"
+                  className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-sm font-bold flex items-center gap-2 transition-all cursor-pointer"
                   title="Recycle bin — restore recently deleted textbooks"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -329,11 +329,11 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
               <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700">
+                  <div className="bg-slate-50 dark:bg-neutral-800 rounded-2xl p-3 border border-slate-200 dark:border-neutral-700">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Books</p>
                     <p className="text-xl font-black font-mono text-slate-900 dark:text-slate-100 mt-1">{catalog.length}</p>
                   </div>
-                  <div className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-3 border border-slate-200 dark:border-slate-700">
+                  <div className="bg-slate-50 dark:bg-neutral-800 rounded-2xl p-3 border border-slate-200 dark:border-neutral-700">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Courses</p>
                     <p className="text-xl font-black font-mono text-indigo-600 dark:text-indigo-300 mt-1">
                       {new Set(catalog.map((t) => t.courseCode)).size}
@@ -359,7 +359,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                 {/* Textbook List */}
                 <div className="space-y-2">
                   {catalog.length === 0 && (
-                    <div className="text-center py-8 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                    <div className="text-center py-8 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700">
                       <ImageIcon className="w-7 h-7 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                       <p className="font-bold text-slate-600 dark:text-slate-300 text-sm">No textbooks yet</p>
                       <p className="text-xs text-slate-400 dark:text-slate-500">Click &quot;Add Textbook&quot; to create the first one.</p>
@@ -369,10 +369,10 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                   {catalog.map((book) => (
                     <div
                       key={book.id}
-                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50 hover:border-slate-200 dark:hover:border-slate-700 transition-colors"
                     >
                       {/* Cover thumbnail or placeholder */}
-                      <div className="w-11 h-14 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                      <div className="w-11 h-14 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-neutral-700 border border-slate-200 dark:border-neutral-700 flex items-center justify-center">
                         {book.coverUrl ? (
                           <img
                             src={book.coverUrl}
@@ -390,10 +390,10 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                           <span className="text-[10px] font-extrabold font-mono px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">
                             {book.courseCode}
                           </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-700 text-slate-600 dark:text-slate-300">
                             {formatNaira(book.price)}
                           </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-700 text-slate-600 dark:text-slate-300">
                             {book.level}
                           </span>
                         </div>
@@ -428,7 +428,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                             </button>
                           </>
                         ) : (
-                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800">
+                          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 px-2 py-1 rounded-lg bg-slate-100 dark:bg-neutral-800">
                             Added by other rep
                           </span>
                         )}
@@ -450,15 +450,15 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
                   {editingId ? 'Edit Textbook' : 'Add Textbook'}
                 </h3>
                 <button
                   onClick={() => setIsFormOpen(false)}
-                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
+                  className="p-2 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -497,11 +497,11 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
                   <button
                     type="button"
                     onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -528,9 +528,9 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <div>
                   <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
                     <ArrowLeftRight className="w-4 h-4 text-emerald-600" />
@@ -542,7 +542,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                 </div>
                 <button
                   onClick={() => setTransferBook(null)}
-                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
+                  className="p-2 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -582,11 +582,11 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                   </span>
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-neutral-800">
                   <button
                     type="button"
                     onClick={() => setTransferBook(null)}
-                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer"
                   >
                     Cancel
                   </button>
@@ -614,9 +614,9 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-slate-900 rounded-3xl overflow-hidden shadow-2xl"
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
             >
-              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <div>
                   <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm flex items-center gap-2">
                     <Trash2 className="w-4 h-4 text-rose-500" />
@@ -628,7 +628,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                 </div>
                 <button
                   onClick={() => setRecycleOpen(false)}
-                  className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer"
+                  className="p-2 rounded-full bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-600 dark:text-slate-300 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -648,7 +648,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                     <span className="text-xs font-semibold">Loading recycle bin…</span>
                   </div>
                 ) : recycled.length === 0 ? (
-                  <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                  <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700">
                     <Trash2 className="w-7 h-7 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                     <p className="font-bold text-slate-600 dark:text-slate-300 text-sm">Recycle bin is empty</p>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Deleted textbooks appear here for 24 hours.</p>
@@ -657,9 +657,9 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                   recycled.map((book) => (
                     <div
                       key={book.id}
-                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50"
+                      className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 dark:border-neutral-800 bg-slate-50/50 dark:bg-neutral-800/50"
                     >
-                      <div className="w-11 h-14 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                      <div className="w-11 h-14 shrink-0 rounded-lg overflow-hidden bg-slate-200 dark:bg-neutral-700 border border-slate-200 dark:border-neutral-700 flex items-center justify-center">
                         {book.coverUrl ? (
                           <img
                             src={book.coverUrl}
@@ -677,7 +677,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                           <span className="text-[10px] font-extrabold font-mono px-1.5 py-0.5 rounded bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300">
                             {book.courseCode}
                           </span>
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-700 text-slate-600 dark:text-slate-300">
                             {formatNaira(book.price)}
                           </span>
                         </div>

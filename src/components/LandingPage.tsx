@@ -77,10 +77,10 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
   const outstanding = unpaid.reduce((s, b) => s + b.price, 0);
 
   return (
-    <div className="w-[300px] sm:w-[330px] rounded-[2.5rem] bg-slate-900 dark:bg-slate-800 p-2.5 shadow-2xl shadow-indigo-900/25 border border-slate-700/60">
+    <div className="w-[300px] sm:w-[330px] rounded-[2.5rem] bg-slate-900 dark:bg-neutral-800 p-2.5 shadow-2xl shadow-indigo-900/25 border border-slate-700/60">
       <div className="relative rounded-[2rem] overflow-hidden bg-white dark:bg-black flex flex-col h-[600px]">
         {/* Notch */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-2 w-20 h-4 bg-slate-900 dark:bg-slate-800 rounded-full z-20" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-2 w-20 h-4 bg-slate-900 dark:bg-neutral-800 rounded-full z-20" />
 
         {/* Status bar */}
         <div className="flex items-center justify-between px-6 pt-3.5 pb-1 text-slate-400 text-[9px] font-bold">
@@ -158,9 +158,9 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
             sample.map((b) => (
               <div
                 key={b.id}
-                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-slate-800 p-2"
+                className="flex items-center gap-2.5 rounded-xl border border-slate-100 dark:border-neutral-800 p-2"
               >
-                <div className="w-9 h-12 rounded-md bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+                <div className="w-9 h-12 rounded-md bg-slate-100 dark:bg-neutral-800 overflow-hidden shrink-0 flex items-center justify-center">
                   <img src={b.coverUrl} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -184,7 +184,7 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
 
         {/* QR Pass */}
         <div className="mx-4 mb-2 flex items-center gap-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800 p-2.5">
-          <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-white dark:bg-neutral-900 flex items-center justify-center shrink-0">
             <QrCode className="w-5 h-5 text-indigo-600" />
           </div>
           <div className="min-w-0">
@@ -196,7 +196,7 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
         </div>
 
         {/* Bottom nav */}
-        <div className="border-t border-slate-100 dark:border-slate-800 px-7 py-2.5 flex items-center justify-between text-slate-400">
+        <div className="border-t border-slate-100 dark:border-neutral-800 px-7 py-2.5 flex items-center justify-between text-slate-400">
           <LayoutDashboard className="w-4 h-4 text-indigo-600" />
           <History className="w-4 h-4" />
           <Wallet className="w-4 h-4" />
@@ -280,7 +280,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
   return (
     <div className="min-h-dvh bg-white dark:bg-black text-slate-900 dark:text-slate-100 font-sans overflow-x-clip">
       {/* Landing Nav */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800">
+      <header className="sticky top-0 z-40 bg-white/80 dark:bg-black/80 backdrop-blur-md border-b border-slate-200/60 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <BrandMark />
@@ -298,7 +298,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           <div className="flex items-center gap-2">
             <button
               onClick={onSignIn}
-              className="hidden sm:block px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              className="hidden sm:block px-4 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               Sign In
             </button>
@@ -351,7 +351,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
                 </button>
                 <button
                   onClick={onSignIn}
-                  className="px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-700 text-slate-800 dark:text-slate-100 font-bold text-sm hover:bg-slate-50 dark:hover:bg-neutral-800 transition-all cursor-pointer"
                 >
                   Sign In
                 </button>
@@ -374,7 +374,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
               <DashboardPhone profile={profile} textbooks={textbooks} />
 
               <motion.div
-                className="absolute -right-3 sm:-right-8 top-20 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 px-3 py-2 flex items-center gap-2"
+                className="absolute -right-3 sm:-right-8 top-20 bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-100 dark:border-neutral-800 px-3 py-2 flex items-center gap-2"
                 animate={{ y: [0, -8, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -386,7 +386,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
               </motion.div>
 
               <motion.div
-                className="absolute -left-3 sm:-left-10 bottom-24 bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 px-3 py-2 flex items-center gap-2"
+                className="absolute -left-3 sm:-left-10 bottom-24 bg-white dark:bg-neutral-900 rounded-2xl shadow-xl border border-slate-100 dark:border-neutral-800 px-3 py-2 flex items-center gap-2"
                 animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
               >
@@ -405,7 +405,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
 
       {/* Honest highlights — replaces fabricated statistics */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <FadeIn className="bg-slate-900 dark:bg-slate-900 rounded-3xl px-6 py-10 grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <FadeIn className="bg-slate-900 dark:bg-neutral-900 rounded-3xl px-6 py-10 grid grid-cols-2 lg:grid-cols-4 gap-8">
           {highlights.map((h) => (
             <div key={h.title} className="text-center">
               <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center mx-auto">
@@ -436,7 +436,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           {steps.map((s, i) => (
             <Fragment key={s.title}>
               <FadeIn delay={i * 0.06} className="flex-1">
-                <div className="h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all">
+                <div className="h-full rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-5 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all">
                   <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-sm">
                     {i + 1}
                   </div>
@@ -458,7 +458,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
       </section>
 
       {/* Dashboard Preview */}
-      <section className="py-20 lg:py-28 bg-slate-50 dark:bg-slate-900/40" id="dashboard">
+      <section className="py-20 lg:py-28 bg-slate-50 dark:bg-neutral-900/40" id="dashboard">
         <div className="max-w-6xl mx-auto px-4 sm:px-6">
           <FadeIn className="text-center max-w-2xl mx-auto">
             <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
@@ -475,7 +475,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           <div className="mt-12 grid lg:grid-cols-2 gap-6 min-w-0">
             {/* Student Preview */}
             <FadeIn className="min-w-0 w-full">
-              <div className="w-full max-w-[340px] sm:max-w-md mx-auto min-w-0 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
+              <div className="w-full max-w-[340px] sm:max-w-md mx-auto min-w-0 rounded-3xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Student Dashboard</p>
                   <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">
@@ -509,9 +509,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
                   {sample.map((b) => (
                     <div
                       key={b.id}
-                      className="flex items-center gap-3 rounded-2xl border border-slate-100 dark:border-slate-800 p-3"
+                      className="flex items-center gap-3 rounded-2xl border border-slate-100 dark:border-neutral-800 p-3"
                     >
-                      <div className="w-10 h-13 rounded-lg bg-slate-100 dark:bg-slate-800 overflow-hidden shrink-0 flex items-center justify-center">
+                      <div className="w-10 h-13 rounded-lg bg-slate-100 dark:bg-neutral-800 overflow-hidden shrink-0 flex items-center justify-center">
                         <img src={b.coverUrl} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -540,7 +540,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
 
             {/* Class Rep / Department Preview */}
             <FadeIn delay={0.1} className="min-w-0 w-full">
-              <div className="w-full max-w-[340px] sm:max-w-md mx-auto min-w-0 rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs">
+              <div className="w-full max-w-[340px] sm:max-w-md mx-auto min-w-0 rounded-3xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xs">
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-xs font-bold text-slate-500 dark:text-slate-400">Class Rep Portal</p>
                   <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
@@ -552,9 +552,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
                   {repCapabilities.map((c) => (
                     <div
                       key={c.title}
-                      className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 p-4"
+                      className="rounded-2xl border border-slate-100 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-800 p-4"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-white dark:bg-slate-900 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-lg bg-white dark:bg-neutral-900 flex items-center justify-center">
                         <c.icon className="w-4 h-4 text-indigo-600" />
                       </div>
                       <p className="mt-2 text-xs font-black text-slate-900 dark:text-slate-100">
@@ -567,7 +567,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
                   ))}
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-slate-100 dark:border-slate-800 p-3 space-y-2">
+                <div className="mt-4 rounded-2xl border border-slate-100 dark:border-neutral-800 p-3 space-y-2">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
                     <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">
@@ -604,7 +604,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
         <div className="mt-12 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f, i) => (
             <FadeIn key={f.title} delay={i * 0.05}>
-              <div className="h-full rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all">
+              <div className="h-full rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-6 shadow-xs hover:shadow-md hover:-translate-y-1 transition-all">
                 <div className="w-11 h-11 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center">
                   <f.icon className="w-5 h-5 text-indigo-600" />
                 </div>
@@ -617,7 +617,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
       </section>
 
       {/* Student Experience Timeline */}
-      <section className="py-20 lg:py-24 bg-slate-50 dark:bg-slate-900/40">
+      <section className="py-20 lg:py-24 bg-slate-50 dark:bg-neutral-900/40">
         <FadeIn className="text-center max-w-2xl mx-auto px-4 sm:px-6">
           <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
             Student Experience
@@ -632,7 +632,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
             {timeline.map((t, i) => (
               <Fragment key={t.label}>
                 <FadeIn delay={i * 0.05} className="flex flex-col items-center gap-2">
-                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-2xl bg-white dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 shadow-xs flex items-center justify-center">
                     <t.icon className="w-6 h-6 text-indigo-600" />
                   </div>
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{t.label}</span>
@@ -658,10 +658,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
         </FadeIn>
 
         <FadeIn delay={0.05}>
-          <div className="mt-12 rounded-3xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+          <div className="mt-12 rounded-3xl border border-slate-200 dark:border-neutral-800 overflow-hidden shadow-xs">
             <table className="w-full text-left">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-800/60">
+                <tr className="bg-slate-50 dark:bg-neutral-800/60">
                   <th className="p-4 text-xs font-bold text-slate-500 w-1/3">Experience</th>
                   <th className="p-4 text-xs font-bold text-slate-500">Traditional</th>
                   <th className="p-4 text-xs font-bold text-indigo-600 dark:text-indigo-300 bg-indigo-50/60 dark:bg-indigo-950/30">
@@ -673,7 +673,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
                 {comparison.map((c) => (
                   <tr
                     key={c.label}
-                    className="border-t border-slate-100 dark:border-slate-800"
+                    className="border-t border-slate-100 dark:border-neutral-800"
                   >
                     <td className="p-4 text-xs font-extrabold text-slate-800 dark:text-slate-100">
                       {c.label}
@@ -707,7 +707,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           {focusTags.map((tag) => (
             <span
               key={tag}
-              className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-extrabold text-sm text-slate-700 dark:text-slate-200"
+              className="px-5 py-2.5 rounded-2xl border border-slate-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 font-extrabold text-sm text-slate-700 dark:text-slate-200"
             >
               {tag}
             </span>
@@ -746,7 +746,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
+      <footer className="border-t border-slate-200 dark:border-neutral-800 bg-slate-50 dark:bg-neutral-900/40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 py-14 grid gap-10 md:grid-cols-4">
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
@@ -793,7 +793,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           </div>
         </div>
 
-        <div className="border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+        <div className="border-t border-slate-200 dark:border-neutral-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
           © 2026 Webuy. All rights reserved.
         </div>
       </footer>

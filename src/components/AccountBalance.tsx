@@ -58,7 +58,7 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
   }, [load]);
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+    <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm space-y-4">
       <button
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center gap-2 text-left cursor-pointer group"

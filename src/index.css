@@ -7,23 +7,32 @@ html {
   /* Paint the canvas the same color as the app so no white gap shows at the
      bottom edge when scrolling (body bg defaults to white). */
   background-color: #f1f5f9; /* slate-100 */
+  /* Stop rubber-band/overscroll from revealing the canvas behind the app. */
+  overscroll-behavior-y: none;
 }
 
 html.dark {
-  background-color: #020617; /* slate-950 */
+  background-color: #000; /* jet black — matches dark:bg-black */
+  color-scheme: dark;
 }
 
 body {
   background-color: inherit;
   margin: 0;
-  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
 }
 
 /* Prevent the tiny fixed white strip under the address bar in mobile Chrome:
    100vh includes browser chrome, so the page can overhang the visible area.
    The dynamic viewport unit (dvh) tracks the actually-visible height. */
 @supports (min-height: 100dvh) {
-  html {
+  html,
+  body,
+  #root {
     min-height: 100dvh;
   }
 }

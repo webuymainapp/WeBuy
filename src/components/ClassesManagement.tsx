@@ -135,7 +135,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
   return (
     <>
       {/* Trigger card — opens the classes modal */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-700 shadow-sm">
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
         <button
           onClick={() => {
             soundEffects.playTap();
@@ -177,10 +177,10 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 60, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-              className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden max-h-[85dvh] flex flex-col"
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden max-h-[85dvh] flex flex-col"
             >
               {/* Header */}
-              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-slate-800 flex items-center justify-between gap-3">
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
                     <School className="w-5 h-5 text-indigo-400" />
@@ -217,7 +217,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                   <>
                     {/* Create-class form — platform admin only */}
                     {isChief && (
-                      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 p-3.5 space-y-3">
+                      <div className="rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50/50 dark:bg-neutral-800/50 p-3.5 space-y-3">
                         {!showCreate ? (
                           <button
                             onClick={() => {
@@ -240,7 +240,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                               placeholder="Class name (e.g. Civil Engineering 300)"
                               value={cName}
                               onChange={(e) => setCName(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600"
                             />
                             <div className="grid grid-cols-2 gap-2">
                               <input
@@ -249,7 +249,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                                 placeholder="Department"
                                 value={cDept}
                                 onChange={(e) => setCDept(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600"
                               />
                               <input
                                 type="text"
@@ -257,7 +257,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                                 placeholder="Level (e.g. 300)"
                                 value={cLevel}
                                 onChange={(e) => setCLevel(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600"
                               />
                             </div>
                             <input
@@ -265,12 +265,12 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                               placeholder="Invite code (blank = auto-generated)"
                               value={cCode}
                               onChange={(e) => setCCode(e.target.value.toUpperCase())}
-                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600 uppercase"
+                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600 uppercase"
                             />
                             <select
                               value={cAdminId}
                               onChange={(e) => setCAdminId(e.target.value)}
-                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600 cursor-pointer"
+                              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600 cursor-pointer"
                             >
                               <option value="">No chief yet (pick later)</option>
                               {users
@@ -297,7 +297,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                               <button
                                 type="button"
                                 onClick={() => setShowCreate(false)}
-                                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                                className="px-3 py-2 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -309,7 +309,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
 
                     {/* Classes list */}
                     {classes.length === 0 ? (
-                      <div className="text-center py-10 bg-slate-50 dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-4">
+                      <div className="text-center py-10 bg-slate-50 dark:bg-neutral-800 rounded-2xl border border-dashed border-slate-200 dark:border-neutral-700 p-4">
                         <School className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-1" />
                         <p className="font-bold text-slate-700 dark:text-slate-300 text-sm">No classes yet</p>
                         <p className="text-xs text-slate-400 dark:text-slate-500">Create one so students have somewhere to sign up.</p>
@@ -321,7 +321,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                         return (
                           <div
                             key={c.id}
-                            className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-2"
+                            className="p-3.5 rounded-2xl border border-slate-200 dark:border-neutral-700 bg-slate-50/50 dark:bg-neutral-800/50 space-y-2"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="min-w-0 space-y-0.5">
@@ -349,7 +349,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                                       type="text"
                                       value={editCode}
                                       onChange={(e) => setEditCode(e.target.value.toUpperCase())}
-                                      className="w-28 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold bg-white dark:bg-slate-900 dark:text-slate-100 focus:outline-indigo-600 uppercase"
+                                      className="w-28 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600 uppercase"
                                     />
                                     <button
                                       onClick={saveCode}
@@ -371,7 +371,7 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                                     {canEdit && (
                                       <button
                                         onClick={() => startEdit(c)}
-                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors cursor-pointer"
                                         title="Change invite code"
                                       >
                                         <Pencil className="w-3.5 h-3.5" />

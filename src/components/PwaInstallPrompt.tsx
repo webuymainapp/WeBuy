@@ -63,7 +63,7 @@ export const PwaInstallPrompt: React.FC = () => {
       <div className="flex items-center gap-2 self-end sm:self-auto">
         <button
           onClick={handleInstall}
-          className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-indigo-900 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+          className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-neutral-800 hover:bg-slate-100 dark:hover:bg-neutral-700 text-indigo-900 dark:text-indigo-300 font-bold text-xs flex items-center gap-1.5 shadow-sm transition-colors cursor-pointer"
         >
           <Download className="w-3.5 h-3.5 text-indigo-600" />
           <span>Add to Home Screen</span>
