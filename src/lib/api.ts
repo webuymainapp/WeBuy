@@ -286,7 +286,7 @@ interface TransactionRow {
   method: string;
   status: string;
   createdAt: string;
-  books: { courseCode: string; bookTitle: string; amount: number }[];
+  books: { courseCode: string; courseTitle?: string; bookTitle: string; amount: number }[];
   category?: 'purchase' | 'topup' | 'refund';
   direction?: 'in' | 'out';
   note?: string | null;
@@ -300,6 +300,7 @@ export function toTransaction(r: TransactionRow, regNo: string): PaymentTransact
     textbookId: r.reference,
     bookTitle: r.books[0]?.bookTitle ?? 'Textbook',
     courseCode: r.books[0]?.courseCode ?? 'COURSE',
+    courseTitle: r.books[0]?.courseTitle ?? '',
     amount: r.books[0]?.amount ?? r.amount,
     fee: r.fee,
     total: r.total,

@@ -82,6 +82,15 @@ const formatDateTime = (iso: string) => {
   });
 };
 
+/** The product a student paid for = "COURSE CODE - course title". Falls back to
+ *  the stored book title when a course title isn't available. */
+const productLabel = (t: PaymentTransaction) => {
+  const code = t.courseCode !== 'COURSE' ? t.courseCode : (t.books?.[0]?.courseCode ?? '');
+  const title = t.courseTitle || t.books?.[0]?.courseTitle || '';
+  if (!title) return t.books?.[0]?.bookTitle ?? t.note ?? t.bookTitle;
+  return code ? `${code} - ${title}` : title;
+};
+
 export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   transactions,
   loading = false,
@@ -110,8 +119,8 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
       }
       if (!q) return true;
       const books = t.books?.length
-        ? t.books.map((b) => `${b.bookTitle} ${b.courseCode}`).join(' ')
-        : `${t.bookTitle} ${t.courseCode}`;
+        ? t.books.map((b) => `${b.bookTitle} ${b.courseTitle ?? ''} ${b.courseCode}`).join(' ')
+        : `${t.bookTitle} ${t.courseTitle ?? ''} ${t.courseCode}`;
       return (
         books.toLowerCase().includes(q) ||
         (t.reference ?? '').toLowerCase().includes(q) ||
@@ -153,7 +162,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
     const rows = filtered.map((t) => {
       const status = normalizeStatus(t.status);
       const books = t.books?.length
-        ? t.books.map((b) => `"${b.bookTitle} (${b.courseCode})"`).join('; ')
+        ? t.books.map((b) => `"${b.courseCode} - ${b.courseTitle || b.bookTitle}"`).join('; ')
         : `"${t.note ?? t.bookTitle}"`;
       return [
         t.reference,
@@ -349,7 +358,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
                           ? 'Book Refund'
                           : isMulti
                             ? `${t.books!.length} textbooks`
-                            : (t.books?.[0]?.bookTitle ?? t.note ?? t.bookTitle);
+                            : productLabel(t);
                     const sub =
                       t.category === 'topup'
                         ? dateStr

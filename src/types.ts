@@ -58,7 +58,8 @@ export interface PaymentTransaction {
   studentRegNo: string;
   category: TransactionCategory;
   direction: TransactionDirection;
-  books?: { courseCode: string; bookTitle: string; amount: number }[];
+  courseTitle?: string;
+  books?: { courseCode: string; courseTitle?: string; bookTitle: string; amount: number }[];
   note?: string | null;
 }
 

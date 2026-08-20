@@ -101,7 +101,7 @@ router.get(
         [req.student.sub],
       ),
       query(
-        `select st.id as student_textbook_id, t.course_code, t.book_title, t.price
+        `select st.id as student_textbook_id, t.course_code, t.course_title, t.book_title, t.price
            from student_textbooks st
            join textbooks t on t.id = st.textbook_id
           where st.student_id = $1`,
@@ -119,11 +119,12 @@ router.get(
 
     const bookMap = new Map<
       string,
-      { courseCode: string; bookTitle: string; amount: number }
+      { courseCode: string; courseTitle: string; bookTitle: string; amount: number }
     >();
     for (const b of bookRes.rows) {
       bookMap.set(b.student_textbook_id, {
         courseCode: b.course_code,
+        courseTitle: b.course_title,
         bookTitle: b.book_title,
         amount: b.price,
       });
@@ -136,20 +137,21 @@ router.get(
       .map((w) => w.reference);
     const walletBookRows = purchaseRefs.length
       ? await query(
-          `select t.course_code, t.book_title, t.price, st.transaction_reference
+          `select t.course_code, t.course_title, t.book_title, t.price, st.transaction_reference
              from student_textbooks st
              join textbooks t on t.id = st.textbook_id
             where st.student_id = $1 and st.transaction_reference = any($2::text[])
               and st.transaction_reference is not null`,
           [req.student.sub, purchaseRefs],
         )
-      : { rows: [] as Array<{ course_code: string; book_title: string; price: number; transaction_reference: string }> };
-    const walletBookMap = new Map<string, Array<{ courseCode: string; bookTitle: string; amount: number }>>();
+      : { rows: [] as Array<{ course_code: string; course_title: string; book_title: string; price: number; transaction_reference: string }> };
+    const walletBookMap = new Map<string, Array<{ courseCode: string; courseTitle: string; bookTitle: string; amount: number }>>();
     for (const w of walletBookRows.rows) {
       const key = w.transaction_reference;
       if (!walletBookMap.has(key)) walletBookMap.set(key, []);
       walletBookMap.get(key)!.push({
         courseCode: w.course_code,
+        courseTitle: w.course_title,
         bookTitle: w.book_title,
         amount: w.price,
       });
@@ -158,6 +160,7 @@ router.get(
     const transactions = txRes.rows.map((t) => {
       const items: Array<{
         course_code: string;
+        course_title?: string;
         book_title: string;
         amount: number;
       }> = t.payload?.items ?? [];
@@ -165,6 +168,7 @@ router.get(
       const books = items.length
         ? items.map((i) => ({
             courseCode: i.course_code,
+            courseTitle: i.course_title ?? '',
             bookTitle: i.book_title,
             amount: i.amount,
           }))
@@ -172,7 +176,7 @@ router.get(
           // current catalog price.
           ids
             .map((id) => bookMap.get(id))
-            .filter(Boolean) as { courseCode: string; bookTitle: string; amount: number }[];
+            .filter(Boolean) as { courseCode: string; courseTitle: string; bookTitle: string; amount: number }[];
       return {
         reference: t.reference,
         amount: t.amount,
@@ -197,7 +201,7 @@ router.get(
       direction: 'in' | 'out';
       status: string;
       createdAt: string;
-      books: { courseCode: string; bookTitle: string; amount: number }[];
+      books: { courseCode: string; courseTitle: string; bookTitle: string; amount: number }[];
       note: string | null;
     }> = transactions;
 
