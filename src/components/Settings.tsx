@@ -121,7 +121,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
   };
 
   const inputClass =
-    'w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100';
+    'w-1/2 min-w-[10rem] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100';
 
   return (
     <div className="space-y-0">
@@ -262,7 +262,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
           <button
             type="submit"
             disabled={phoneBusy}
-            className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-1/2 min-w-[10rem] py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             {phoneBusy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             {profile.phone ? 'Change Phone Number (200 pts)' : 'Save Phone Number'}
@@ -348,7 +348,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
           <button
             type="submit"
             disabled={busy}
-            className="w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            className="w-1/2 min-w-[10rem] py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
             Update Password
