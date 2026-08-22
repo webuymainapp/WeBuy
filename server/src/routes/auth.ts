@@ -111,10 +111,12 @@ router.post(
     const value = emailOrRegNo.toLowerCase();
 
     const result = await query(
-      `select id, reg_no, full_name, email, phone, department, level,
-              password_hash, role, email_verified, avatar_url, created_at
-         from students
-        where email = $1 or lower(reg_no) = $1
+      `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
+              s.password_hash, s.role, s.email_verified, s.avatar_url, s.created_at,
+              c.id as class_id, c.name as class_name, c.invite_code
+         from students s
+         left join classes c on c.admin_id = s.id
+        where s.email = $1 or lower(s.reg_no) = $1
         limit 1`,
       [value],
     );
@@ -153,6 +155,9 @@ router.post(
         emailVerified: row.email_verified,
         avatarUrl: row.avatar_url,
         createdAt: row.created_at,
+        classId: row.class_id ?? null,
+        className: row.class_name ?? null,
+        inviteCode: row.invite_code ?? null,
       },
     });
   }),
@@ -163,9 +168,12 @@ router.get(
   requireAuth,
   asyncHandler(async (req, res) => {
     const result = await query(
-      `select id, reg_no, full_name, email, phone, department, level,
-              role, email_verified, avatar_url, created_at
-         from students where id = $1`,
+      `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
+              s.role, s.email_verified, s.avatar_url, s.created_at,
+              c.id as class_id, c.name as class_name, c.invite_code
+         from students s
+         left join classes c on c.admin_id = s.id
+        where s.id = $1`,
       [req.student.sub],
     );
     if (result.rowCount === 0) {
@@ -185,6 +193,9 @@ router.get(
         emailVerified: r.email_verified,
         avatarUrl: r.avatar_url,
         createdAt: r.created_at,
+        classId: r.class_id ?? null,
+        className: r.class_name ?? null,
+        inviteCode: r.invite_code ?? null,
       },
     });
   }),

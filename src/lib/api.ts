@@ -87,6 +87,9 @@ export interface AuthStudent {
   role: 'student' | 'class_rep' | 'chief_admin';
   emailVerified: boolean;
   avatarUrl: string | null;
+  classId?: string | null;
+  className?: string | null;
+  inviteCode?: string | null;
 }
 
 export interface SignupResult {
@@ -188,6 +191,9 @@ export function toStudentProfile(s: AuthStudent, settings: AppSettings): Student
     phone: s.phone ?? '',
     avatarUrl: s.avatarUrl ?? DEFAULT_AVATAR,
     emailVerified: s.emailVerified,
+    classId: s.classId ?? null,
+    className: s.className ?? null,
+    inviteCode: s.inviteCode ?? null,
   };
 }
 

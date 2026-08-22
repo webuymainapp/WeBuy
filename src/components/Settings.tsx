@@ -9,10 +9,12 @@ import {
   Lock,
   Camera,
   Check,
+  Copy,
   ShieldCheck,
   AlertCircle,
   Loader2,
   BadgeCheck,
+  Users,
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { authApi, walletApi, ApiError } from '../lib/api';
@@ -42,6 +44,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneSuccess, setPhoneSuccess] = useState(false);
   const [phoneBusy, setPhoneBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const toggleTheme = () => {
@@ -143,6 +146,49 @@ export const Settings: React.FC<SettingsPageProps> = ({
           </p>
         </div>
       </div>
+
+      {/* Chief admin invite code — only shown if the user has a class */}
+      {profile.inviteCode && (
+        <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 py-4 border-b border-slate-200/60 dark:border-neutral-800">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+              <Users className="w-4 h-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                {profile.className || 'Your Class'}
+              </p>
+              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                Share this code with students to join
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                try {
+                  await navigator.clipboard?.writeText(profile.inviteCode!);
+                } catch {
+                  /* ignore */
+                }
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-3 h-3" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3 h-3" />
+                  {profile.inviteCode}
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="divide-y divide-slate-200/70 dark:divide-neutral-800">
         {/* Theme Toggle */}

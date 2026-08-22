@@ -12,6 +12,9 @@ export interface StudentProfile {
   phone: string;
   avatarUrl: string;
   emailVerified?: boolean;
+  classId?: string | null;
+  className?: string | null;
+  inviteCode?: string | null;
 }
 
 export interface Textbook {
