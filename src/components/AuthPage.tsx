@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, ArrowLeft, Lock, Mail, User, GraduationCap, Building2, AtSign, KeyRound, AlertCircle, ShieldCheck, Loader2, RotateCcw } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
@@ -39,6 +39,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpMsg, setOtpMsg] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  // Countdown timer
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   type OtpStage = 'idle' | 'success' | 'failure';
@@ -101,6 +109,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       }
       soundEffects.playSuccessChime();
       setOtpScreen({ identity: res.student.regNo, email: res.student.email });
+      setCooldown(60);
       setOtp('');
       setOtpError(null);
       setOtpMsg(null);
@@ -189,7 +198,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setOtpMsg(null);
     try {
       const res = await authApi.resendOtp(otpScreen.identity);
-      if (res.sent) {
+      if (res.cooldown) {
+        setCooldown(res.cooldown);
+        setOtpMsg(`Please wait ${res.cooldown}s before resending.`);
+      } else if (res.sent) {
+        setCooldown(60);
         try {
           await sendVerificationEmail();
         } catch {
@@ -216,7 +229,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     try {
       const res = await authApi.resendOtp(signInEmailOrRegNo.trim());
-      if (res.sent) {
+      if (res.cooldown) {
+        setCooldown(res.cooldown);
+        setError(`Please wait ${res.cooldown}s before resending.`);
+      } else if (res.sent) {
+        setCooldown(60);
         try {
           await sendVerificationEmail();
         } catch {
@@ -332,10 +349,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={resending}
-                  className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+                  disabled={resending || cooldown > 0}
+                  className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
                 >
-                  {resending ? 'Sending…' : "Didn't get it? Resend code"}
+                  {cooldown > 0
+                    ? `Resend in ${cooldown}s`
+                    : resending
+                      ? 'Sending…'
+                      : "Didn't get it? Resend code"}
                 </button>
 
                 <button
@@ -477,10 +498,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               <button
                 type="button"
                 onClick={handleSignInResend}
-                disabled={resending}
-                className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer mt-1"
+                disabled={resending || cooldown > 0}
+                className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer mt-1 disabled:opacity-50"
               >
-                {resending ? 'Sending…' : 'Resend verification code'}
+                {cooldown > 0
+                  ? `Resend in ${cooldown}s`
+                  : resending
+                    ? 'Sending…'
+                    : 'Resend verification code'}
               </button>
             </form>
           ) : (

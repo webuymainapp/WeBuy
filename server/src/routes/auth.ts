@@ -203,10 +203,14 @@ router.post(
   validateBody(z.object({ emailOrRegNo: z.string().trim().min(2).max(120) })),
   asyncHandler(async (req, res) => {
     const value = req.body.emailOrRegNo.toLowerCase();
-    const pending = await reissuePendingOtp(value);
-    if (pending) {
-      await enqueueVerificationEmail(pending.email, pending.otp).catch(() => undefined);
-      res.json({ ok: true, sent: true, email: pending.email });
+    const result = await reissuePendingOtp(value);
+    if (result && result.ok) {
+      await enqueueVerificationEmail(result.email, result.otp).catch(() => undefined);
+      res.json({ ok: true, sent: true, email: result.email });
+      return;
+    }
+    if (result && !result.ok) {
+      res.json({ ok: true, sent: false, cooldown: result.cooldown });
       return;
     }
     res.json({ ok: true, sent: false });

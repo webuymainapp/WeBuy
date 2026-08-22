@@ -57,8 +57,8 @@ export async function stagePendingSignup(input: PendingSignupInput): Promise<str
   ]);
   await query(
     `insert into pending_signups
-       (reg_no, full_name, email, phone, department, level, password_hash, otp_hash, attempts, expires_at, class_id)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, 0, now() + make_interval(mins => $9), $10)`,
+       (reg_no, full_name, email, phone, department, level, password_hash, otp_hash, attempts, expires_at, class_id, last_otp_sent_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, 0, now() + make_interval(mins => $9), $10, now())`,
     [
       input.regNo,
       input.fullName,
@@ -75,25 +75,44 @@ export async function stagePendingSignup(input: PendingSignupInput): Promise<str
   return otp;
 }
 
+export type ReissueResult =
+  | { ok: true; otp: string; email: string }
+  | { ok: false; cooldown: number }  // seconds remaining
+  | null;                             // no pending signup
+
 /** Re-issue an OTP for an existing pending signup. Resets the attempt counter. */
 export async function reissuePendingOtp(
   emailOrRegNo: string,
-): Promise<{ otp: string; email: string } | null> {
+): Promise<ReissueResult> {
+  const COOLDOWN_SECONDS = 60;
   const res = await query(
-    'select id, email from pending_signups where (email = $1 or reg_no = $1) and used_at is null limit 1',
+    `select id, email, last_otp_sent_at
+       from pending_signups
+      where (email = $1 or reg_no = $1) and used_at is null limit 1`,
     [emailOrRegNo],
   );
   if (res.rowCount === 0) return null;
   const row = res.rows[0];
+
+  // Enforce cooldown — reject if last OTP was sent less than 60s ago.
+  if (row.last_otp_sent_at) {
+    const elapsed = (Date.now() - new Date(row.last_otp_sent_at).getTime()) / 1000;
+    if (elapsed < COOLDOWN_SECONDS) {
+      return { ok: false, cooldown: Math.ceil(COOLDOWN_SECONDS - elapsed) };
+    }
+  }
+
   const otp = generateOtp();
   const otpHash = sha256(otp);
   await query(
     `update pending_signups
-        set otp_hash = $1, attempts = 0, expires_at = now() + make_interval(mins => $2)
+        set otp_hash = $1, attempts = 0,
+            expires_at = now() + make_interval(mins => $2),
+            last_otp_sent_at = now()
       where id = $3`,
     [otpHash, OTP_TTL_MINUTES, row.id],
   );
-  return { otp, email: row.email as string };
+  return { ok: true, otp, email: row.email as string };
 }
 
 /**

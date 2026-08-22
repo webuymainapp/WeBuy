@@ -133,7 +133,7 @@ export const authApi = {
     request<{ student: AuthStudent }>('/api/auth/me', json('PATCH', body)),
 
   resendOtp: (emailOrRegNo: string) =>
-    request<{ ok: boolean; sent: boolean; email?: string }>(
+    request<{ ok: boolean; sent: boolean; email?: string; cooldown?: number }>(
       '/api/auth/resend-otp',
       json('POST', { emailOrRegNo }),
     ),

@@ -222,6 +222,9 @@ alter table pending_signups add column if not exists otp_hash text;
 alter table pending_signups add column if not exists attempts int not null default 0;
 alter table pending_signups alter column token_hash drop not null;
 
+-- Cooldown: track when the last OTP email was sent so we can throttle resends.
+alter table pending_signups add column if not exists last_otp_sent_at timestamptz;
+
 -- One-time email verification tokens (hashed at rest; only the plain token is
 -- handed to the Vercel serverless function so it can build the email link).
 create table if not exists verification_tokens (
