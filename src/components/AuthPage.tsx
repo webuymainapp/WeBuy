@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { ArrowRight, ArrowLeft, Lock, Mail, User, GraduationCap, Building2, AtSign, KeyRound, AlertCircle, ShieldCheck, Loader2, RotateCcw } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { authApi, sendVerificationEmail, ApiError, setToken, type AuthStudent } from '../lib/api';
+import { PasswordInput } from './PasswordInput';
 
 interface AuthPageProps {
   onClose: () => void;
@@ -343,34 +344,28 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">New Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
+                <PasswordInput
+                  value={newPassword}
+                  onChange={setNewPassword}
+                  placeholder="At least 8 characters"
                   required
                   minLength={8}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="At least 8 characters"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  className="py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                 />
-              </div>
             </div>
 
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
+                <PasswordInput
+                  value={confirmPassword}
+                  onChange={setConfirmPassword}
+                  placeholder="Re-enter your password"
                   required
                   minLength={8}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Re-enter your password"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  className="py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
                 />
-              </div>
               {newPassword && confirmPassword && newPassword !== confirmPassword && (
                 <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 mt-1">Passwords do not match</p>
               )}
@@ -650,17 +645,15 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    value={signInPassword}
-                    onChange={(e) => setSignInPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
-                  />
-                </div>
+                <PasswordInput
+                  value={signInPassword}
+                  onChange={setSignInPassword}
+                  placeholder="Enter your password"
+                  required
+                  autoComplete="current-password"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  className="py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
+                />
                 <button
                   type="button"
                   onClick={handleForgotPassword}
@@ -790,18 +783,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Create Password
                 </label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 8 characters"
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
-                  />
-                </div>
+                <PasswordInput
+                  value={password}
+                  onChange={setPassword}
+                  placeholder="At least 8 characters"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  leftIcon={<Lock className="w-4 h-4" />}
+                  className="py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
+                />
               </div>
 
               <button

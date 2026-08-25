@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Wallet,
   TrendingUp,
@@ -36,6 +36,12 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  // Secret chief-only reveal: a triple-tap unlocks the extra data. Tapping the
+  // header once just opens the normal rep view; three quick taps reveal the
+  // chief-only pills (Live PocketFi, Users' Unspent).
+  const [revealChief, setRevealChief] = useState(false);
+  const tapTimer = useRef<number | null>(null);
+  const tapCount = useRef(0);
   const [revenue, setRevenue] = useState<{ revenue: number; paidBooks: number } | null>(null);
 
   const load = useCallback(async () => {
@@ -59,11 +65,36 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
     load();
   }, [load, refreshKey]);
 
+  // Handles the secret gesture: 1 tap = normal expand; 3 taps within ~500ms =
+  // unlock the chief-only data.
+  const handleHeaderClick = () => {
+    tapCount.current += 1;
+    if (tapTimer.current) {
+      window.clearTimeout(tapTimer.current);
+    }
+    tapTimer.current = window.setTimeout(() => {
+      tapCount.current = 0;
+    }, 500);
+
+    if (tapCount.current === 3) {
+      setRevealChief(true);
+      setOpen(true);
+      tapCount.current = 0;
+      if (isChief) onToast('Chief data unlocked');
+    } else {
+      // Closing the panel resets the chief reveal so the next open starts clean.
+      setOpen((o) => {
+        if (o) setRevealChief(false);
+        return !o;
+      });
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm space-y-4">
       <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2 text-left cursor-pointer group"
+        onClick={handleHeaderClick}
+        className="w-full flex items-center gap-2 text-left cursor-pointer group focus:outline-none"
       >
         <Wallet className="w-4 h-4 text-emerald-600 shrink-0 group-hover:text-emerald-500 transition-colors" />
         <div className="flex-1 min-w-0">
@@ -124,12 +155,12 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
                 <Scale className="w-5 h-5" />
               </div>
             </div>
-            {isChief && data.livePocketFi != null && (
+            {isChief && revealChief && data.livePocketFi != null && (
               <span className="self-end px-2 py-0.5 rounded-full bg-emerald-500/80 text-white text-[10px] font-bold">
                 Live PocketFi: {formatNaira(data.livePocketFi)}
               </span>
             )}
-            {isChief && (
+            {isChief && revealChief && (
               <span className="self-end px-2 py-0.5 rounded-full bg-rose-500/80 text-white text-[10px] font-bold">
                 Users' Unspent: {formatNaira(data.userWallets ?? 0)}
               </span>

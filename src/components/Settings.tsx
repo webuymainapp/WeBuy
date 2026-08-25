@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { authApi, walletApi, ApiError } from '../lib/api';
+import { PasswordInput } from './PasswordInput';
 
 interface SettingsPageProps {
   settings: AppSettings;
@@ -384,29 +385,29 @@ export const Settings: React.FC<SettingsPageProps> = ({
             {/* Password Change Form (expandable) */}
             {showPasswordSection && (
               <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-slate-200 dark:border-neutral-700 space-y-3">
-                <input
-                  type="password"
-                  required
-                  placeholder="Current password"
+                <PasswordInput
                   value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
-                />
-                <input
-                  type="password"
+                  onChange={setCurrentPassword}
+                  placeholder="Current password"
                   required
-                  placeholder="New password (min 8 characters)"
+                  autoComplete="current-password"
+                  className="px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                />
+                <PasswordInput
                   value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
-                />
-                <input
-                  type="password"
+                  onChange={setNewPassword}
+                  placeholder="New password (min 8 characters)"
                   required
-                  placeholder="Confirm new password"
+                  autoComplete="new-password"
+                  className="px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                />
+                <PasswordInput
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
+                  onChange={setConfirmPassword}
+                  placeholder="Confirm new password"
+                  required
+                  autoComplete="new-password"
+                  className="px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
                 />
                 {passwordError && <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{passwordError}</p>}
                 {passwordSuccess && (
