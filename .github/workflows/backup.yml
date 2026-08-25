@@ -34,7 +34,13 @@ jobs:
           sudo apt-get install -y postgresql-client-17
 
       - name: Dump database
-        run: pg_dump --no-owner --no-privileges "${{ secrets.DATABASE_URL }}" > "backups/webuy_$(date +%Y%m%d).sql"
+        run: |
+          # Use the v17 pg_dump (installed from PGDG) so it matches the Supabase
+          # server version. The system default is v16, which refuses to dump a
+          # v17 server.
+          PG_DUMP=/usr/lib/postgresql/17/bin/pg_dump
+          if [ ! -x "$PG_DUMP" ]; then PG_DUMP=pg_dump; fi
+          "$PG_DUMP" --no-owner --no-privileges "${{ secrets.DATABASE_URL }}" > "backups/webuy_$(date +%Y%m%d).sql"
 
       - name: Purge stale/unverified signups
         run: |
