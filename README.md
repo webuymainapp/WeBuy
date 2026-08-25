@@ -130,8 +130,8 @@ The production database is backed up automatically every day.
 3. Point the backend at the new DB — update `DATABASE_URL` in `server/.env`
    (local) and in the Render environment variables, then redeploy.
 
-Backups are as-of the dump time, so expect up to ~24h of potential data loss with
-daily dumps. Non-DB secrets (Gmail app password, PocketFi keys) live in
+Backups are as-of the dump time, so expect up to ~6h of potential data loss with
+hourly dumps (dumps run every 6 hours). Non-DB secrets (Gmail app password, PocketFi keys) live in
 `server/.env` / Render env vars and are **not** in the dumps — back those up
 separately.
 

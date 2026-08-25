@@ -2,8 +2,9 @@ name: Daily Database Backup
 
 on:
   schedule:
-    # 03:00 UTC every day (4am Lagos / 10pm ET)
-    - cron: '0 3 * * *'
+    # Every 6 hours (00:00, 06:00, 12:00, 18:00 UTC) — cuts potential data loss
+    # to ~6h instead of ~24h
+    - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:
