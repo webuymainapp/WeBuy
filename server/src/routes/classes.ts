@@ -88,7 +88,7 @@ router.post(
 
     let code = inviteCode ?? '';
     if (code) {
-      const taken = await query('select id from classes where invite_code = $1', [code]);
+      const taken = await query('select id from classes where upper(invite_code) = upper($1)', [code]);
       if (taken.rowCount) {
         throw new HttpError(409, 'That invite code is already in use. Pick another.');
       }
@@ -96,7 +96,7 @@ router.post(
       // Generate a unique code that isn't already in use.
       for (let i = 0; i < 5; i++) {
         const candidate = randomInviteCode();
-        const taken = await query('select id from classes where invite_code = $1', [candidate]);
+        const taken = await query('select id from classes where upper(invite_code) = upper($1)', [candidate]);
         if (taken.rowCount === 0) {
           code = candidate;
           break;
@@ -161,7 +161,7 @@ router.patch(
     }
 
     const taken = await query(
-      'select id from classes where invite_code = $1 and id <> $2',
+      'select id from classes where upper(invite_code) = upper($1) and id <> $2',
       [code, req.params.id],
     );
     if (taken.rowCount) {

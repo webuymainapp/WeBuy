@@ -108,7 +108,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         email: email.trim(),
         phone: phone.trim(),
         password,
-        inviteCode: inviteCode.trim(),
+        inviteCode: inviteCode.trim().toUpperCase(),
       });
       // Push the mail outbox drainer so the OTP email is sent right away.
       try {

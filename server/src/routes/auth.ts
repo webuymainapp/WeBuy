@@ -52,8 +52,9 @@ router.post(
     const normalizedPhone = phone ? normalizePhone(phone) : null;
 
     // Resolve the invite code to a class — every student must belong to one.
+    // Case-insensitive match so "csc2024", "CSC2024", "Csc2024" all work.
     const cls = await query(
-      'select id, name, department, level from classes where invite_code = $1',
+      'select id, name, department, level from classes where upper(invite_code) = upper($1)',
       [inviteCode],
     );
     if (cls.rowCount === 0) {
