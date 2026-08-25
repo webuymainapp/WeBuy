@@ -30,9 +30,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Brand & Identity */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center text-left group focus:outline-none">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-xl tracking-tighter">
-              W
-            </div>
+            <img src="/icons/logo.png" alt="WeBuy" className="w-8 h-8 rounded-lg object-cover" />
             <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">eBuy</span>
         </div>
         </div>

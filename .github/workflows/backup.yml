@@ -1,0 +1,40 @@
+name: Daily Database Backup
+
+on:
+  schedule:
+    # 03:00 UTC every day (4am Lagos / 10pm ET)
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout backups repo
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.BACKUP_REPO || 'webuymainapp/WeBuy-backups' }}
+          token: ${{ secrets.BACKUP_PAT }}
+          path: backups
+
+      - name: Install postgres client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump database
+        run: pg_dump --no-owner --no-privileges "${{ secrets.DATABASE_URL }}" > "backups/webuy_$(date +%Y%m%d).sql"
+
+      - name: Commit and push dump
+        working-directory: backups
+        run: |
+          git config user.name "webuymainapp-backup-bot"
+          git config user.email "backup-bot@webuymainapp.local"
+          git add -A
+          git diff --cached --quiet || git commit -m "daily backup $(date +%Y-%m-%d)"
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.BACKUP_PAT }}

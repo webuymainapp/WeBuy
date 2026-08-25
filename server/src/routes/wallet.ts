@@ -117,9 +117,10 @@ const phoneSchema = z.object({
 });
 
 /**
- * Set (or change) my phone number. Adding the first number is free; a later
- * change costs 200 points, deducted atomically with the phone update. After
- * the phone is saved the funding account is (re)provisioned and the fresh
+ * Set (or change) my phone number. Graduated pricing:
+ *   - No phone yet: free (first set), then 100 pts per subsequent set
+ *   - Has phone: 100 pts (first change), then 200 pts per subsequent change
+ * After the phone is saved the funding account is (re)provisioned and the fresh
  * wallet is returned so the UI can drop the "Add phone number" banner.
  */
 router.post(
@@ -129,16 +130,23 @@ router.post(
     const phone = normalizePhone(req.body.phone);
 
     let changed = false;
+    let feeCharged = 0;
     try {
       await query('begin');
 
       const me = await query(
-        'select phone from students where id = $1 for update',
+        'select phone, phone_edit_count from students where id = $1 for update',
         [req.student.sub],
       );
       const existing = (me.rows[0]?.phone as string | null) ?? '';
+      const editCount = (me.rows[0]?.phone_edit_count as number) ?? 0;
       if (existing !== phone) {
-        if (existing) {
+        // Graduated cost: no phone → free/100; has phone → 100/200
+        const cost = existing
+          ? (editCount === 0 ? 100 : 200)
+          : (editCount === 0 ? 0 : 100);
+
+        if (cost > 0) {
           await query(
             `insert into student_wallets (student_id) values ($1)
              on conflict (student_id) do nothing`,
@@ -150,30 +158,31 @@ router.post(
             [req.student.sub],
           );
           const balance = wallet.rows[0].point_balance as number;
-          if (balance < 200) {
+          if (balance < cost) {
             await query('rollback');
             throw new HttpError(
               400,
-              `Changing your phone number costs 200 points. You have ${balance} points.`,
+              `Changing your phone number costs ${cost} points. You have ${balance} points.`,
             );
           }
           const feeReference = makeDepositReference();
           await query(
             `update student_wallets
-                set point_balance = point_balance - 200, updated_at = now()
-              where student_id = $1`,
-            [req.student.sub],
+                set point_balance = point_balance - $1, updated_at = now()
+              where student_id = $2`,
+            [cost, req.student.sub],
           );
           await query(
             `insert into wallet_transactions (student_id, kind, amount, reference, note)
-             values ($1, 'purchase', -200, $2, 'Phone number change fee (200 pts)')`,
-            [req.student.sub, feeReference],
+             values ($1, 'purchase', -$2, $3, $4)`,
+            [req.student.sub, cost, feeReference, `Phone number change fee (${cost} pts)`],
           );
+          feeCharged = cost;
         }
-        await query('update students set phone = $1 where id = $2', [
-          phone,
-          req.student.sub,
-        ]);
+        await query(
+          `update students set phone = $1, phone_edit_count = phone_edit_count + 1 where id = $2`,
+          [phone, req.student.sub],
+        );
         changed = true;
       }
       await query('commit');
@@ -195,7 +204,7 @@ router.post(
         order by created_at desc limit 50`,
       [req.student.sub],
     );
-    res.json({ ok: true, phone, ...toWalletJson(wallet), transactions: txns.rows });
+    res.json({ ok: true, phone, feeCharged, ...toWalletJson(wallet), transactions: txns.rows });
   }),
 );
 

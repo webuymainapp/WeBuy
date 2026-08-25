@@ -279,3 +279,6 @@ update students set role = 'chief_admin' where reg_no = '20241450652' and role =
 
 -- Profile edit: first edit is free, subsequent edits cost 100 pts.
 alter table students add column if not exists free_profile_edit_used boolean not null default false;
+
+-- Phone edit count for graduated pricing: no phone → free/100; has phone → 100/200.
+alter table students add column if not exists phone_edit_count int not null default 0;

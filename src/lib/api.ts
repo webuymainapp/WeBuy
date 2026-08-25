@@ -88,6 +88,7 @@ export interface AuthStudent {
   emailVerified: boolean;
   avatarUrl: string | null;
   freeProfileEditUsed?: boolean;
+  phoneEditCount?: number;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;
@@ -197,6 +198,7 @@ export function toStudentProfile(s: AuthStudent, settings: AppSettings): Student
     avatarUrl: s.avatarUrl ?? DEFAULT_AVATAR,
     emailVerified: s.emailVerified,
     freeProfileEditUsed: s.freeProfileEditUsed,
+    phoneEditCount: s.phoneEditCount,
     classId: s.classId ?? null,
     className: s.className ?? null,
     inviteCode: s.inviteCode ?? null,
@@ -653,6 +655,52 @@ export const repApi = {
 
   purgeTextbook: (id: string) =>
     request<{ ok: boolean }>(`/api/rep/textbooks/${id}/purge`, json('POST')),
+};
+
+// ---- Database Monitor (chief admin only) -----------------------------------
+export interface DbTableInfo {
+  tableName: string;
+  size: string;
+  sizeBytes: number;
+  approxRows: number;
+}
+
+export interface DbMonitorData {
+  db: {
+    name: string;
+    size: string;
+    connections: number;
+    generatedAt: string;
+  };
+  tables: DbTableInfo[];
+  counts: {
+    students: number;
+    classes: number;
+    textbooks_active: number;
+    textbooks_deleted: number;
+    assignments: number;
+    wallet_txns: number;
+    payouts: number;
+    collections: number;
+  };
+  transactions: {
+    kind: string;
+    n: number;
+    credits: number;
+    debits: number;
+  }[];
+  mail: { status: string; n: number }[];
+  notifications: {
+    read_notifications: number;
+    unread_notifications: number;
+    expired_verification_tokens: number;
+    expired_password_resets: number;
+    stale_signups: number;
+  };
+}
+
+export const dbApi = {
+  monitor: () => request<DbMonitorData>('/api/rep/db-monitor'),
 };
 
 // ---- Classes ---------------------------------------------------------------

@@ -59,13 +59,13 @@ const FadeIn: React.FC<{
 );
 
 const BrandMark: React.FC<{ size?: 'sm' | 'md' }> = ({ size = 'md' }) => (
-  <div
+  <img
+    src="/icons/logo.png"
+    alt="WeBuy"
     className={`${
-      size === 'md' ? 'w-9 h-9 rounded-xl text-lg' : 'w-7 h-7 rounded-lg text-sm'
-    } bg-indigo-600 flex items-center justify-center text-white font-black shadow-sm shadow-indigo-200 dark:shadow-none`}
-  >
-    W
-  </div>
+      size === 'md' ? 'w-9 h-9 rounded-xl' : 'w-7 h-7 rounded-lg'
+    } object-cover shadow-sm shadow-indigo-200 dark:shadow-none`}
+  />
 );
 
 const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] }> = ({
@@ -91,9 +91,7 @@ const DashboardPhone: React.FC<{ profile: StudentProfile; textbooks: Textbook[] 
         {/* Mini Navbar */}
         <div className="px-4 pt-0.5 pb-2 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-[10px] font-black">
-              W
-            </div>
+            <img src="/icons/logo.png" alt="WeBuy" className="w-6 h-6 rounded-lg object-cover" />
             <span className="text-xs font-extrabold text-slate-900 dark:text-slate-100">Webuy</span>
           </div>
           <div className="relative">

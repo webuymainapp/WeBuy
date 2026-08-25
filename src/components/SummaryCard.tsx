@@ -37,7 +37,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const completionPercentage = totalAssigned > 0 ? Math.round((paidBooks.length / totalAssigned) * 100) : 0;
 
   return (
-    <div className="rounded-xl p-4 border border-slate-200 dark:border-[#2A2A2A] flex flex-col gap-3 relative bg-slate-50 dark:bg-[#161616]">
+    <div className="rounded-xl p-4 border border-slate-200 dark:border-[#2A2A2A] flex flex-col gap-3 relative bg-slate-200 dark:bg-[#161616]">
       {/* Profile row */}
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-3 min-w-0">
@@ -70,8 +70,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
             </div>
           </div>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5 transition-colors shrink-0">
-          <RefreshCw className="w-4 h-4" />
+        <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors shrink-0">
+          <RefreshCw className="w-3 h-3" />
           Verify
         </button>
       </div>

@@ -127,7 +127,8 @@ router.post(
 
     const result = await query(
       `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
-              s.password_hash, s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used, s.created_at,
+              s.password_hash, s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used,
+              s.phone_edit_count, s.created_at,
               c.id as class_id, c.name as class_name, c.invite_code
          from students s
          left join classes c on c.admin_id = s.id
@@ -170,6 +171,7 @@ router.post(
         emailVerified: row.email_verified,
         avatarUrl: row.avatar_url,
         freeProfileEditUsed: row.free_profile_edit_used,
+        phoneEditCount: row.phone_edit_count,
         createdAt: row.created_at,
         classId: row.class_id ?? null,
         className: row.class_name ?? null,
@@ -185,7 +187,8 @@ router.get(
   asyncHandler(async (req, res) => {
     const result = await query(
       `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
-              s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used, s.created_at,
+              s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used,
+              s.phone_edit_count, s.created_at,
               c.id as class_id, c.name as class_name, c.invite_code
          from students s
          left join classes c on c.admin_id = s.id
@@ -209,6 +212,7 @@ router.get(
         emailVerified: r.email_verified,
         avatarUrl: r.avatar_url,
         freeProfileEditUsed: r.free_profile_edit_used,
+        phoneEditCount: r.phone_edit_count,
         classId: r.class_id ?? null,
         className: r.class_name ?? null,
         inviteCode: r.invite_code ?? null,
@@ -422,7 +426,8 @@ router.patch(
             set ${setClauses.join(', ')}
           where id = $${idx}
           returning id, reg_no, full_name, email, phone, department, level,
-                    role, email_verified, avatar_url, free_profile_edit_used, created_at`,
+                    role, email_verified, avatar_url, free_profile_edit_used,
+                    phone_edit_count, created_at`,
         values,
       );
       if (result.rowCount === 0) {
@@ -451,6 +456,7 @@ router.patch(
           emailVerified: r.email_verified,
           avatarUrl: r.avatar_url,
           freeProfileEditUsed: r.free_profile_edit_used,
+          phoneEditCount: r.phone_edit_count,
           createdAt: r.created_at,
         },
         points: newBalance,

@@ -328,9 +328,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
         <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
           <div className="p-6 bg-slate-900 text-white space-y-1">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
-              W
-            </div>
+            <img src="/icons/logo.png" alt="WeBuy" className="w-9 h-9 rounded-xl object-cover shadow-sm" />
             <h3 className="text-xl font-extrabold tracking-tight mt-2">Set new password</h3>
             <p className="text-xs text-slate-400">Choose a strong password for your account.</p>
           </div>

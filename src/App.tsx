@@ -440,11 +440,19 @@ export default function App() {
   if (booting) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-slate-100">
-        <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl mb-4">
-          W
-        </div>
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-        <p className="text-xs font-semibold text-slate-500 mt-3">Loading your portal…</p>
+        <style>{`
+          @keyframes pulse-logo {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.12); opacity: 0.85; }
+          }
+        `}</style>
+        <img
+          src="/icons/logo.png"
+          alt="WeBuy"
+          className="w-20 h-20 rounded-2xl object-cover mb-4"
+          style={{ animation: 'pulse-logo 1.4s ease-in-out infinite' }}
+        />
+        <p className="text-xs font-semibold text-slate-500 mt-1">Loading your portal…</p>
       </div>
     );
   }

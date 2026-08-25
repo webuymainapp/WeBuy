@@ -1060,4 +1060,87 @@ router.post(
   }),
 );
 
+// ---- Database Monitor (chief admin only) -----------------------------------
+
+/**
+ * Report the health and size of every Webuy table so the chief admin can tell
+ * when the DB needs cleaning or capacity review. Reads Postgres system catalogs
+ * (pg_stat_* / pg_class) — no writes.
+ */
+router.get(
+  '/db-monitor',
+  requireChiefAdmin,
+  asyncHandler(async (_req, res) => {
+    const [dbSize, tables, counts, transactions, mail, notifs] =
+      await Promise.all([
+        query(
+          `select pg_size_pretty(pg_database_size(current_database())) as size,
+                  current_database() as db,
+                  (select count(*)::int from pg_stat_activity where datname = current_database()) as connections,
+                  now() as generated_at`,
+        ),
+        query(
+          `select t.relname as table_name,
+                  pg_size_pretty(pg_total_relation_size(c.oid)) as size,
+                  pg_total_relation_size(c.oid)::bigint as size_bytes,
+                  c.reltuples::bigint as approx_rows
+             from pg_class c
+             join pg_namespace n on n.oid = c.relnamespace
+             join pg_stat_user_tables t on t.relid = c.oid
+            where n.nspname = 'public'
+              and c.relkind in ('r', 'm')
+            order by pg_total_relation_size(c.oid) desc`,
+        ),
+        query(
+          `select
+             (select count(*)::int from students) as students,
+             (select count(*)::int from classes) as classes,
+             (select count(*)::int from textbooks where deleted_at is null) as textbooks_active,
+             (select count(*)::int from textbooks where deleted_at is not null) as textbooks_deleted,
+             (select count(*)::int from student_textbooks) as assignments,
+             (select count(*)::int from wallet_transactions) as wallet_txns,
+             (select count(*)::int from payouts) as payouts,
+             (select count(*)::int from collections) as collections`,
+        ),
+        query(
+          `select kind, count(*)::int as n,
+                  coalesce(sum(amount) filter (where amount > 0), 0)::int as credits,
+                  coalesce(-sum(amount) filter (where amount < 0), 0)::int as debits
+             from wallet_transactions group by kind order by kind`,
+        ),
+        query(
+          `select status, count(*)::int as n
+             from mail_queue group by status order by status`,
+        ),
+        query(
+          `select
+             (select count(*)::int from notifications where read = true) as read_notifications,
+             (select count(*)::int from notifications where read = false) as unread_notifications,
+             (select count(*)::int from verification_tokens where used_at is not null or expires_at < now()) as expired_verification_tokens,
+             (select count(*)::int from password_resets where expires_at < now()) as expired_password_resets,
+             (select count(*)::int from pending_signups where used_at is not null or created_at < now() - interval '7 days') as stale_signups`,
+        ),
+      ]);
+
+    res.json({
+      db: {
+        name: dbSize.rows[0].db,
+        size: dbSize.rows[0].size,
+        connections: dbSize.rows[0].connections,
+        generatedAt: dbSize.rows[0].generated_at,
+      },
+      tables: tables.rows.map((r: Record<string, unknown>) => ({
+        tableName: r.table_name,
+        size: r.size,
+        sizeBytes: r.size_bytes,
+        approxRows: r.approx_rows,
+      })),
+      counts: counts.rows[0],
+      transactions: transactions.rows,
+      mail: mail.rows,
+      notifications: notifs.rows[0],
+    });
+  }),
+);
+
 export default router;

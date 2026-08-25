@@ -12,6 +12,7 @@ import { accountApi, repApi, ApiError, type AccountEntry } from '../lib/api';
 interface AccountBalanceProps {
   onToast: (msg: string) => void;
   isChief: boolean;
+  refreshKey?: number;
 }
 
 const formatNaira = (amount: number) =>
@@ -23,7 +24,7 @@ const formatNaira = (amount: number) =>
     .format(amount)
     .replace('NGN', '₦');
 
-export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief }) => {
+export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief, refreshKey = 0 }) => {
   const [data, setData] = useState<{
     balance: number;
     textbookValue: number;
@@ -55,7 +56,7 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, refreshKey]);
 
   return (
     <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm space-y-4">

@@ -2,10 +2,6 @@ import React, { useRef, useState } from 'react';
 import { AppSettings, StudentProfile } from '../types';
 import {
   ArrowLeft,
-  Moon,
-  Sun,
-  Bell,
-  BellOff,
   Lock,
   Camera,
   Check,
@@ -34,6 +30,14 @@ interface SettingsPageProps {
   onBack: () => void;
 }
 
+function phoneCost(profile: StudentProfile, newPhone: string): number {
+  const hasPhone = !!profile.phone;
+  const editCount = profile.phoneEditCount ?? 0;
+  const changing = profile.phone !== newPhone;
+  if (!changing) return 0;
+  return hasPhone ? (editCount === 0 ? 100 : 200) : (editCount === 0 ? 0 : 100);
+}
+
 export const Settings: React.FC<SettingsPageProps> = ({
   settings,
   onUpdateSettings,
@@ -47,16 +51,13 @@ export const Settings: React.FC<SettingsPageProps> = ({
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [phone, setPhone] = useState(profile.phone ?? '');
-  const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [phoneSuccess, setPhoneSuccess] = useState(false);
-  const [phoneBusy, setPhoneBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPasswordSection, setShowPasswordSection] = useState(false);
   const [modalRegNo, setModalRegNo] = useState('');
   const [modalDepartment, setModalDepartment] = useState('');
   const [modalLevel, setModalLevel] = useState('');
+  const [modalPhone, setModalPhone] = useState('');
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [editSuccess, setEditSuccess] = useState(false);
@@ -109,34 +110,11 @@ export const Settings: React.FC<SettingsPageProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handlePhoneSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setPhoneError(null);
-    setPhoneSuccess(false);
-    const value = phone.trim();
-    if (!value) {
-      setPhoneError('Enter your phone number.');
-      return;
-    }
-    setPhoneBusy(true);
-    try {
-      const res = await walletApi.updatePhone(value);
-      onUpdateProfile({ ...profile, phone: res.phone });
-      soundEffects.playSuccessChime();
-      setPhoneSuccess(true);
-      setTimeout(() => setPhoneSuccess(false), 3000);
-    } catch (err) {
-      soundEffects.playError();
-      setPhoneError(err instanceof ApiError ? err.message : 'Could not update phone number');
-    } finally {
-      setPhoneBusy(false);
-    }
-  };
-
   const openEditModal = () => {
     setModalRegNo(profile.regNo);
     setModalDepartment(profile.department);
     setModalLevel((profile.level ?? '').replace(' Level', ''));
+    setModalPhone(profile.phone ?? '');
     setEditError(null);
     setEditSuccess(false);
     setShowEditModal(true);
@@ -146,26 +124,48 @@ export const Settings: React.FC<SettingsPageProps> = ({
     const trimmedRegNo = modalRegNo.trim();
     const trimmedDept = modalDepartment.trim();
     const trimmedLevel = modalLevel.trim();
+    const trimmedPhone = modalPhone.trim();
 
     if (!trimmedRegNo || !trimmedDept || !trimmedLevel) {
       setEditError('All fields are required.');
       return;
     }
 
+    const wantsPhoneChange = trimmedPhone !== (profile.phone ?? '');
+    const pCost = phoneCost(profile, trimmedPhone);
+    const profileChanged = trimmedRegNo !== profile.regNo || trimmedDept !== profile.department || trimmedLevel !== (profile.level ?? '').replace(' Level', '');
+
+    if (!profileChanged && !wantsPhoneChange) {
+      setEditError('Nothing to update.');
+      return;
+    }
+
     setEditBusy(true);
     setEditError(null);
     try {
-      const res = await authApi.updateMe({
-        regNo: trimmedRegNo,
-        department: trimmedDept,
-        level: trimmedLevel,
-      });
-      onUpdateProfile({
-        ...profile,
-        regNo: res.student.regNo,
-        department: res.student.department,
-        level: res.student.level,
-      });
+      if (profileChanged) {
+        const res = await authApi.updateMe({
+          regNo: trimmedRegNo,
+          department: trimmedDept,
+          level: trimmedLevel,
+        });
+        onUpdateProfile({
+          ...profile,
+          regNo: res.student.regNo,
+          department: res.student.department,
+          level: res.student.level,
+        });
+      }
+
+      if (wantsPhoneChange) {
+        const phoneRes = await walletApi.updatePhone(trimmedPhone);
+        onUpdateProfile({
+          ...profile,
+          phone: phoneRes.phone,
+          phoneEditCount: (profile.phoneEditCount ?? 0) + 1,
+        });
+      }
+
       soundEffects.playSuccessChime();
       setEditSuccess(true);
       setTimeout(() => {
@@ -181,12 +181,17 @@ export const Settings: React.FC<SettingsPageProps> = ({
   };
 
   const sectionHeading = 'text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider';
-  const cardClass = 'bg-white dark:bg-[#1a1a1a] rounded-xl p-4 flex items-center justify-between border border-slate-200 dark:border-[#333333]';
+  const cardClass = 'bg-white dark:bg-neutral-900 rounded-xl p-4 flex items-center justify-between border border-slate-200 dark:border-neutral-700';
+
+  const nextPhoneCost = phoneCost(profile, modalPhone);
+  const phoneCostLabel = profile.phone
+    ? (nextPhoneCost === 0 ? '' : ` (${nextPhoneCost} pts)`)
+    : (nextPhoneCost === 0 ? ' (Free)' : ` (${nextPhoneCost} pts)`);
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 px-1">
       {/* Page header */}
-      <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 py-3 border-b border-slate-200/60 dark:border-[#333333] flex items-center gap-3">
+      <div className="py-3 border-b border-slate-200/60 dark:border-neutral-700 flex items-center gap-3">
         <button
           onClick={onBack}
           className="p-2 rounded-xl hover:bg-slate-200/60 dark:hover:bg-neutral-800 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
@@ -204,27 +209,27 @@ export const Settings: React.FC<SettingsPageProps> = ({
       <div className="py-6 space-y-8">
         {/* Chief admin invite code */}
         {profile.inviteCode && (
-          <div className="bg-white dark:bg-[#1a1a1a] rounded-xl p-4 flex items-center gap-3 border border-slate-200 dark:border-[#333333]">
-            <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 flex items-center justify-center shrink-0">
-              <Users className="w-4 h-4" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="font-bold text-xs text-slate-900 dark:text-slate-100">
-                {profile.className || 'Your Class'}
-              </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                Share this code with students to join
-              </p>
+          <div className={cardClass}>
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                  {profile.className || 'Your Class'}
+                </p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  Share this code with students to join
+                </p>
+              </div>
             </div>
             <button
               onClick={async () => {
-                try {
-                  await navigator.clipboard?.writeText(profile.inviteCode!);
-                } catch { /* ignore */ }
+                try { await navigator.clipboard?.writeText(profile.inviteCode!); } catch { /* ignore */ }
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1500);
               }}
-              className="shrink-0 px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copied ? <><Check className="w-3 h-3" /> Copied</> : <><Copy className="w-3 h-3" /> {profile.inviteCode}</>}
             </button>
@@ -237,12 +242,12 @@ export const Settings: React.FC<SettingsPageProps> = ({
             <img
               src={profile.avatarUrl}
               alt={profile.fullName}
-              className="w-16 h-16 rounded-full object-cover border border-slate-200 dark:border-[#333333]"
+              className="w-16 h-16 rounded-full object-cover border border-slate-200 dark:border-neutral-700"
               referrerPolicy="no-referrer"
             />
             <button
               onClick={() => fileRef.current?.click()}
-              className="absolute bottom-0 right-0 bg-purple-600 text-white p-1 rounded-full border-2 border-white dark:border-black flex items-center justify-center shadow-sm cursor-pointer"
+              className="absolute bottom-0 right-0 bg-indigo-600 text-white p-1 rounded-full border-2 border-white dark:border-black flex items-center justify-center shadow-sm cursor-pointer"
               aria-label="Change profile picture"
             >
               <Camera className="w-3.5 h-3.5" />
@@ -305,55 +310,27 @@ export const Settings: React.FC<SettingsPageProps> = ({
             </div>
 
             {/* Phone */}
-            <form onSubmit={handlePhoneSubmit} className={cardClass + ' flex-col !items-stretch gap-3'}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="text-slate-400 w-6 flex justify-center"><Phone className="w-5 h-5" /></div>
-                  <div>
-                    <p className="text-xs font-medium text-slate-900 dark:text-white mb-0.5">Phone No</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{profile.phone || 'Not set'}</p>
-                  </div>
+            <div className={cardClass}>
+              <div className="flex items-center gap-3">
+                <div className="text-slate-400 w-6 flex justify-center"><Phone className="w-5 h-5" /></div>
+                <div>
+                  <p className="text-xs font-medium text-slate-900 dark:text-white mb-0.5">Phone No</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{profile.phone || 'Not set'}</p>
                 </div>
-                {profile.phone && (
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">saved</span>
-                )}
               </div>
-              {/* Inline phone edit */}
-              <div className="space-y-2">
-                <input
-                  type="tel"
-                  required
-                  inputMode="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="08030000000"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-purple-600"
-                />
-                <p className="text-[10px] text-slate-400 dark:text-slate-500">
-                  11 digits (0XXXXXXXXXX). +234 is accepted and converted automatically.
-                </p>
-                {phoneError && <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{phoneError}</p>}
-                {phoneSuccess && (
-                  <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Phone number saved
-                  </p>
-                )}
-                <button
-                  type="submit"
-                  disabled={phoneBusy}
-                  className="w-full py-2 px-4 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                >
-                  {phoneBusy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                  {profile.phone ? 'Change Phone Number (200 pts)' : 'Save Phone Number'}
-                </button>
-              </div>
-            </form>
+              <button
+                onClick={openEditModal}
+                className="text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Disclaimer */}
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
             PocketFi needs your phone number to create your personal funding account.{' '}
-            <span className="text-rose-600 dark:text-rose-400 font-medium">Changing phone number will cost 200 points</span>
+            <span className="text-rose-600 dark:text-rose-400 font-medium">Changing phone number costs points</span>
           </p>
         </section>
 
@@ -375,7 +352,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                 role="switch"
                 aria-checked={settings.theme === 'dark'}
                 className={`relative inline-flex h-6 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
-                  settings.theme === 'dark' ? 'bg-purple-600' : 'bg-slate-300 dark:bg-slate-600'
+                  settings.theme === 'dark' ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'
                 }`}
               >
                 <span
@@ -389,7 +366,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
             {/* Password */}
             <button
               onClick={() => setShowPasswordSection(!showPasswordSection)}
-              className={cardClass + ' cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1e1e1e] transition-colors'}
+              className={cardClass + ' cursor-pointer hover:bg-slate-50 dark:hover:bg-neutral-800 transition-colors'}
             >
               <div className="flex items-center gap-3">
                 <div className="text-slate-400 w-6 flex justify-center"><Lock className="w-5 h-5" /></div>
@@ -403,14 +380,14 @@ export const Settings: React.FC<SettingsPageProps> = ({
 
             {/* Password Change Form (expandable) */}
             {showPasswordSection && (
-              <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-[#1a1a1a] rounded-xl p-4 border border-slate-200 dark:border-[#333333] space-y-3">
+              <form onSubmit={handlePasswordSubmit} className="bg-white dark:bg-neutral-900 rounded-xl p-4 border border-slate-200 dark:border-neutral-700 space-y-3">
                 <input
                   type="password"
                   required
                   placeholder="Current password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-purple-600"
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
                 />
                 <input
                   type="password"
@@ -418,7 +395,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                   placeholder="New password (min 8 characters)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-purple-600"
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
                 />
                 <input
                   type="password"
@@ -426,7 +403,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                   placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-purple-600"
+                  className="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100 focus:outline-indigo-600"
                 />
                 {passwordError && <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{passwordError}</p>}
                 {passwordSuccess && (
@@ -437,7 +414,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                 <button
                   type="submit"
                   disabled={busy}
-                  className="w-full py-2.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+                  className="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
                 >
                   {busy && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   Update Password
@@ -463,7 +440,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
           <div className="bg-white dark:bg-neutral-900 rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-xl border border-slate-200 dark:border-neutral-800">
             <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/60 dark:border-neutral-800">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-300 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-300 flex items-center justify-center">
                   <Pencil className="w-4 h-4" />
                 </div>
                 <div>
@@ -500,7 +477,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                   value={modalRegNo}
                   onChange={(e) => setModalRegNo(e.target.value)}
                   placeholder="e.g. CSC/2024/001"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-purple-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -510,7 +487,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
                   value={modalDepartment}
                   onChange={(e) => setModalDepartment(e.target.value)}
                   placeholder="e.g. Computer Science"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-purple-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
                 />
               </div>
 
@@ -520,8 +497,29 @@ export const Settings: React.FC<SettingsPageProps> = ({
                   value={modalLevel}
                   onChange={(e) => setModalLevel(e.target.value)}
                   placeholder="e.g. 300"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-purple-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Phone No</label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={modalPhone}
+                  onChange={(e) => setModalPhone(e.target.value)}
+                  placeholder="08030000000"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 text-slate-900 dark:text-slate-100"
+                />
+                <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                  11 digits (0XXXXXXXXXX). +234 is accepted automatically.
+                </p>
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                  {profile.phone
+                    ? `Changing costs ${nextPhoneCost} pts${nextPhoneCost === 100 ? ' (first change)' : nextPhoneCost === 200 ? ' (subsequent)' : ''}`
+                    : `First set is free${nextPhoneCost > 0 ? `, then ${nextPhoneCost} pts` : ''}`
+                  }
+                </p>
               </div>
 
               {editError && <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400">{editError}</p>}
@@ -536,10 +534,10 @@ export const Settings: React.FC<SettingsPageProps> = ({
                 <button
                   onClick={saveProfileEdit}
                   disabled={editBusy || editSuccess}
-                  className="flex-1 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-60 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer"
                 >
                   {editBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : editSuccess ? <Check className="w-3.5 h-3.5" /> : null}
-                  {editSuccess ? 'Saved' : profile.freeProfileEditUsed ? 'Save Changes (100 pts)' : 'Save Changes (Free)'}
+                  {editSuccess ? 'Saved' : profile.freeProfileEditUsed ? `Save Changes (100 pts${nextPhoneCost > 0 ? ' + phone)' : ')'}` : 'Save Changes (Free)'}
                 </button>
               </div>
             </div>

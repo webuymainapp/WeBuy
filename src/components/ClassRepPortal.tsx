@@ -30,6 +30,7 @@ import { AccountBalance } from './AccountBalance';
 import { RepTransactions } from './RepTransactions';
 import { Payouts } from './Payouts';
 import { ClassesManagement } from './ClassesManagement';
+import { DbMonitor } from './DbMonitor';
 import { repApi, passesApi, dataApi, ApiError, type RosterItem } from '../lib/api';
 
 const formatNaira = (amount: number) =>
@@ -69,11 +70,17 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
   // Toast message state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Bumped whenever rep data changes so balance/revenue cards re-fetch fresh
+  // numbers instead of showing stale totals after new payments or toggles.
+  const [refreshKey, setRefreshKey] = useState(0);
+
   // QR scan modal state
   const [isScanOpen, setIsScanOpen] = useState(false);
 
   // Roster modal state
   const [rosterOpen, setRosterOpen] = useState(false);
+
+  const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -148,6 +155,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
       }
       await loadRoster(selectedCourse);
       onDataChanged();
+      bumpRefresh();
     } catch (err) {
       soundEffects.playError();
       showToast(err instanceof ApiError ? err.message : 'Could not update collection status');
@@ -196,6 +204,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
       if (verified.book?.courseCode) setSelectedCourse(verified.book.courseCode);
       await loadRoster(selectedCourse);
       onDataChanged();
+      bumpRefresh();
       showToast(`COLLECTED for ${verified.student.fullName}! Syncing with student portal...`);
       return 'ok';
     } catch (err) {
@@ -296,7 +305,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
       </div>
 
       {/* Common Account Balance */}
-      <AccountBalance onToast={showToast} isChief={isChief} />
+      <AccountBalance onToast={showToast} isChief={isChief} refreshKey={refreshKey} />
 
       {/* Recent Transactions */}
       <RepTransactions onToast={showToast} isChief={isChief} />
@@ -339,6 +348,9 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
         currentUserId={studentProfile.id}
         onToast={showToast}
       />
+
+      {/* Database Monitor — chief admin only */}
+      {isChief && <DbMonitor onToast={showToast} />}
 
       {/* Course Selection Tabs Bar */}
       <div className="bg-white dark:bg-neutral-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-neutral-700 shadow-sm space-y-3">
@@ -464,10 +476,10 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
               <div className="mt-2">
                 <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 font-mono">
-                  {formatNaira(activeBook.price * totalPaidCount)}
+                  {formatNaira((activeBook.price - 100) * totalPaidCount)}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
-                  {formatNaira(activeBook.price)} × {totalPaidCount} paid
+                  {formatNaira(activeBook.price - 100)} × {totalPaidCount} paid
                 </p>
               </div>
             </div>

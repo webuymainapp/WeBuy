@@ -105,3 +105,39 @@ Open http://localhost:3000.
   `<your-api-url>/api/pocketfi`.
 
 See `server/README.md` for API endpoints and security rules.
+
+## Backups & Recovery
+
+The production database is backed up automatically every day.
+
+- **Where** — the private repo `webuymainapp/WeBuy-backups`, containing a plain
+  SQL dump (`webuy_YYYYMMDD.sql`) per day (schema + all data).
+- **How** — a GitHub Actions workflow (`.github/workflows/backup.yml`) runs on a
+  cron schedule (03:00 UTC), dumps the DB via `pg_dump`, and pushes the file.
+  It reads `DATABASE_URL` from the `DATABASE_URL` secret and pushes with the
+  `BACKUP_PAT` secret (both set on this repo's Actions settings).
+- **Trigger manually** — run the `Daily Database Backup` workflow from the
+  Actions tab, or push a new workflow: `repository_dispatch`/`workflow_dispatch`
+  are enabled.
+
+### Restore (if the database is lost)
+
+1. Create a new Postgres database (new Supabase project, Render Postgres, Neon).
+2. Run the most recent dump against it:
+   ```bash
+   psql "NEW_DATABASE_URL" -f webuy_YYYYMMDD.sql
+   ```
+3. Point the backend at the new DB — update `DATABASE_URL` in `server/.env`
+   (local) and in the Render environment variables, then redeploy.
+
+Backups are as-of the dump time, so expect up to ~24h of potential data loss with
+daily dumps. Non-DB secrets (Gmail app password, PocketFi keys) live in
+`server/.env` / Render env vars and are **not** in the dumps — back those up
+separately.
+
+### Database Monitor (chief admin)
+
+The rep portal includes a read-only **Database Monitor** (`GET /api/rep/db-monitor`,
+chief admin only) that reports DB size, per-table sizes, row counts, wallet
+ledger totals, and cleanup candidates (expired tokens, stale signups, soft-deleted
+textbooks) so you know when the DB needs clearing or capacity review.

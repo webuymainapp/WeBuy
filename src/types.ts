@@ -13,6 +13,7 @@ export interface StudentProfile {
   avatarUrl: string;
   emailVerified?: boolean;
   freeProfileEditUsed?: boolean;
+  phoneEditCount?: number;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;
