@@ -437,7 +437,7 @@ export default function App() {
     );
   }
 
-  if (booting) {
+  if (booting || (authenticated && !profile)) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center text-slate-900 dark:text-slate-100">
         <style>{`
