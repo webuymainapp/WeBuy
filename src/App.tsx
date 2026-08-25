@@ -151,8 +151,8 @@ export default function App() {
   const [authenticated, setAuthenticated] = useState<boolean>(() => !!getToken());
   const [booting, setBooting] = useState<boolean>(() => !!getToken());
   const [userRole, setUserRole] = useState<'student' | 'class_rep' | 'chief_admin'>('student');
-  const [showAuth, setShowAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [showAuth, setShowAuth] = useState(() => new URLSearchParams(window.location.search).get('otp') === '1');
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
   const [dataError, setDataError] = useState<string | null>(null);
 
   const [activeRole, setActiveRole] = useState<'student' | 'class_rep'>('student');
@@ -416,6 +416,7 @@ export default function App() {
             setShowAuth(false);
           }}
           onAuthSuccess={handleAuthSuccess}
+          devOtp={new URLSearchParams(window.location.search).get('otp') === '1'}
         />
       );
     }
@@ -462,11 +463,9 @@ export default function App() {
 
       {/* Top Header */}
       <Navbar
-        profile={currentProfile}
         activeRole={activeRole}
         isRep={isRep}
         onRoleChange={handleRoleChange}
-        onSignOut={handleSignOut}
         onSelectTab={setActiveTab}
         activeTab={activeTab}
         notifications={notifications}
@@ -813,10 +812,9 @@ export default function App() {
             onUpdateProfile={(p) => {
               const prevPhone = profile?.phone ?? '';
               setProfile(p);
-              // Phone may have just been added/changed — refresh the wallet so the
-              // funding account (re)provisions, the account name/bank appear, and
-              // the "Add phone number" banner disappears.
-              if (p.phone && p.phone !== prevPhone) {
+              // Refresh the wallet after any profile change — covers phone
+              // updates (account reprovision) and profile edits (100 pt fee).
+              if (p.phone !== prevPhone || p.fullName !== profile?.fullName || p.department !== profile?.department || p.level !== profile?.level || p.regNo !== profile?.regNo) {
                 walletApi
                   .get()
                   .then(setWallet)

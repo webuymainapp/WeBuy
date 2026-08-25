@@ -173,4 +173,44 @@ router.patch(
   }),
 );
 
+const updateLevelSchema = z.object({ level: z.string().trim().min(1).max(40) });
+
+/**
+ * Update a class's level — affects every student in the class (upgrade flow).
+ * Only the platform admin or the class's own chief can do this.
+ */
+router.patch(
+  '/:id/level',
+  validateBody(updateLevelSchema),
+  asyncHandler(async (req, res) => {
+    const parsed = updateLevelSchema.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      throw new HttpError(400, 'Invalid level');
+    }
+    const newLevel = parsed.data.level;
+
+    const cls = await query(
+      'select id, admin_id from classes where id = $1',
+      [req.params.id],
+    );
+    if (cls.rowCount === 0) {
+      throw new HttpError(404, 'Class not found');
+    }
+    const isChief = req.student.role === 'chief_admin';
+    const isClassChief = cls.rows[0].admin_id === req.student.sub;
+    if (!isChief && !isClassChief) {
+      throw new HttpError(403, 'Only the platform admin or this class\'s chief can update the level');
+    }
+
+    // Update the class AND every student in it in one go.
+    await query('update classes set level = $1 where id = $2', [newLevel, req.params.id]);
+    const result = await query(
+      'update students set level = $1 where class_id = $2',
+      [newLevel, req.params.id],
+    );
+
+    res.json({ ok: true, level: newLevel, studentsUpdated: result.rowCount });
+  }),
+);
+
 export default router;

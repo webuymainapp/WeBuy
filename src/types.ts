@@ -12,6 +12,7 @@ export interface StudentProfile {
   phone: string;
   avatarUrl: string;
   emailVerified?: boolean;
+  freeProfileEditUsed?: boolean;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;

@@ -87,6 +87,7 @@ export interface AuthStudent {
   role: 'student' | 'class_rep' | 'chief_admin';
   emailVerified: boolean;
   avatarUrl: string | null;
+  freeProfileEditUsed?: boolean;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;
@@ -118,8 +119,6 @@ export const authApi = {
     fullName: string;
     email: string;
     phone?: string;
-    department: string;
-    level: string;
     password: string;
     inviteCode: string;
   }) => request<SignupResult>('/api/auth/signup', json('POST', body)),
@@ -132,8 +131,8 @@ export const authApi = {
   changePassword: (body: { currentPassword: string; newPassword: string }) =>
     request<{ ok: boolean }>('/api/auth/change-password', json('POST', body)),
 
-  updateMe: (body: { fullName?: string; phone?: string }) =>
-    request<{ student: AuthStudent }>('/api/auth/me', json('PATCH', body)),
+  updateMe: (body: { department?: string; level?: string; regNo?: string }) =>
+    request<{ student: AuthStudent; points: number }>('/api/auth/me', json('PATCH', body)),
 
   resendOtp: (emailOrRegNo: string) =>
     request<{ ok: boolean; sent: boolean; email?: string; cooldown?: number }>(
@@ -143,6 +142,12 @@ export const authApi = {
 
   verifyOtp: (emailOrRegNo: string, otp: string) =>
     request<SigninResult>('/api/auth/verify-otp', json('POST', { emailOrRegNo, otp })),
+
+  forgotPassword: (emailOrRegNo: string) =>
+    request<{ ok: boolean }>('/api/auth/forgot-password', json('POST', { emailOrRegNo })),
+
+  resetPassword: (emailOrRegNo: string, otp: string, newPassword: string) =>
+    request<{ ok: boolean }>('/api/auth/reset-password', json('POST', { emailOrRegNo, otp, newPassword })),
 };
 
 // ---- Vercel serverless email sender ---------------------------------------
@@ -191,6 +196,7 @@ export function toStudentProfile(s: AuthStudent, settings: AppSettings): Student
     phone: s.phone ?? '',
     avatarUrl: s.avatarUrl ?? DEFAULT_AVATAR,
     emailVerified: s.emailVerified,
+    freeProfileEditUsed: s.freeProfileEditUsed,
     classId: s.classId ?? null,
     className: s.className ?? null,
     inviteCode: s.inviteCode ?? null,
@@ -553,6 +559,12 @@ export const repApi = {
       json('PATCH', { role }),
     ),
 
+  deleteUser: (id: string) =>
+    request<{ ok: boolean; deleted: string }>(
+      `/api/rep/users/${id}`,
+      { method: 'DELETE' },
+    ),
+
   getOverview: () =>
     request<{
       counts: {
@@ -681,6 +693,12 @@ export const classesApi = {
     request<{ ok: boolean; inviteCode: string }>(
       `/api/classes/${id}/invite-code`,
       json('PATCH', { inviteCode }),
+    ),
+
+  updateLevel: (id: string, level: string) =>
+    request<{ ok: boolean; level: string; studentsUpdated: number }>(
+      `/api/classes/${id}/level`,
+      json('PATCH', { level }),
     ),
 };
 

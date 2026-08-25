@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Transaction History</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style data-purpose="custom-styles">
+    body {
+      background-color: #0b0b0b;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .text-purple-accent {
+      color: #6338f0;
+    }
+    .bg-purple-accent {
+      background-color: #6338f0;
+    }
+    .bg-dark-gray {
+      background-color: #1a1a1a;
+    }
+    .text-gray-muted {
+      color: #8c8c8c;
+    }
+    .border-dark {
+      border-color: #2a2a2a;
+    }
+    .icon-bg-purple {
+      background-color: #24164b;
+    }
+    .icon-bg-green {
+      background-color: #12351c;
+    }
+    .bottom-nav-gradient {
+      background: linear-gradient(to top, #0b0b0b 80%, transparent);
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'custom-dark': '#0b0b0b',
+            'custom-card': '#1a1a1a',
+            'custom-purple': '#6338f0',
+            'custom-purple-light': '#24164b',
+            'custom-green-light': '#12351c',
+            'custom-red': '#e53e3e',
+            'custom-green': '#38a169',
+            'custom-gray': '#8c8c8c',
+            'custom-border': '#2a2a2a'
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="antialiased min-h-screen pb-24 relative">
+<!-- BEGIN: TopNavigationBar -->
+<nav class="flex items-center justify-between p-4 border-b border-custom-border" data-purpose="top-navigation">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-custom-purple rounded flex items-center justify-center font-bold text-white">
+        W
+      </div>
+<span class="font-semibold text-lg">eBuy</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 bg-custom-green-light text-custom-green px-3 py-1.5 rounded-full text-sm font-medium">
+<svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+        Rep Mode
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M19 9l-7 7-7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+<button class="text-white">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</div>
+</nav>
+<!-- END: TopNavigationBar -->
+<!-- BEGIN: MainContent -->
+<main class="p-4" data-purpose="main-content">
+<!-- Header Section -->
+<header class="flex justify-between items-start mb-6">
+<div>
+<h1 class="text-2xl font-bold mb-1">Transactions</h1>
+<p class="text-custom-gray text-sm">Payments, points &amp; refunds</p>
+</div>
+<button class="bg-custom-card p-2 rounded-full text-custom-gray">
+<svg class="h-5 w-5" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</button>
+</header>
+<!-- Summary Section -->
+<div class="flex justify-between items-center text-xs text-custom-gray mb-4 uppercase tracking-wider font-semibold">
+<span>August 6th 2026</span>
+<div class="space-x-4">
+<span>Spent <span class="text-white">N2,200</span></span>
+<span class="text-custom-green">Received N2,200</span>
+</div>
+</div>
+<!-- Search Bar -->
+<div class="relative mb-6">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<svg class="h-5 w-5 text-custom-gray" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<input class="w-full bg-custom-dark border border-custom-border rounded-lg py-3 pl-10 pr-4 text-sm text-white placeholder-custom-gray focus:outline-none focus:border-custom-purple transition-colors" placeholder="Search books, courses, or references..." type="text"/>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-3 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+<button class="whitespace-nowrap bg-custom-purple-light text-white px-5 py-2 rounded-full text-sm font-medium border border-transparent">All(6)</button>
+<button class="whitespace-nowrap bg-custom-card text-custom-gray px-5 py-2 rounded-full text-sm font-medium border border-custom-border">Purchases(2)</button>
+<button class="whitespace-nowrap bg-custom-card text-custom-gray px-5 py-2 rounded-full text-sm font-medium border border-custom-border">Wallets(5)</button>
+<button class="whitespace-nowrap bg-custom-card text-custom-gray px-5 py-2 rounded-full text-sm font-medium border border-custom-border">Withdrawals(0)</button>
+</div>
+<!-- Transaction List -->
+<div class="space-y-6">
+<!-- Transaction Item: Purchase -->
+<div class="flex items-center justify-between" data-purpose="transaction-item">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full icon-bg-purple flex items-center justify-center shrink-0 text-custom-purple">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="font-semibold text-[15px] leading-tight mb-1 truncate max-w-[200px]">GST 212 - Philosophy and Lo...</h3>
+<p class="text-custom-gray text-xs">Purchase - 20th July 2026</p>
+</div>
+</div>
+<div class="text-right shrink-0">
+<p class="font-bold text-custom-red text-sm">-N8.00</p>
+<p class="text-white text-xs">Completed</p>
+</div>
+</div>
+<!-- Transaction Item: Wallet Top-up -->
+<div class="flex items-center justify-between" data-purpose="transaction-item">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full icon-bg-green flex items-center justify-center shrink-0 text-custom-green">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="font-semibold text-[15px] leading-tight mb-1">Wallet Top-up</h3>
+<p class="text-custom-gray text-xs">14th July 2026</p>
+</div>
+</div>
+<div class="text-right shrink-0">
+<p class="font-bold text-custom-green text-sm">+N1000.00</p>
+<p class="text-white text-xs">Completed</p>
+</div>
+</div>
+<!-- Repeated Item to match UI length roughly -->
+<div class="flex items-center justify-between" data-purpose="transaction-item">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full icon-bg-purple flex items-center justify-center shrink-0 text-custom-purple">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="font-semibold text-[15px] leading-tight mb-1 truncate max-w-[200px]">GST 212 - Philosophy and Lo...</h3>
+<p class="text-custom-gray text-xs">Purchase - 20th July 2026</p>
+</div>
+</div>
+<div class="text-right shrink-0">
+<p class="font-bold text-custom-red text-sm">-N8.00</p>
+<p class="text-white text-xs">Completed</p>
+</div>
+</div>
+<div class="flex items-center justify-between" data-purpose="transaction-item">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full icon-bg-purple flex items-center justify-center shrink-0 text-custom-purple">
+<svg class="h-6 w-6" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+</svg>
+</div>
+<div>
+<h3 class="font-semibold text-[15px] leading-tight mb-1 truncate max-w-[200px]">GST 212 - Philosophy and Lo...</h3>
+<p class="text-custom-gray text-xs">Purchase - 20th July 2026</p>
+</div>
+</div>
+<div class="text-right shrink-0">
+<p class="font-bold text-custom-red text-sm">-N8.00</p>
+<p class="text-white text-xs">Completed</p>
+</div>
+</div>
+</div>
+</main>
+<!-- END: MainContent -->
+<!-- BEGIN: BottomNavigationBar -->
+<div class="fixed bottom-0 left-0 w-full bottom-nav-gradient pt-8 pb-4 px-4 flex justify-center pointer-events-none" data-purpose="bottom-navigation">
+<div class="bg-custom-card/90 backdrop-blur-md rounded-2xl flex justify-between items-center w-full max-w-sm px-2 py-2 pointer-events-auto border border-custom-border/50">
+<button class="flex-1 py-3 text-center text-custom-gray font-medium text-sm rounded-xl">
+        Dashboard
+      </button>
+<button  class="flex-1 py-3 text-center text-white bg-custom-purple font-medium text-sm rounded-xl shadow-lg">
+        History
+      </button>
+<button class="flex-1 py-3 text-center text-custom-gray font-medium text-sm rounded-xl">
+        Settings
+      </button>
+</div>
+</div>
+<!-- END: BottomNavigationBar -->
+</body></html>

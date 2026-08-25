@@ -15,6 +15,7 @@ create table if not exists students (
   role text not null default 'student' check (role in ('student', 'class_rep', 'chief_admin')),
   email_verified boolean not null default false,
   avatar_url text,
+  free_profile_edit_used boolean not null default false,
   created_at timestamptz not null default now()
 );
 
@@ -275,3 +276,6 @@ create index if not exists idx_textbooks_deleted on textbooks(deleted_at) where 
 alter table students drop constraint if exists students_role_check;
 alter table students add constraint students_role_check check (role in ('student', 'class_rep', 'chief_admin'));
 update students set role = 'chief_admin' where reg_no = '20241450652' and role = 'class_rep';
+
+-- Profile edit: first edit is free, subsequent edits cost 100 pts.
+alter table students add column if not exists free_profile_edit_used boolean not null default false;

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { query } from '../db/pool';
 import { asyncHandler, HttpError } from '../lib/http';
-import { validateBody } from '../lib/validate';
+import { validateBody, normalizePhone } from '../lib/validate';
 import { requireAuth } from '../middleware/auth';
 import { signPassToken } from '../lib/jwt';
 import {
@@ -113,7 +113,7 @@ async function ensureWallet(student: AuthTokenPayload): Promise<WalletResult> {
 }
 
 const phoneSchema = z.object({
-  phone: z.string().trim().min(10).max(20),
+  phone: z.string().trim().min(1).max(20),
 });
 
 /**
@@ -126,10 +126,7 @@ router.post(
   '/phone',
   validateBody(phoneSchema),
   asyncHandler(async (req, res) => {
-    const phone = req.body.phone.replace(/\D/g, '');
-    if (phone.length < 10) {
-      throw new HttpError(400, 'Enter a valid 10–11 digit phone number.');
-    }
+    const phone = normalizePhone(req.body.phone);
 
     let changed = false;
     try {

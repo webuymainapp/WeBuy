@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Account Preferences</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            'custom-bg': '#000000',
+            'custom-card': '#1a1a1a',
+            'custom-text': '#f3f4f6',
+            'custom-muted': '#9ca3af',
+            'custom-purple': '#6d28d9',
+            'custom-purple-light': '#8b5cf6',
+            'custom-green': '#10b981',
+            'custom-green-dark': '#065f46',
+            'custom-gold': '#d97706',
+            'custom-red': '#ef4444',
+            'custom-border': '#333333',
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-utilities">
+    body {
+      background-color: #000000;
+      color: #f3f4f6;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+      -ms-overflow-style: none;  /* IE and Edge */
+      scrollbar-width: none;  /* Firefox */
+    }
+  </style>
+<!-- Phosphor Icons -->
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body class="bg-custom-bg text-custom-text h-screen flex flex-col no-scrollbar">
+<!-- BEGIN: Top Navigation -->
+<header class="flex items-center justify-between p-4 border-b border-custom-border sticky top-0 bg-custom-bg z-10">
+<!-- Logo -->
+<div class="flex items-center gap-2">
+<div class="bg-custom-purple-light text-white font-bold w-8 h-8 rounded flex items-center justify-center text-xl">
+        W
+      </div>
+<span class="text-xl font-semibold">eBuy</span>
+</div>
+<!-- Right Actions -->
+<div class="flex items-center gap-4">
+<!-- Rep Mode Pill -->
+<button class="flex items-center gap-1 bg-custom-green-dark/30 border border-custom-green-dark text-custom-green px-3 py-1.5 rounded-full text-sm font-medium">
+<i class="ph ph-shield-check text-lg"></i>
+        Rep Mode
+        <i class="ph ph-caret-down"></i>
+</button>
+<!-- Notification -->
+<button class="relative text-custom-text hover:text-white transition-colors">
+<i class="ph ph-bell text-2xl"></i>
+</button>
+</div>
+</header>
+<!-- END: Top Navigation -->
+<!-- BEGIN: Main Content -->
+<main class="flex-1 overflow-y-auto pb-24 px-4 pt-6">
+<h1 class="text-lg font-semibold text-custom-muted mb-6">Preferences for your Webuy Account</h1>
+<!-- Profile Photo Section -->
+<section class="flex items-center gap-4 mb-8">
+<div class="relative">
+<img alt="Profile" class="w-16 h-16 rounded-full object-cover border border-custom-border" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDubX_RbdmszZW00VKPNbSE6rI9HCYcJ00XEZsaXnuepbtW1e7vGXmQCNUrgagSerwhDcIyTZaJqUXgdl9OSVfSn-2tGqixJT97lnPVt1ozZEw3Ncxnmsvge2oCNez0ZpNXJijmKECgUtvRjQ6bEmCxFzJ1lgQA12rMHF1gmJ47rMWNRqHX0WNjLtottZYBOYKyvdHj8lkjRGUFBo1RCmD95kv-B2U-aJLEaG33IkRWqvJOJj_QekeMPg"/>
+<button class="absolute bottom-0 right-0 bg-custom-purple-light text-white p-1 rounded-full border-2 border-custom-bg flex items-center justify-center shadow-sm">
+<i class="ph ph-camera text-sm"></i>
+</button>
+</div>
+<div>
+<h2 class="text-base font-semibold">Profile Photo</h2>
+<p class="text-sm text-custom-muted">Upload a photo for your account</p>
+</div>
+</section>
+<!-- Account Section -->
+<section class="mb-8">
+<h3 class="text-sm font-semibold text-custom-muted mb-3 uppercase tracking-wider">Account</h3>
+<div class="flex flex-col gap-3">
+<!-- Username -->
+<div class="bg-custom-card rounded-xl p-4 flex items-center justify-between border border-custom-border/50">
+<div class="flex items-center gap-3">
+<div class="text-custom-muted w-6 flex justify-center"><i class="ph-fill ph-user text-xl"></i></div>
+<div>
+<p class="text-xs font-medium text-white mb-0.5">Username</p>
+<p class="text-sm text-custom-muted">Ogemdi Victor</p>
+</div>
+</div>
+<button class="text-custom-muted hover:text-white"><i class="ph ph-pencil-simple text-xl"></i></button>
+</div>
+<!-- Email -->
+<div class="bg-custom-card rounded-xl p-4 flex items-center justify-between border border-custom-border/50">
+<div class="flex items-center gap-3">
+<div class="text-custom-muted w-6 flex justify-center"><i class="ph-fill ph-envelope-simple text-xl"></i></div>
+<div>
+<p class="text-xs font-medium text-white mb-0.5">Email address</p>
+<p class="text-sm text-custom-muted">ogemdivictor12@gma...</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1">
+<button class="text-custom-muted hover:text-white"><i class="ph ph-pencil-simple text-xl"></i></button>
+<span class="flex items-center gap-1 text-xs text-custom-green font-medium"><i class="ph-fill ph-seal-check"></i> verified</span>
+</div>
+</div>
+<!-- Phone -->
+<div class="bg-custom-card rounded-xl p-4 flex items-center justify-between border border-custom-border/50">
+<div class="flex items-center gap-3">
+<div class="text-custom-muted w-6 flex justify-center"><i class="ph-fill ph-phone text-xl"></i></div>
+<div>
+<p class="text-xs font-medium text-white mb-0.5">Phone No</p>
+<p class="text-sm text-custom-muted">09044337550</p>
+</div>
+</div>
+<div class="flex flex-col items-end gap-1">
+<button class="text-custom-muted hover:text-white"><i class="ph ph-pencil-simple text-xl"></i></button>
+<span class="text-xs text-custom-gold font-medium">saved</span>
+</div>
+</div>
+</div>
+<!-- Disclaimer -->
+<p class="text-xs text-custom-muted mt-3 leading-relaxed">
+        PocketFi needs you phone no to create personal funding account. <span class="text-custom-red">Changing phone no will cost 200 points</span>
+</p>
+</section>
+<!-- App Settings Section -->
+<section>
+<h3 class="text-sm font-semibold text-custom-muted mb-3 uppercase tracking-wider">App Settings</h3>
+<div class="flex flex-col gap-3">
+<!-- Appearance -->
+<div class="bg-custom-card rounded-xl p-4 flex items-center justify-between border border-custom-border/50">
+<div class="flex items-center gap-3">
+<div class="text-custom-muted w-6 flex justify-center"><i class="ph-fill ph-circle-half-tilt text-xl"></i></div>
+<div>
+<p class="text-sm font-medium text-white mb-0.5">Appearance</p>
+<p class="text-xs text-custom-muted">Dark mode</p>
+</div>
+</div>
+<!-- Toggle Switch (Visual only) -->
+<div class="w-10 h-6 bg-custom-muted/30 rounded-full relative flex items-center px-1">
+<div class="w-4 h-4 bg-white rounded-full absolute right-1 shadow"></div>
+</div>
+</div>
+<!-- Password -->
+<div class="bg-custom-card rounded-xl p-4 flex items-center justify-between border border-custom-border/50">
+<div class="flex items-center gap-3">
+<div class="text-custom-muted w-6 flex justify-center"><i class="ph-fill ph-lock-key text-xl"></i></div>
+<div>
+<p class="text-sm font-medium text-white mb-0.5">Password</p>
+<p class="text-xs text-custom-muted">Tap to change password</p>
+</div>
+</div>
+<i class="ph ph-caret-right text-custom-muted text-lg"></i>
+</div>
+</div>
+</section>
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Bottom Navigation -->
+<footer class="fixed bottom-0 w-full bg-custom-bg border-t border-custom-border p-4 pb-6">
+<div class="flex justify-around items-center border border-custom-border rounded-2xl p-1 bg-custom-bg">
+<button class="flex-1 text-center py-3 text-sm font-medium text-custom-muted hover:text-white transition-colors rounded-xl">
+        Dashboard
+      </button>
+<button class="flex-1 text-center py-3 text-sm font-medium text-custom-muted hover:text-white transition-colors rounded-xl">
+        History
+      </button>
+<button class="flex-1 text-center py-3 text-sm font-semibold bg-custom-purple-light text-white rounded-xl shadow-lg shadow-custom-purple-light/20">
+        Settings
+      </button>
+</div>
+</footer>
+<!-- END: Bottom Navigation -->
+</body></html>

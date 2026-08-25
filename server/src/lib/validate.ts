@@ -39,3 +39,38 @@ export const inviteCodeSchema = z
   .min(1, 'invite code is required')
   .max(40)
   .regex(/^[a-z0-9-]+$/i, 'invite code contains invalid characters');
+
+/**
+ * Normalise a Nigerian phone number to 11 digits (0XXXXXXXXXX).
+ *
+ * Accepted inputs:
+ *   0XXXXXXXXXX           → 0XXXXXXXXXX  (11 digits, as-is)
+ *   +234XXXXXXXXXX        → 0XXXXXXXXXX  (strip country code)
+ *    234XXXXXXXXXX        → 0XXXXXXXXXX  (strip country code without +)
+ *
+ * Throws HttpError(400) if the result is not exactly 11 digits starting with 0.
+ */
+export function normalizePhone(raw: string): string {
+  // Strip everything that isn't a digit or a leading +
+  let digits = raw.replace(/[^\d+]/g, '');
+
+  // Strip + prefix
+  if (digits.startsWith('+')) {
+    digits = digits.slice(1);
+  }
+
+  // Strip country code 234
+  if (digits.startsWith('234') && digits.length > 11) {
+    digits = '0' + digits.slice(3);
+  }
+
+  // Must now be exactly 11 digits starting with 0
+  if (!/^0\d{10}$/.test(digits)) {
+    throw new HttpError(
+      400,
+      'Enter a valid 11-digit phone number (e.g. 0XXXXXXXXXX). Country code +234 is accepted and converted automatically.',
+    );
+  }
+
+  return digits;
+}

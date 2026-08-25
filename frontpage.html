@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>eBuy App Screen</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style data-purpose="custom-fonts">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #000000;
+      color: #ffffff;
+    }
+  </style>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              purple: '#5D21D1',
+              dark: '#111111',
+              card: '#161616',
+              border: '#2A2A2A',
+              green: '#22C55E',
+              red: '#EF4444'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="antialiased min-h-screen flex flex-col max-w-md mx-auto relative pb-20">
+<!-- BEGIN: Header -->
+<header class="flex items-center justify-between p-4 border-b border-brand-border bg-black sticky top-0 z-10">
+<div class="flex items-center gap-2">
+<div class="w-8 h-8 bg-brand-purple rounded-md flex items-center justify-center font-bold text-xl tracking-tighter">
+        W
+      </div>
+<span class="text-xl font-semibold">eBuy</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-2 bg-[#1A2E20] text-[#4ADE80] px-3 py-1.5 rounded-full text-sm font-medium border border-[#1A4D2E]">
+<i class="fa-solid fa-shield-halved"></i>
+        Rep Mode
+        <i class="fa-solid fa-chevron-down text-xs ml-1"></i>
+</button>
+<button class="text-gray-300 hover:text-white relative">
+<i class="fa-regular fa-bell text-xl"></i>
+</button>
+</div>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Main Content -->
+<main class="p-4 flex-1 overflow-y-auto">
+<div class="text-xs text-gray-400 font-semibold tracking-wider mb-3 uppercase">
+      2025/2026 FIRST SEMESTER
+    </div>
+<!-- BEGIN: User Profile Card -->
+<div class="bg-brand-card rounded-xl p-4 border border-brand-border mb-6">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<img alt="Ogemdi Victor" class="w-10 h-10 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSX35ZkSuaTobgxqkv6ScHz0S0b708ewRWlMrgA-Dq3bp0Tg8kLi5pBxNuUGeCAIlRgMd8rWtXFpIhyQ0QDkGrnFagbJCuumnszIoo0zbXWpTyxCnkIa-3PlFL9-ts5rVh7Xno1IweRXxYuEd6M-3-iOxKpCwnPpcmc2nLPbB_zTg8Xs8weOiTGxqoO5daHJ7lpn08RB6nicqjjGzB1-Q6G8jgL0I0j6okpL-z_fLYGXcErVfoZZI9sQ"/>
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-semibold text-base">Ogemdi Victor</h2>
+<i class="fa-regular fa-copy text-gray-400 text-sm cursor-pointer"></i>
+</div>
+<div class="text-xs text-gray-400 flex items-center gap-1">
+              7004507625 <span class="text-gray-600">•</span> <span class="text-green-500">Via kuda bank</span>
+</div>
+</div>
+</div>
+<button class="bg-[#22C55E] hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
+<i class="fa-solid fa-arrows-rotate"></i>
+          Verify
+        </button>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex-1 h-px bg-brand-border"></div>
+<div class="text-gray-400 text-sm">
+          Available Points <span class="text-green-500 font-bold ml-1">0.00</span>
+</div>
+</div>
+</div>
+<!-- END: User Profile Card -->
+<!-- BEGIN: Progress & Pay Action -->
+<div class="mb-8">
+<div class="flex justify-between items-center text-sm mb-2">
+<span class="text-gray-400">1/3 collected &amp; ready</span>
+<span class="text-gray-400">33%</span>
+</div>
+<div class="w-full bg-gray-800 rounded-full h-1.5 mb-5">
+<div class="bg-brand-purple h-1.5 rounded-full" style="width: 33%"></div>
+</div>
+<button class="w-full bg-brand-purple hover:bg-[#4a10a3] text-white font-semibold py-3.5 rounded-full text-base transition-colors shadow-[0_4px_14px_0_rgba(93,33,209,0.39)]">
+        Pay All (2 due)
+      </button>
+</div>
+<!-- END: Progress & Pay Action -->
+<!-- BEGIN: Textbooks List -->
+<section>
+<div class="mb-4">
+<h3 class="font-bold text-lg">Compulsory Course Textbooks</h3>
+<p class="text-sm text-gray-400">Assigned for computer science - 200lvl</p>
+</div>
+<div class="flex gap-2 mb-6">
+<button class="flex items-center gap-2 bg-brand-card border border-brand-border px-3 py-2 rounded-lg text-sm text-gray-300 w-1/3 justify-between">
+<div class="flex items-center gap-2">
+<i class="fa-solid fa-border-all"></i>
+<span>All Books</span>
+</div>
+<i class="fa-solid fa-chevron-down text-xs"></i>
+</button>
+<div class="relative flex-1">
+<i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"></i>
+<input class="w-full bg-brand-card border border-brand-border rounded-lg py-2 pl-9 pr-3 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-brand-purple" placeholder="Search by course code or title" type="text"/>
+</div>
+</div>
+<div class="space-y-4">
+<!-- Item 1: Unpaid -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1A102A] flex items-center justify-center text-brand-purple">
+<i class="fa-solid fa-book-open text-xl"></i>
+</div>
+<div>
+<h4 class="font-semibold text-[15px] mb-0.5">GST 212 - Philosophy and Logic</h4>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-gray-300">N4500</span>
+<span class="text-[10px] font-semibold uppercase tracking-wider text-red-500 bg-[#2A1010] border border-red-900/30 px-2 py-0.5 rounded">unpaid</span>
+</div>
+</div>
+</div>
+<button class="text-gray-500 p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+</div>
+<!-- Item 2: Collected -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1A102A] flex items-center justify-center text-brand-purple">
+<i class="fa-solid fa-book-open text-xl"></i>
+</div>
+<div>
+<h4 class="font-semibold text-[15px] mb-0.5">MATH 202 - Differential Calculus</h4>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-gray-300">N2000</span>
+<span class="text-[10px] font-semibold uppercase tracking-wider text-brand-purple bg-[#1A102A] border border-brand-purple/30 px-2 py-0.5 rounded">Collected</span>
+</div>
+</div>
+</div>
+<button class="text-gray-500 p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+</div>
+<!-- Item 3: Paid -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1A102A] flex items-center justify-center text-brand-purple">
+<i class="fa-solid fa-book-open text-xl"></i>
+</div>
+<div>
+<h4 class="font-semibold text-[15px] mb-0.5">GET 203 - Workshop Practice</h4>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-gray-300">N3700</span>
+<span class="text-[10px] font-semibold uppercase tracking-wider text-green-500 bg-[#102A1A] border border-green-900/30 px-2 py-0.5 rounded">Paid</span>
+</div>
+</div>
+</div>
+<button class="text-gray-500 p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+</div>
+<!-- Item 4: Paid -->
+<div class="flex items-center justify-between group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-[#1A102A] flex items-center justify-center text-brand-purple">
+<i class="fa-solid fa-book-open text-xl"></i>
+</div>
+<div>
+<h4 class="font-semibold text-[15px] mb-0.5">GET 203 - Workshop Practice</h4>
+<div class="flex items-center gap-3">
+<span class="text-sm font-medium text-gray-300">N3700</span>
+<span class="text-[10px] font-semibold uppercase tracking-wider text-green-500 bg-[#102A1A] border border-green-900/30 px-2 py-0.5 rounded">Paid</span>
+</div>
+</div>
+</div>
+<button class="text-gray-500 p-2"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+</div>
+</div>
+</section>
+<!-- END: Textbooks List -->
+</main>
+<!-- END: Main Content -->
+<!-- BEGIN: Bottom Navigation -->
+<nav class="fixed bottom-4 left-4 right-4 bg-brand-card/90 backdrop-blur-md border border-brand-border rounded-2xl p-1 z-20 max-w-md mx-auto">
+<div class="flex justify-between items-center">
+<button class="flex-1 bg-brand-purple text-white py-3 px-4 rounded-xl font-semibold text-sm transition-colors text-center">
+        Dashboard
+      </button>
+<button class="flex-1 text-gray-400 hover:text-white py-3 px-4 rounded-xl font-medium text-sm transition-colors text-center">
+        History
+      </button>
+<button class="flex-1 text-gray-400 hover:text-white py-3 px-4 rounded-xl font-medium text-sm transition-colors text-center">
+        Settings
+      </button>
+</div>
+</nav>
+<!-- END: Bottom Navigation -->
+</body></html>

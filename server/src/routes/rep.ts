@@ -237,6 +237,57 @@ router.patch(
   }),
 );
 
+/** Delete a user entirely — chief admin only. Cannot delete yourself.
+ *  Wipes all traces: wallet, transactions, notifications, pending signups,
+ *  mail queue entries, verification tokens — everything referencing the user
+ *  by id OR email is cleaned up before the student row is deleted. */
+router.delete(
+  '/users/:id',
+  requireChiefAdmin,
+  asyncHandler(async (req, res) => {
+    const targetId = String(req.params.id);
+
+    if (targetId === req.student.sub) {
+      throw new HttpError(400, 'You cannot delete your own account');
+    }
+
+    const target = await query(
+      'select id, full_name, email, role from students where id = $1',
+      [targetId],
+    );
+    if (target.rowCount === 0) {
+      throw new HttpError(404, 'User not found');
+    }
+
+    const targetEmail = target.rows[0].email as string;
+
+    // If the user is a rep, transfer their courses to the chief first.
+    const prevRole = target.rows[0].role as string;
+    if (prevRole !== 'student') {
+      const chief = await query(
+        'select id, full_name from students where id = $1',
+        [req.student.sub],
+      );
+      if (chief.rowCount && chief.rowCount > 0) {
+        await transferOwnedCourses(
+          targetId,
+          String(chief.rows[0].id),
+          String(chief.rows[0].full_name),
+        );
+      }
+    }
+
+    // Wipe everything tied to this user's email that FK cascades don't cover.
+    await query('delete from pending_signups where lower(email) = lower($1)', [targetEmail]);
+    await query('delete from mail_queue where lower(to_email) = lower($1)', [targetEmail]);
+
+    // The student row itself — cascades handle wallet, notifications,
+    // student_textbooks, verification_tokens, wallet_transactions, etc.
+    await query('delete from students where id = $1', [targetId]);
+    res.json({ ok: true, deleted: target.rows[0].full_name });
+  }),
+);
+
 /** High-level dashboard: counts + recent activity so reps see everything. */
 router.get(
   '/overview',

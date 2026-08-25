@@ -47,6 +47,11 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
   const [editCode, setEditCode] = useState('');
   const [savingCode, setSavingCode] = useState(false);
 
+  // Level editing (for class upgrades).
+  const [editLevelId, setEditLevelId] = useState<string | null>(null);
+  const [editLevel, setEditLevel] = useState('');
+  const [savingLevel, setSavingLevel] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -128,6 +133,30 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
   const startEdit = (c: ClassInfo) => {
     setEditId(c.id);
     setEditCode(c.inviteCode ?? '');
+  };
+
+  const startEditLevel = (c: ClassInfo) => {
+    setEditLevelId(c.id);
+    setEditLevel(c.level);
+  };
+
+  const saveLevel = async () => {
+    if (!editLevelId || !editLevel.trim()) return;
+    setSavingLevel(true);
+    setError(null);
+    try {
+      const res = await classesApi.updateLevel(editLevelId, editLevel.trim());
+      soundEffects.playSuccessChime();
+      onToast(`Level updated to ${res.level}. ${res.studentsUpdated} student(s) affected.`);
+      setEditLevelId(null);
+      setEditLevel('');
+      await load();
+    } catch (err) {
+      soundEffects.playError();
+      setError(err instanceof ApiError ? err.message : 'Could not update level');
+    } finally {
+      setSavingLevel(false);
+    }
   };
 
   const myClass = classes.find((c) => c.isMine);
@@ -329,7 +358,46 @@ export const ClassesManagement: React.FC<ClassesManagementProps> = ({
                                   {c.name}
                                 </h4>
                                 <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 truncate">
-                                  {c.department} · Level {c.level}
+                                  {c.department} · Level{' '}
+                                  {editLevelId === c.id ? (
+                                    <span className="inline-flex items-center gap-1">
+                                      <select
+                                        value={editLevel}
+                                        onChange={(e) => setEditLevel(e.target.value)}
+                                        className="px-1.5 py-0.5 rounded-md border border-slate-200 dark:border-neutral-700 text-xs font-bold bg-white dark:bg-neutral-900 dark:text-slate-100 focus:outline-indigo-600 cursor-pointer"
+                                      >
+                                        {['100 Level', '200 Level', '300 Level', '400 Level', '500 Level', '600 Level'].map((l) => (
+                                          <option key={l} value={l}>{l}</option>
+                                        ))}
+                                      </select>
+                                      <button
+                                        onClick={saveLevel}
+                                        disabled={savingLevel}
+                                        className="p-0.5 rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white transition-all cursor-pointer"
+                                      >
+                                        {savingLevel ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
+                                      </button>
+                                      <button
+                                        onClick={() => setEditLevelId(null)}
+                                        className="p-0.5 rounded text-slate-400 hover:text-slate-600 transition-colors cursor-pointer"
+                                      >
+                                        <X className="w-3 h-3" />
+                                      </button>
+                                    </span>
+                                  ) : (
+                                    <span>
+                                      {c.level}
+                                      {canEdit && (
+                                        <button
+                                          onClick={() => startEditLevel(c)}
+                                          className="ml-1 p-0.5 rounded text-slate-400 hover:text-indigo-500 transition-colors cursor-pointer align-middle"
+                                          title="Update level for all students"
+                                        >
+                                          <Pencil className="w-3 h-3" />
+                                        </button>
+                                      )}
+                                    </span>
+                                  )}
                                 </p>
                                 <p className="text-[11px] text-slate-400 dark:text-slate-500 flex items-center gap-1 truncate">
                                   <Users className="w-3 h-3 shrink-0" />

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, ShieldCheck, UserX, Search, Loader2, AlertCircle, Shield, X, UserPlus } from 'lucide-react';
+import { Users, ShieldCheck, UserX, Search, Loader2, AlertCircle, Shield, X, UserPlus, Trash2 } from 'lucide-react';
 import { repApi, ApiError } from '../lib/api';
 import type { PortalUser } from '../types';
 import { soundEffects } from '../utils/audio';
@@ -19,6 +19,7 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState<PortalUser | null>(null);
   const [open, setOpen] = useState(false);
 
   const load = useCallback(async () => {
@@ -61,6 +62,24 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
     } catch (err) {
       soundEffects.playError();
       onToast(err instanceof ApiError ? err.message : 'Could not update role');
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const deleteUser = async () => {
+    const u = confirmDeleteUser;
+    if (!u || busyId) return;
+    setBusyId(u.id);
+    try {
+      await repApi.deleteUser(u.id);
+      soundEffects.playSuccessChime();
+      onToast(`${u.fullName} deleted from the database.`);
+      setConfirmDeleteUser(null);
+      await load();
+    } catch (err) {
+      soundEffects.playError();
+      onToast(err instanceof ApiError ? err.message : 'Could not delete user');
     } finally {
       setBusyId(null);
     }
@@ -232,34 +251,105 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
                         </div>
 
                         {!isSelf && (
-                          <button
-                            onClick={() => toggleRole(u)}
-                            disabled={busyId === u.id}
-                            className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60 ${
-                              isRep
-                                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/40'
-                                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-200'
-                            }`}
-                          >
-                            {busyId === u.id ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : isRep ? (
-                              <>
-                                <UserX className="w-3.5 h-3.5" />
-                                Revoke Rep
-                              </>
-                            ) : (
-                              <>
-                                <ShieldCheck className="w-3.5 h-3.5" />
-                                Grant Rep
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => toggleRole(u)}
+                              disabled={busyId === u.id}
+                              className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer disabled:opacity-60 ${
+                                isRep
+                                  ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100 dark:hover:bg-rose-900/40'
+                                  : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-200'
+                              }`}
+                            >
+                              {busyId === u.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : isRep ? (
+                                <>
+                                  <UserX className="w-3.5 h-3.5" />
+                                  Revoke Rep
+                                </>
+                              ) : (
+                                <>
+                                  <ShieldCheck className="w-3.5 h-3.5" />
+                                  Grant Rep
+                                </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteUser(u)}
+                              className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+                              title="Delete user"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
                         )}
                       </div>
                     );
                   })
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {confirmDeleteUser && (
+          <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setConfirmDeleteUser(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="relative w-full max-w-sm bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden p-5 sm:p-6 space-y-4"
+            >
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-rose-100 dark:bg-rose-950/60 flex items-center justify-center shrink-0">
+                  <Trash2 className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-base">
+                    Delete User
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                    This will <span className="font-bold text-rose-600 dark:text-rose-400">permanently delete</span>{' '}
+                    <span className="font-bold">{confirmDeleteUser.fullName}</span> and wipe all their data:
+                    wallet, transactions, notifications, email verifications, pending signups, and mail queue entries.
+                    This action cannot be undone.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={deleteUser}
+                  disabled={busyId === confirmDeleteUser.id}
+                  className="flex-1 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-60 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  {busyId === confirmDeleteUser.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Yes, Delete
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => setConfirmDeleteUser(null)}
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
               </div>
             </motion.div>
           </div>

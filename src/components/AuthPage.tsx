@@ -9,6 +9,7 @@ interface AuthPageProps {
   onAuthSuccess: (student: AuthStudent) => void;
   initialMode?: AuthMode;
   onBack?: () => void;
+  devOtp?: boolean;
 }
 
 type AuthMode = 'signin' | 'signup';
@@ -27,19 +28,30 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onAuthSuccess,
   initialMode,
   onBack,
+  devOtp,
 }) => {
   const [mode, setMode] = useState<AuthMode>(initialMode ?? 'signin');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // OTP verification state (set after a successful signup).
-  const [otpScreen, setOtpScreen] = useState<{ identity: string; email: string } | null>(null);
+  // OTP verification state (set after a successful signup or password reset).
+  const [otpScreen, setOtpScreen] = useState<{ identity: string; email: string; purpose: 'signup' | 'reset' } | null>(
+    devOtp ? { identity: 'dev@test.com', email: 'dev@test.com', purpose: 'reset' } : null,
+  );
   const [otp, setOtp] = useState('');
   const [otpBusy, setOtpBusy] = useState(false);
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpMsg, setOtpMsg] = useState<string | null>(null);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+
+  // Password reset state (after OTP verified in reset mode).
+  const [resetScreen, setResetScreen] = useState<{ identity: string; otp: string } | null>(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [resetBusy, setResetBusy] = useState(false);
+  const [resetError, setResetError] = useState<string | null>(null);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Countdown timer
   useEffect(() => {
@@ -61,8 +73,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [regNo, setRegNo] = useState('');
-  const [department, setDepartment] = useState(DEPARTMENTS[0]);
-  const [level, setLevel] = useState('300 Level');
   const [password, setPassword] = useState('');
   const [inviteCode, setInviteCode] = useState('');
 
@@ -96,8 +106,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         fullName: fullName.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        department,
-        level,
         password,
         inviteCode: inviteCode.trim(),
       });
@@ -157,6 +165,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setOtpError(null);
     setOtpMsg(null);
     setOtpBusy(true);
+
+    // For password reset, just verify the OTP via reset-password endpoint... 
+    // Actually we need a separate verify endpoint. For now, verify via the existing
+    // flow then route to reset screen on success.
+    if (otpScreen.purpose === 'reset') {
+      try {
+        // Verify the OTP by calling forgot-password won't work — we need to just
+        // store the OTP and pass it to the reset-password form.
+        setResetScreen({ identity: otpScreen.identity, otp });
+        setOtpBusy(false);
+        return;
+      } catch {
+        // fallthrough
+      }
+    }
 
     const apiPromise = authApi.verifyOtp(otpScreen.identity, otp);
 
@@ -250,6 +273,134 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   };
 
+  const handleForgotPassword = async () => {
+    const identity = signInEmailOrRegNo.trim();
+    if (!identity) {
+      setError('Enter your email or registration number first.');
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      await authApi.forgotPassword(identity);
+      soundEffects.playSuccessChime();
+      setOtpScreen({ identity, email: identity, purpose: 'reset' });
+      setCooldown(60);
+      setOtp('');
+      setOtpError(null);
+      setOtpMsg('A password reset code has been sent to your email.');
+    } catch (err) {
+      soundEffects.playError();
+      setError(err instanceof ApiError ? err.message : 'Could not send reset code');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetScreen) return;
+    setResetError(null);
+    if (newPassword !== confirmPassword) {
+      setResetError('Passwords do not match.');
+      return;
+    }
+    setResetBusy(true);
+    try {
+      await authApi.resetPassword(resetScreen.identity, resetScreen.otp, newPassword);
+      soundEffects.playSuccessChime();
+      setResetSuccess(true);
+      setResetScreen(null);
+      setOtpScreen(null);
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      soundEffects.playError();
+      setResetError(err instanceof ApiError ? err.message : 'Could not reset password');
+    } finally {
+      setResetBusy(false);
+    }
+  };
+
+  // ---- New Password Screen (after OTP verified in reset mode) ----
+  if (resetScreen) {
+    return (
+      <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
+        <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
+          <div className="p-6 bg-slate-900 text-white space-y-1">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
+              W
+            </div>
+            <h3 className="text-xl font-extrabold tracking-tight mt-2">Set new password</h3>
+            <p className="text-xs text-slate-400">Choose a strong password for your account.</p>
+          </div>
+
+          <form onSubmit={handleResetPassword} className="p-6 space-y-4">
+            {resetError && (
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>{resetError}</span>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">New Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Confirm Password</label>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your password"
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 focus:outline-indigo-600"
+                />
+              </div>
+              {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 mt-1">Passwords do not match</p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={resetBusy || !newPassword || !confirmPassword || newPassword !== confirmPassword}
+              className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
+            >
+              {resetBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+              <span>Reset Password</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => { setResetScreen(null); setOtpScreen(null); setNewPassword(''); setConfirmPassword(''); setResetError(null); }}
+              className="w-full text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3 inline mr-1 -mt-0.5" />
+              Back to sign in
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (otpScreen) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
@@ -258,9 +409,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
               W
             </div>
-            <h3 className="text-xl font-extrabold tracking-tight mt-2">Enter verification code</h3>
+            <h3 className="text-xl font-extrabold tracking-tight mt-2">
+              {otpScreen.purpose === 'reset' ? 'Password reset code' : 'Enter verification code'}
+            </h3>
             <p className="text-xs text-slate-400">
-              We sent a 6-digit code to <strong className="text-slate-200">{otpScreen.email}</strong>. It expires in 10 minutes.
+              {otpScreen.purpose === 'reset'
+                ? <>We sent a 6-digit code to <strong className="text-slate-200">{otpScreen.email}</strong>. It expires in 10 minutes.</>
+                : <>We sent a 6-digit code to <strong className="text-slate-200">{otpScreen.email}</strong>. It expires in 10 minutes.</>}
             </p>
           </div>
 
@@ -291,7 +446,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   transition={{ duration: 0.45, ease: 'easeInOut' }}
                   className="relative"
                 >
-                  <div className="flex justify-between gap-2">
+                  <div className="flex justify-between gap-1.5 sm:gap-2">
                     {Array.from({ length: 6 }).map((_, i) => (
                       <input
                         key={i}
@@ -307,7 +462,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                         onKeyDown={(e) => handleOtpBoxKeyDown(i, e)}
                         onPaste={handleOtpBoxPaste}
                         aria-label={`Digit ${i + 1}`}
-                        className={`w-12 h-14 sm:w-14 sm:h-16 rounded-xl border text-center text-2xl font-mono font-black focus:outline-indigo-600 focus:border-indigo-500 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 ${
+                        className={`flex-1 min-w-0 h-12 sm:h-14 rounded-xl border text-center text-xl sm:text-2xl font-mono font-black focus:outline-indigo-600 focus:border-indigo-500 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 ${
                           otpStage === 'success'
                             ? 'border-emerald-500 dark:border-emerald-500 text-emerald-600 dark:text-emerald-400'
                             : otpStage === 'failure'
@@ -343,12 +498,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Verify & Activate Account</span>
+                  <span>{otpScreen.purpose === 'reset' ? 'Verify Code' : 'Verify & Activate Account'}</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={handleResendOtp}
+                  onClick={otpScreen.purpose === 'reset' ? handleForgotPassword : handleResendOtp}
                   disabled={resending || cooldown > 0}
                   className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
                 >
@@ -373,6 +528,30 @@ export const AuthPage: React.FC<AuthPageProps> = ({
               </>
             )}
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  // ---- Password Reset Success Screen ----
+  if (resetSuccess) {
+    return (
+      <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
+        <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden text-center p-8 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center mx-auto">
+            <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+          </div>
+          <h3 className="text-xl font-extrabold tracking-tight">Password reset successful</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Your password has been updated. You can now sign in with your new password.
+          </p>
+          <button
+            onClick={() => { setResetSuccess(false); setSignInPassword(''); }}
+            className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
+          >
+            Sign In
+            <ArrowRight className="w-4 h-4" />
+          </button>
         </div>
       </div>
     );
@@ -484,6 +663,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                     className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
                   />
                 </div>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={busy}
+                  className="mt-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  Forgot Password?
+                </button>
               </div>
 
               <button
@@ -547,8 +734,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
+              <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Registration Number
                   </label>
@@ -563,27 +749,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                       className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-mono font-bold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 uppercase"
                     />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Level
-                  </label>
-                  <div className="relative">
-                    <GraduationCap className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <select
-                      value={level}
-                      onChange={(e) => setLevel(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
-                    >
-                      <option value="100 Level">100 Level</option>
-                      <option value="200 Level">200 Level</option>
-                      <option value="300 Level">300 Level</option>
-                      <option value="400 Level">400 Level</option>
-                      <option value="500 Level">500 Level</option>
-                    </select>
-                  </div>
-                </div>
               </div>
 
               <div>
@@ -603,41 +768,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Phone Number
-                  </label>
-                  <div className="relative">
-                    <KeyRound className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="tel"
-                      required
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      placeholder="0803 000 0000"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
-                    />
-                  </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Phone Number
+                </label>
+                <div className="relative">
+                  <KeyRound className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="08030000000"
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold focus:outline-indigo-600 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
+                  />
                 </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Department
-                  </label>
-                  <div className="relative">
-                    <Building2 className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
-                    <select
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 dark:border-neutral-700 text-xs font-semibold bg-slate-50 dark:bg-neutral-800 dark:text-slate-100"
-                    >
-                      {DEPARTMENTS.map((d) => (
-                        <option key={d} value={d}>{d}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
+                  11 digits (0XXXXXXXXXX). +234 is accepted and converted automatically.
+                </p>
               </div>
 
               <div>
