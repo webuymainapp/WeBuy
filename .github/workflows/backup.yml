@@ -28,6 +28,11 @@ jobs:
       - name: Dump database
         run: pg_dump --no-owner --no-privileges "${{ secrets.DATABASE_URL }}" > "backups/webuy_$(date +%Y%m%d).sql"
 
+      - name: Purge stale/unverified signups
+        run: |
+          psql "${{ secrets.DATABASE_URL }}" -c \
+            "delete from pending_signups where used_at is not null or created_at < now() - interval '7 days';"
+
       - name: Commit and push dump
         working-directory: backups
         run: |
