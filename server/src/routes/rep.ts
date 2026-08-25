@@ -284,6 +284,7 @@ router.delete(
     // The student row itself — cascades handle wallet, notifications,
     // student_textbooks, verification_tokens, wallet_transactions, etc.
     await query('delete from students where id = $1', [targetId]);
+    overviewCache.del('overview');
     res.json({ ok: true, deleted: target.rows[0].full_name });
   }),
 );
