@@ -14,7 +14,7 @@ import {
   OTP_TTL_MINUTES,
   OTP_MAX_ATTEMPTS,
 } from '../lib/security';
-import { signAuthToken } from '../lib/jwt';
+import { signAuthToken, newSessionToken } from '../lib/jwt';
 import { enqueueVerificationEmail, enqueueMail } from '../lib/mail';
 import { createHash } from 'node:crypto';
 import { requireAuth } from '../middleware/auth';
@@ -152,11 +152,17 @@ router.post(
       );
     }
 
+    const sess = newSessionToken();
     const token = signAuthToken({
       sub: row.id,
       role: row.role,
       reg_no: row.reg_no,
+      sess,
     });
+
+    // Single-session: overwrite the stored session token so any older
+    // browser's token (with an older sess value) is rejected by requireAuth.
+    await query('update students set session_token = $1 where id = $2', [sess, row.id]);
 
     res.json({
       token,
@@ -271,11 +277,16 @@ router.post(
     }
     const row = result.rows[0];
 
+    const sess = newSessionToken();
     const token = signAuthToken({
       sub: row.id,
       role: row.role,
       reg_no: row.reg_no,
+      sess,
     });
+
+    // Single-session: this OTP login is also a sign-in, so rotate the session.
+    await query('update students set session_token = $1 where id = $2', [sess, row.id]);
 
     res.json({
       token,

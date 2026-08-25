@@ -282,3 +282,7 @@ alter table students add column if not exists free_profile_edit_used boolean not
 
 -- Phone edit count for graduated pricing: no phone → free/100; has phone → 100/200.
 alter table students add column if not exists phone_edit_count int not null default 0;
+
+-- Single-session enforcement: the currently-valid session token. On every sign-in
+-- a fresh token is generated, invalidating any other browser/device's session.
+alter table students add column if not exists session_token text;
