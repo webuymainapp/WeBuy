@@ -18,6 +18,7 @@ import {
   Mail,
   Phone,
   Contrast,
+  LogOut,
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { authApi, walletApi, ApiError } from '../lib/api';
@@ -28,6 +29,7 @@ interface SettingsPageProps {
   profile: StudentProfile;
   onUpdateProfile: (profile: StudentProfile) => void;
   onBack: () => void;
+  onSignOut: () => void;
 }
 
 function phoneCost(profile: StudentProfile, newPhone: string): number {
@@ -44,6 +46,7 @@ export const Settings: React.FC<SettingsPageProps> = ({
   profile,
   onUpdateProfile,
   onBack,
+  onSignOut,
 }) => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -432,6 +435,18 @@ export const Settings: React.FC<SettingsPageProps> = ({
             password in plain text.
           </p>
         </div>
+
+        {/* Sign Out */}
+        <button
+          onClick={() => {
+            soundEffects.playTap();
+            onSignOut();
+          }}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-rose-200 dark:border-rose-800/60 text-rose-600 dark:text-rose-400 text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+          Sign Out
+        </button>
       </div>
 
       {/* Edit Profile Modal */}

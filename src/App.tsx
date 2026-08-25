@@ -830,6 +830,7 @@ export default function App() {
               }
             }}
             onBack={() => setActiveTab('dashboard')}
+            onSignOut={handleSignOut}
           />
         )}
 
