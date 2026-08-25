@@ -433,7 +433,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                   {activeBook.courseCode}
                 </span>
                 <span className="text-xs font-mono font-extrabold text-amber-300 bg-amber-400/10 px-2.5 py-0.5 rounded-full border border-amber-400/20">
-                  ₦{activeBook.price.toLocaleString()}
+                  ₦{(activeBook.price - 100).toLocaleString()}
                 </span>
               </div>
 
