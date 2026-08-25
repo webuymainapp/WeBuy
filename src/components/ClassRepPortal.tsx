@@ -21,6 +21,7 @@ import {
   Banknote,
   X,
   ClipboardList,
+  RefreshCw,
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { ManageTextbooks } from './ManageTextbooks';
@@ -291,16 +292,32 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
             </p>
           </div>
 
-          <button
-            onClick={() => {
-              soundEffects.playTap();
-              setIsScanOpen(true);
-            }}
-            className="shrink-0 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
-          >
-            <QrCode className="w-4 h-4" />
-            <span>Scan QR Pass</span>
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => {
+                soundEffects.playTap();
+                bumpRefresh();
+                loadRoster(selectedCourse);
+                onDataChanged();
+                showToast('Data refreshed.');
+              }}
+              className="px-3.5 py-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Refresh</span>
+            </button>
+
+            <button
+              onClick={() => {
+                soundEffects.playTap();
+                setIsScanOpen(true);
+              }}
+              className="shrink-0 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 transition-all cursor-pointer"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>Scan QR Pass</span>
+            </button>
+          </div>
         </div>
       </div>
 

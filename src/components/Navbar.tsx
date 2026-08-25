@@ -26,12 +26,12 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-30 bg-slate-100 dark:bg-black">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 h-12 flex items-center justify-between gap-3">
         {/* Brand & Identity */}
         <div className="flex items-center gap-3 min-w-0">
           <div className="flex items-center text-left group focus:outline-none">
             <img src="/icons/logo.png" alt="WeBuy" className="w-8 h-8 rounded-lg object-cover" />
-            <span className="text-xl font-semibold text-slate-900 dark:text-slate-100">eBuy</span>
+            <span className="text-lg font-semibold text-slate-900 dark:text-slate-100">eBuy</span>
         </div>
         </div>
 
@@ -63,7 +63,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   <User className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                  Student View
+                  Student
                 </button>
                 <button
                   onClick={() => {
@@ -77,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                  Class Rep Portal
+                  Rep Portal
                 </button>
               </>
             )}

@@ -257,7 +257,7 @@ export const TransactionHistory: React.FC<TransactionHistoryProps> = ({
   return (
     <section className="space-y-4">
       {/* Sticky header — flush with the page, no separate card */}
-      <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
+      <div className="sticky top-12 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
         <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100">

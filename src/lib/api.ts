@@ -802,6 +802,7 @@ export const accountApi = {
       textbookValue: number;
       withdrawals: number;
       livePocketFi: number | null;
+      userWallets: number;
       recent: AccountEntry[];
     }>('/api/account'),
 

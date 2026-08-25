@@ -73,6 +73,17 @@ router.get(
       }
     }
 
+    // Total unspent points across every student's wallet — how much of the
+    // money funded in is still sitting in student wallets, not yet spent on
+    // textbooks. Chief admin only.
+    let userWallets = 0;
+    if (_req.student.role === 'chief_admin') {
+      const wallets = await query(
+        'select coalesce(sum(point_balance), 0)::int as total from student_wallets',
+      );
+      userWallets = wallets.rows[0].total as number;
+    }
+
     const recent = [...recentTx.rows, ...recentWalletDep.rows]
       .sort(
         (a, b) =>
@@ -85,6 +96,7 @@ router.get(
       textbookValue,
       withdrawals,
       livePocketFi,
+      userWallets,
       recent,
     });
   }),

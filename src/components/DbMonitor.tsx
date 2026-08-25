@@ -15,6 +15,8 @@ import {
   Receipt,
   Trash2,
   Clock,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 import { dbApi, ApiError, type DbMonitorData } from '../lib/api';
 
@@ -29,8 +31,9 @@ const formatBytes = (b: number) => {
 };
 
 export const DbMonitor: React.FC<DbMonitorProps> = ({ onToast }) => {
+  const [open, setOpen] = useState(false);
   const [data, setData] = useState<DbMonitorData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -46,6 +49,7 @@ export const DbMonitor: React.FC<DbMonitorProps> = ({ onToast }) => {
     }
   }, []);
 
+  // Load once on mount so the trigger card can show a health summary.
   useEffect(() => {
     load();
   }, [load]);
@@ -65,28 +69,119 @@ export const DbMonitor: React.FC<DbMonitorProps> = ({ onToast }) => {
   const card = 'bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm';
   const label = 'text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400';
 
-  if (loading) {
-    return (
-      <div className={card}>
-        <div className="flex items-center justify-center gap-2 py-8 text-slate-400">
-          <Loader2 className="w-5 h-5 animate-spin" />
-          <span className="text-xs font-semibold">Reading database stats…</span>
-        </div>
-      </div>
-    );
-  }
+  // Compact health summary for the trigger card
+  const summary = data
+    ? { size: data.db.size, students: data.counts.students, txns: data.counts.wallet_txns }
+    : null;
 
-  if (error || !data) {
-    return (
-      <div className={card}>
-        <div className="flex items-start gap-2 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{error || 'Could not load database stats'}</span>
-        </div>
+  return (
+    <>
+      {/* Trigger card — opens the modal */}
+      <div className="bg-white dark:bg-neutral-900 rounded-3xl p-5 border border-slate-200 dark:border-neutral-700 shadow-sm">
+        <button
+          onClick={() => {
+            setOpen(true);
+            if (!data) load();
+          }}
+          className="w-full flex items-center gap-3 text-left cursor-pointer group min-w-0"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900 flex items-center justify-center shrink-0">
+            <Database className="w-5 h-5 text-emerald-600 dark:text-emerald-300" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
+              Database Monitor
+              {summary && (
+                <span className="text-[10px] font-extrabold font-mono px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">
+                  {summary.size}
+                </span>
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
+              {summary
+                ? `${summary.students} students · ${summary.txns} wallet transactions`
+                : 'Open to view DB health, sizes and cleanup recommendations'}
+            </p>
+          </div>
+          <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 group-hover:text-emerald-500 transition-colors" />
+        </button>
       </div>
-    );
-  }
 
+      {/* Modal */}
+      {open && (
+        <div className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => setOpen(false)}
+          />
+          <div className="relative w-full max-w-2xl bg-slate-100 dark:bg-black rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden max-h-[90dvh] flex flex-col">
+            {/* Modal header */}
+            <div className="p-4 sm:p-5 bg-slate-900 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                  <Database className="w-5 h-5 text-emerald-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-base text-white leading-tight">Database Monitor</h3>
+                  <p className="text-[11px] text-slate-400 truncate">
+                    {data ? `${data.db.name} · ${data.db.size} · ${data.db.connections} connections` : 'Chief admin · read-only'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={refresh}
+                  disabled={refreshing}
+                  className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                  Refresh
+                </button>
+                <button
+                  onClick={() => setOpen(false)}
+                  className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+              {loading ? (
+                <div className={card}>
+                  <div className="flex items-center justify-center gap-2 py-8 text-slate-400">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span className="text-xs font-semibold">Reading database stats…</span>
+                  </div>
+                </div>
+              ) : error || !data ? (
+                <div className={card}>
+                  <div className="flex items-start gap-2 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{error || 'Could not load database stats'}</span>
+                  </div>
+                </div>
+              ) : (
+                <DbMonitorContent data={data} label={label} card={card} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+function DbMonitorContent({
+  data,
+  label,
+  card,
+}: {
+  data: DbMonitorData;
+  label: string;
+  card: string;
+}) {
   const n = data.counts;
   const totalBytes = data.tables.reduce((s, t) => s + t.sizeBytes, 0);
   const cleanupNeeded =
@@ -97,34 +192,6 @@ export const DbMonitor: React.FC<DbMonitorProps> = ({ onToast }) => {
 
   return (
     <div className="space-y-3">
-      {/* Header */}
-      <div className="bg-slate-900 text-white rounded-3xl p-5 shadow-xl border border-slate-800 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/15 flex items-center justify-center shrink-0">
-              <Database className="w-5 h-5 text-emerald-400" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                Database Monitor
-              </h2>
-              <p className="text-xs text-slate-400">
-                {data.db.name} · {data.db.size} · {data.db.connections} active connections
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={refresh}
-            disabled={refreshing}
-            className="shrink-0 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 transition-all cursor-pointer"
-          >
-            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
       {/* Overview metric cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className={card}>
@@ -312,4 +379,4 @@ export const DbMonitor: React.FC<DbMonitorProps> = ({ onToast }) => {
       </p>
     </div>
   );
-};
+}

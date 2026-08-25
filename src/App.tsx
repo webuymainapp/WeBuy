@@ -484,7 +484,7 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-5 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-2 space-y-6">
         {/* Backend connectivity banner */}
         <AnimatePresence>
           {dataError && (
@@ -581,7 +581,7 @@ export default function App() {
             )}
 
             {/* Compulsory Textbooks — flush sticky header */}
-            <div className="sticky top-16 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
+            <div className="sticky top-12 z-20 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-1 pb-4 space-y-4 bg-slate-100 dark:bg-black border-b border-slate-200/60 dark:border-neutral-800">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
                   <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">

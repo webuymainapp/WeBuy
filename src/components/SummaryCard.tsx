@@ -40,19 +40,19 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const completionPercentage = totalAssigned > 0 ? Math.round((paidBooks.length / totalAssigned) * 100) : 0;
 
   return (
-    <div className="rounded-xl p-4 border border-slate-200 dark:border-[#2A2A2A] flex flex-col gap-3 relative bg-slate-200 dark:bg-[#161616]">
+    <div className="rounded-xl p-3 border border-slate-200 dark:border-[#2A2A2A] flex flex-col gap-2.5 relative bg-slate-200 dark:bg-[#161616]">
       {/* Profile row */}
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <img
             src={profile.avatarUrl}
             alt={profile.fullName}
-            className="w-10 h-10 rounded-full object-cover shrink-0"
+            className="w-9 h-9 rounded-full object-cover shrink-0"
             referrerPolicy="no-referrer"
           />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="font-semibold text-base text-slate-900 dark:text-white truncate">{profile.fullName}</h2>
+              <h2 className="font-semibold text-sm text-slate-900 dark:text-white truncate">{profile.fullName}</h2>
               {accountNumber && (
                 <button
                   onClick={async () => {
@@ -63,37 +63,37 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
                   className="text-slate-400 dark:text-gray-400 hover:text-slate-700 dark:hover:text-white transition-colors"
                   aria-label="Copy account number"
                 >
-                  {copied ? <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" /> : <Copy className="w-3.5 h-3.5" />}
+                  {copied ? <Check className="w-3 h-3 text-indigo-600 dark:text-indigo-400" /> : <Copy className="w-3 h-3" />}
                 </button>
               )}
             </div>
-            <div className="text-xs text-slate-500 dark:text-gray-400 flex items-center gap-1">
+            <div className="text-[11px] text-slate-500 dark:text-gray-400 flex items-center gap-1">
               {accountNumber && <><span className="font-mono">{accountNumber}</span><span className="text-slate-300 dark:text-gray-600">•</span></>}
               <span className="text-indigo-600 dark:text-indigo-400">via {bankName || 'PocketFi'}</span>
             </div>
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 shrink-0">
+        <div className="flex flex-col items-end gap-0.5 shrink-0">
           <button
             onClick={onVerify}
             disabled={verifying}
-            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white px-2 py-0.5 rounded-md text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
           >
             <RefreshCw className={`w-3 h-3 ${verifying ? 'animate-spin' : ''}`} />
             Verify
           </button>
-          <span className="text-[10px] text-slate-500 dark:text-gray-400 text-right leading-tight">
+          <span className="text-[9px] text-slate-500 dark:text-gray-400 text-right leading-tight">
             Press verify to see funds
           </span>
         </div>
       </div>
 
       {/* Points row */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-end justify-between">
         <div className="flex flex-col gap-0.5">
-          <span className="text-slate-500 dark:text-gray-400 text-sm">Available Points</span>
+          <span className="text-slate-500 dark:text-gray-400 text-[11px]">Available Points</span>
           <div className="flex items-center gap-2">
-            <span className="text-indigo-600 dark:text-indigo-400 text-2xl font-extrabold font-mono tracking-tight">
+            <span className="text-indigo-600 dark:text-indigo-400 text-xl font-extrabold font-mono tracking-tight">
               {showBalance ? points.toLocaleString() : '••••••'}
             </span>
             <button
@@ -106,8 +106,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative w-7 h-7 shrink-0">
-            <svg className="w-7 h-7 -rotate-90" viewBox="0 0 36 36">
+          <div className="relative w-6 h-6 shrink-0">
+            <svg className="w-6 h-6 -rotate-90" viewBox="0 0 36 36">
               <circle cx="18" cy="18" r="15" fill="none" stroke="#E2E8F0" className="dark:stroke-[#2A2A2A]" strokeWidth="3" />
               <circle
                 cx="18" cy="18" r="15" fill="none"
@@ -122,7 +122,7 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
               {completionPercentage}
             </span>
           </div>
-          <span className="text-xs text-slate-500 dark:text-gray-400">
+          <span className="text-[11px] text-slate-500 dark:text-gray-400">
             {paidBooks.length}/{totalAssigned} collected
           </span>
         </div>
@@ -132,11 +132,11 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
       {unpaidBooks.length > 0 && (
         <button
           onClick={onPayAll}
-          className="w-full bg-[#5D21D1] hover:bg-[#4a10a3] text-white font-semibold py-3 rounded-full text-sm flex items-center justify-center gap-2 transition-colors"
+          className="self-start flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md shadow-indigo-600/30 cursor-pointer"
         >
-          <CreditCard className="w-4 h-4" />
-          Pay All ({unpaidBooks.length} due)
-          <ArrowRight className="w-4 h-4" />
+          <CreditCard className="w-3.5 h-3.5" />
+          <span className="text-[10px]">Pay All ({unpaidBooks.length} due)</span>
+          <ArrowRight className="w-3 h-3" />
         </button>
       )}
     </div>

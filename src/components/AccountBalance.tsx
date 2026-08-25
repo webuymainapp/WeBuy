@@ -30,6 +30,7 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
     textbookValue: number;
     withdrawals: number;
     livePocketFi: number | null;
+    userWallets: number;
     recent: AccountEntry[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,6 +127,11 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
             {isChief && data.livePocketFi != null && (
               <span className="self-end px-2 py-0.5 rounded-full bg-emerald-500/80 text-white text-[10px] font-bold">
                 Live PocketFi: {formatNaira(data.livePocketFi)}
+              </span>
+            )}
+            {isChief && (
+              <span className="self-end px-2 py-0.5 rounded-full bg-rose-500/80 text-white text-[10px] font-bold">
+                Users' Unspent: {formatNaira(data.userWallets ?? 0)}
               </span>
             )}
           </div>
