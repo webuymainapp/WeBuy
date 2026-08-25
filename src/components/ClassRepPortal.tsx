@@ -443,11 +443,6 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                 </h3>
                 <p className="text-xs text-indigo-200 italic mt-1">{activeBook.author}</p>
               </div>
-
-              <div className="pt-2 border-t border-indigo-800/60 text-xs text-indigo-300 space-y-1">
-                <p>Lecturer: <strong className="text-white">{activeBook.lecturerName}</strong></p>
-                <p>Pickup: <strong className="text-white">{activeBook.pickupLocation}</strong></p>
-              </div>
             </div>
           </div>
 
