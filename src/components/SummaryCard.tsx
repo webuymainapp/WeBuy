@@ -25,6 +25,9 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   accountNumber,
   bankName,
   accountName,
+  onCopyAccount,
+  onVerify,
+  verifying,
 }) => {
   const [showBalance, setShowBalance] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -70,10 +73,19 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
             </div>
           </div>
         </div>
-        <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors shrink-0">
-          <RefreshCw className="w-3 h-3" />
-          Verify
-        </button>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <button
+            onClick={onVerify}
+            disabled={verifying}
+            className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <RefreshCw className={`w-3 h-3 ${verifying ? 'animate-spin' : ''}`} />
+            Verify
+          </button>
+          <span className="text-[10px] text-slate-500 dark:text-gray-400 text-right leading-tight">
+            Press verify to see funds
+          </span>
+        </div>
       </div>
 
       {/* Points row */}
