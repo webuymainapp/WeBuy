@@ -318,6 +318,11 @@ create table if not exists secret_purchases (
   paid_at timestamptz not null default now(),
   unique (student_id, product_id)
 );
+-- Per-buyer delivery flag: the chief marks an individual sale settled (e.g. when
+-- handing a student their secret item). Defaults to false (unsettled) and simply
+-- surfaces as a status badge to that buyer under "My secret items". It does NOT
+-- hide or delete anything. Added for existing databases.
+alter table secret_purchases add column if not exists settled boolean not null default false;
 create index if not exists idx_secret_purchases_student on secret_purchases(student_id, paid_at desc);
 
 -- Email-link verification: password resets use a one-time hashed token instead

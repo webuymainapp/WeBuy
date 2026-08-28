@@ -849,6 +849,7 @@ export interface SecretProduct {
   price: number;
   basePrice?: number;
   purchaseCount?: number;
+  purchased?: boolean;
 }
 export interface SecretPurchase {
   id: string;
@@ -857,6 +858,7 @@ export interface SecretPurchase {
   status: string;
   paidAt: string;
   name: string;
+  settled?: boolean;
 }
 export interface SecretOrder {
   id: string;
@@ -868,6 +870,7 @@ export interface SecretOrder {
   regNo: string;
   productId: string;
   productName: string;
+  settled?: boolean;
 }
 
 export interface SecretOrderRaw {
@@ -880,6 +883,7 @@ export interface SecretOrderRaw {
   reg_no: string;
   product_id: string;
   product_name: string;
+  settled: boolean;
 }
 
 export const secretApi = {
@@ -908,6 +912,7 @@ export const secretApi = {
         regNo: o.reg_no,
         productId: o.product_id,
         productName: o.product_name,
+        settled: o.settled,
       })),
     })),
 
@@ -919,6 +924,12 @@ export const secretApi = {
 
   createProduct: (body: { name: string; price: number }) =>
     request<{ ok: boolean }>('/api/secret/products', json('POST', body)),
+
+  setSettled: (purchaseId: string, settled: boolean) =>
+    request<{ ok: boolean; purchase: { id: string; settled: boolean } }>(
+      `/api/secret/orders/${purchaseId}/settle`,
+      json('PATCH', { settled }),
+    ),
 
   deleteProduct: (id: string) =>
     request<{ ok: boolean }>(`/api/secret/products/${id}`, {

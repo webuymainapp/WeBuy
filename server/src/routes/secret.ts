@@ -83,9 +83,9 @@ router.get(
   }),
 );
 
-/** My secret purchases (revealed after buying). Items fade from the buyer's view
- *  24h after purchase (one-time per item — the `purchased` flag stays permanent so
- *  they can't re-buy). The chief's full history is on /orders. */
+/** My secret purchases (revealed after buying). These stay visible to the buyer
+ *  permanently — they only disappear when the chief deletes the product, so a
+ *  secret item the user paid for is always available under "My secret items". */
 router.get(
   '/purchases',
   asyncHandler(async (req, res) => {
@@ -96,11 +96,11 @@ router.get(
       throw new HttpError(403, 'No access to the secret marketplace');
     }
     const rows = await query(
-      `select sp.id, sp.product_id, sp.price, sp.status, sp.paid_at, p.name
+      `select sp.id, sp.product_id, sp.price, sp.status, sp.paid_at,
+              p.name, sp.settled
          from secret_purchases sp
          join secret_products p on p.id = sp.product_id
         where sp.student_id = $1
-          and sp.paid_at >= now() - interval '24 hours'
         order by sp.paid_at desc`,
       [req.student.sub],
     );
@@ -117,7 +117,7 @@ router.get(
   requireChiefAdmin,
   asyncHandler(async (_req, res) => {
     const rows = await query(
-      `select sp.id, sp.price, sp.status, sp.paid_at,
+      `select sp.id, sp.price, sp.status, sp.paid_at, sp.settled,
               sp.student_id, s.full_name, s.reg_no,
               sp.product_id, p.name as product_name
          from secret_purchases sp
@@ -249,6 +249,30 @@ router.delete(
     const id = String(req.params.id);
     await query('delete from secret_products where id = $1', [id]);
     res.json({ ok: true });
+  }),
+);
+
+/** Mark an individual secret sale settled (delivered/done) or unsettled — chief
+ *  admin only. This is a per-buyer status flag: it surfaces to that buyer as a
+ *  badge under "My secret items" but never hides or deletes anything. */
+router.patch(
+  '/orders/:id/settle',
+  requireChiefAdmin,
+  validateBody(z.object({ settled: z.boolean() })),
+  asyncHandler(async (req, res) => {
+    const id = String(req.params.id);
+    const settled = req.body.settled === true;
+    const result = await query(
+      `update secret_purchases
+          set settled = $1
+        where id = $2
+        returning id, settled`,
+      [settled, id],
+    );
+    if (result.rowCount === 0) {
+      throw new HttpError(404, 'Purchase not found');
+    }
+    res.json({ ok: true, purchase: result.rows[0] });
   }),
 );
 
