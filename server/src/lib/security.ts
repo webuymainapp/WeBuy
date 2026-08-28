@@ -19,13 +19,22 @@ function sha256(value: string): string {
 }
 
 export const OTP_LENGTH = 6;
-export const OTP_TTL_MINUTES = 10;
+export const OTP_TTL_MINUTES = 24 * 60; // 24h for emailed links
 export const OTP_MAX_ATTEMPTS = 5;
 
 /** Generate a fresh 6-digit OTP (as a zero-padded string). */
 export function generateOtp(): string {
   const n = randomBytes(3).readUIntBE(0, 3);
   return String(n % 1_000_000).padStart(OTP_LENGTH, '0');
+}
+
+/** Generate a high-entropy one-time token (hex). Only its hash is ever stored. */
+export function generateToken(): string {
+  return randomBytes(32).toString('hex');
+}
+
+export function hashToken(token: string): string {
+  return sha256(token);
 }
 
 export interface PendingSignupInput {
@@ -41,23 +50,24 @@ export interface PendingSignupInput {
 
 /**
  * Stage an unverified signup. The email is NOT inserted into `students` until
- * the OTP is verified — it lives in `pending_signups` first so a never-verified
- * signup can be re-attempted without "email already exists". Returns the plain
- * OTP so the email body can show it (only its hash is stored).
+ * the emailed verification link is followed — it lives in `pending_signups`
+ * first so a never-verified signup can be re-attempted without "email already
+ * exists". Returns the plain one-time token so the email body can link to it
+ * (only its hash is stored).
  */
 export async function stagePendingSignup(input: PendingSignupInput): Promise<string> {
-  const otp = generateOtp();
-  const otpHash = sha256(otp);
+  const token = generateToken();
+  const tokenHash = hashToken(token);
 
   // Replace any earlier unverified attempt for this identity so re-signing-up
-  // before verification simply issues a fresh code instead of erroring.
+  // before verification simply issues a fresh token instead of erroring.
   await query('delete from pending_signups where email = $1 or reg_no = $2', [
     input.email,
     input.regNo,
   ]);
   await query(
     `insert into pending_signups
-       (reg_no, full_name, email, phone, department, level, password_hash, otp_hash, attempts, expires_at, class_id, last_otp_sent_at)
+       (reg_no, full_name, email, phone, department, level, password_hash, token_hash, attempts, expires_at, class_id, last_otp_sent_at)
      values ($1, $2, $3, $4, $5, $6, $7, $8, 0, now() + make_interval(mins => $9), $10, now())`,
     [
       input.regNo,
@@ -67,21 +77,21 @@ export async function stagePendingSignup(input: PendingSignupInput): Promise<str
       input.department,
       input.level,
       input.passwordHash,
-      otpHash,
+      tokenHash,
       OTP_TTL_MINUTES,
       input.classId,
     ],
   );
-  return otp;
+  return token;
 }
 
 export type ReissueResult =
-  | { ok: true; otp: string; email: string }
+  | { ok: true; token: string; email: string }
   | { ok: false; cooldown: number }  // seconds remaining
   | null;                             // no pending signup
 
-/** Re-issue an OTP for an existing pending signup. Resets the attempt counter. */
-export async function reissuePendingOtp(
+/** Re-issue a verification token for an existing pending signup. Resets expiry. */
+export async function reissuePendingToken(
   emailOrRegNo: string,
 ): Promise<ReissueResult> {
   const COOLDOWN_SECONDS = 60;
@@ -94,7 +104,7 @@ export async function reissuePendingOtp(
   if (res.rowCount === 0) return null;
   const row = res.rows[0];
 
-  // Enforce cooldown — reject if last OTP was sent less than 60s ago.
+  // Enforce cooldown — reject if the last link email was sent less than 60s ago.
   if (row.last_otp_sent_at) {
     const elapsed = (Date.now() - new Date(row.last_otp_sent_at).getTime()) / 1000;
     if (elapsed < COOLDOWN_SECONDS) {
@@ -102,62 +112,44 @@ export async function reissuePendingOtp(
     }
   }
 
-  const otp = generateOtp();
-  const otpHash = sha256(otp);
+  const token = generateToken();
+  const tokenHash = hashToken(token);
   await query(
     `update pending_signups
-        set otp_hash = $1, attempts = 0,
+        set token_hash = $1, attempts = 0,
             expires_at = now() + make_interval(mins => $2),
             last_otp_sent_at = now()
       where id = $3`,
-    [otpHash, OTP_TTL_MINUTES, row.id],
+    [tokenHash, OTP_TTL_MINUTES, row.id],
   );
-  return { ok: true, otp, email: row.email as string };
+  return { ok: true, token, email: row.email as string };
 }
 
 /**
- * Verify an OTP against a pending signup and, on success, promote the staged
- * account into a real `students` row with email_verified = true.
- * Wrong guesses increment `attempts`; past the cap the code is dead and a fresh
- * one must be requested. Returns the student id.
+ * Verify a one-time email verification token against a pending signup and, on
+ * success, promote the staged account into a real `students` row with
+ * email_verified = true. The token is single-use and expiring. Returns the
+ * student id.
  */
-export async function consumePendingSignupOtp(
-  emailOrRegNo: string,
-  otp: string,
-): Promise<string> {
+export async function consumePendingSignupToken(token: string): Promise<string> {
+  const tokenHash = hashToken(token);
   const res = await query(
     `select * from pending_signups
-      where (email = $1 or reg_no = $1) and used_at is null
+      where token_hash = $1
       limit 1`,
-    [emailOrRegNo],
+    [tokenHash],
   );
   if (res.rowCount === 0) {
-    throw new HttpError(400, 'No pending signup found. Please sign up first.');
+    throw new HttpError(400, 'This verification link is invalid. Please sign up again.');
   }
   const p = res.rows[0];
 
   if (new Date(p.expires_at) <= new Date()) {
-    throw new HttpError(400, 'This code has expired. Request a new one.');
+    throw new HttpError(400, 'This verification link has expired. Please request a new one.');
   }
 
-  const attempts = Number(p.attempts ?? 0);
-  if (attempts >= OTP_MAX_ATTEMPTS) {
-    throw new HttpError(400, 'Too many wrong attempts. Request a new code.');
-  }
-
-  const otpHash = sha256(otp);
-  if (p.otp_hash !== otpHash) {
-    await query('update pending_signups set attempts = $1 where id = $2', [
-      attempts + 1,
-      p.id,
-    ]);
-    const left = OTP_MAX_ATTEMPTS - attempts - 1;
-    throw new HttpError(
-      400,
-      left <= 0
-        ? 'Too many wrong attempts. Request a new code.'
-        : `Incorrect code. ${left} attempt${left === 1 ? '' : 's'} left.`,
-    );
+  if (p.used_at) {
+    throw new HttpError(400, 'This verification link has already been used. Please sign in.');
   }
 
   // Guard against a race where the email/reg_no got taken by a verified

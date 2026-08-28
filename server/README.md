@@ -48,11 +48,13 @@ npm run db:clean
 ## Endpoints
 | Method | Route | Auth | Purpose |
 | ------ | ----- | ---- | ------- |
-| POST | `/api/auth/signup` | – | Create account (bcrypt), stages OTP code |
+| POST | `/api/auth/signup` | – | Create account (bcrypt), stages a verification link |
 | POST | `/api/auth/signin` | – | Login by email or reg no |
 | GET | `/api/auth/me` | JWT | Current student |
-| POST | `/api/auth/resend-otp` | – | Re-issue a fresh 6-digit OTP code |
-| POST | `/api/auth/verify-otp` | – | Consume OTP → promote to student, returns `token` |
+| POST | `/api/auth/resend-verification` | – | Re-issue a fresh email verification link |
+| POST | `/api/auth/verify-email` | – | Consume one-time link → promote to student, returns `token` |
+| POST | `/api/auth/forgot-password` | – | Email a one-time password-reset link |
+| POST | `/api/auth/reset-password` | – | Consume reset link token + set new password |
 | POST | `/api/auth/change-password` | JWT | Verify current password, set a new one |
 | PATCH | `/api/auth/me` | JWT | Update full name / phone |
 | GET | `/api/textbooks` | – | Public catalog |
@@ -98,15 +100,17 @@ npm run db:clean
 - **Role hierarchy** — `student` < `class_rep` < `chief_admin`. The chief admin (the main course rep, `20241450652`) can toggle collection for **any** book. Other reps can only manage textbooks **they themselves added** (`textbooks.added_by`); every collect/revert/pass-collect is ownership-checked server-side, and `GET/PATCH /api/rep/users` are chief-admin-only.
 - **Rate limited** — `/api/auth/signup`, `/api/auth/signin`, `/api/auth/request-verification` are throttled per IP to blunt brute force.
 
-## Email OTP (frontend/Vercel)
-Backend never sends mail directly. On signup/resend it renders the 6-digit OTP
-email into `mail_queue` (the OTP is stored hashed in `pending_signups.otp_hash`,
-never in plaintext). A **mail worker** drains the queue: locally
+## Email verification links (frontend/Vercel)
+Backend never sends mail directly. On signup/reset it renders an email containing
+a **one-time link** into `mail_queue` (the token is stored hashed in
+`pending_signups.token_hash` / `password_resets.token_hash`, never in
+plaintext). A **mail worker** drains the queue: locally
 `mail/mail-worker.ts` runs alongside `npm run dev` via a Vite plugin; in
 production the **Vercel serverless function** (`api/send-verification.ts`) is
-triggered by the frontend and sends the Gmail SMTP email. The user types the code
-into the frontend, which calls `POST /api/auth/verify-otp` — the backend remains
-the source of truth.
+triggered by the frontend and sends the Gmail SMTP email. Clicking the link
+reopens the app with `?verify=TOKEN` (activate account) or `?reset=TOKEN`
+(choose a new password); the frontend calls `/api/auth/verify-email` or
+`/api/auth/reset-password` — the backend remains the source of truth.
 
 ## Deploy on Render
 1. New **Web Service**, repo root = the repo, build = `cd server && npm install && npm run build`, start = `cd server && npm run start`.

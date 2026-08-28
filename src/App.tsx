@@ -39,6 +39,8 @@ import {
   ChevronDown,
   Check,
   LayoutGrid,
+  ShieldCheck,
+  Loader2,
 } from 'lucide-react';
 import { soundEffects } from './utils/audio';
 import {
@@ -154,6 +156,9 @@ export default function App() {
   const [userRole, setUserRole] = useState<'student' | 'class_rep' | 'chief_admin'>('student');
   const [showAuth, setShowAuth] = useState(() => new URLSearchParams(window.location.search).get('otp') === '1');
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
+  const [resetToken, setResetToken] = useState<string | null>(null);
+  const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
+  const [verifySuccess, setVerifySuccess] = useState<{ token: string; student: AuthStudent } | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
 
   const [activeRole, setActiveRole] = useState<'student' | 'class_rep'>('student');
@@ -323,6 +328,46 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Handle email-link entry: ?verify=TOKEN (activate signup) or ?reset=TOKEN.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const verifyToken = params.get('verify');
+    const reset = params.get('reset');
+    if (verifyToken) {
+      authApi
+        .verifyEmail(verifyToken)
+        .then((res) => {
+          setVerifySuccess({ token: res.token, student: res.student });
+        })
+        .catch((err) => {
+          setVerifyMsg(
+            err instanceof ApiError ? err.message : 'Verification link could not be used.',
+          );
+          setShowAuth(true);
+          setAuthMode('signin');
+        });
+      return;
+    }
+    if (reset) {
+      setResetToken(reset);
+      setShowAuth(true);
+      setAuthMode('signin');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // After showing the "account activated" success screen, sign in and drop the
+  // user straight onto their dashboard.
+  useEffect(() => {
+    if (!verifySuccess) return;
+    const t = window.setTimeout(() => {
+      setToken(verifySuccess.token);
+      handleAuthSuccess(verifySuccess.student);
+    }, 2200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [verifySuccess]);
+
   const handleAuthSuccess = (student: AuthStudent) => {
     const p = toStudentProfile(student, settings);
     setProfile(p);
@@ -418,16 +463,37 @@ export default function App() {
 
   // ----- Unauthenticated views ---------------------------------------------
   if (!authenticated) {
+    if (verifySuccess) {
+      return (
+        <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
+          <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden text-center p-8 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center mx-auto">
+              <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="text-xl font-extrabold tracking-tight">Account activated</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Your account is ready. Redirecting you to your dashboard…
+            </p>
+            <div className="flex items-center justify-center gap-2 text-slate-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-[11px] font-semibold">Taking you there now</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
     if (showAuth) {
       return (
         <AuthPage
           initialMode={authMode}
+          resetToken={resetToken}
+          onResetCleared={() => setResetToken(null)}
+          initialError={verifyMsg}
           onBack={() => setShowAuth(false)}
           onClose={() => {
             setShowAuth(false);
           }}
           onAuthSuccess={handleAuthSuccess}
-          devOtp={new URLSearchParams(window.location.search).get('otp') === '1'}
         />
       );
     }

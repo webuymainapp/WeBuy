@@ -10,7 +10,9 @@ interface AuthPageProps {
   onAuthSuccess: (student: AuthStudent) => void;
   initialMode?: AuthMode;
   onBack?: () => void;
-  devOtp?: boolean;
+  resetToken?: string | null;
+  onResetCleared?: () => void;
+  initialError?: string | null;
 }
 
 type AuthMode = 'signin' | 'signup';
@@ -29,30 +31,45 @@ export const AuthPage: React.FC<AuthPageProps> = ({
   onAuthSuccess,
   initialMode,
   onBack,
-  devOtp,
+  resetToken,
+  onResetCleared,
+  initialError,
 }) => {
   const [mode, setMode] = useState<AuthMode>(initialMode ?? 'signin');
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(initialError ?? null);
   const [busy, setBusy] = useState(false);
 
-  // OTP verification state (set after a successful signup or password reset).
-  const [otpScreen, setOtpScreen] = useState<{ identity: string; email: string; purpose: 'signup' | 'reset' } | null>(
-    devOtp ? { identity: 'dev@test.com', email: 'dev@test.com', purpose: 'reset' } : null,
-  );
-  const [otp, setOtp] = useState('');
-  const [otpBusy, setOtpBusy] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
-  const [otpMsg, setOtpMsg] = useState<string | null>(null);
+  // "Check your inbox" screen shown after signup (activate via emailed link) or
+  // after requesting a password reset.
+  const [verifyScreen, setVerifyScreen] = useState<{ identity: string; email: string; purpose: 'signup' | 'reset' } | null>(null);
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
 
-  // Password reset state (after OTP verified in reset mode).
-  const [resetScreen, setResetScreen] = useState<{ identity: string; otp: string } | null>(null);
+  // Password reset state. The user reaches this screen by clicking the emailed
+  // reset link (?reset=TOKEN), so the token comes in from App as `resetToken`.
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [resetBusy, setResetBusy] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+  // Stash the fresh session from the reset endpoint so the success screen can
+  // auto-sign-in and drop the user onto their dashboard without any tap.
+  const resetResultRef = useRef<{ token: string; student: AuthStudent } | null>(null);
+
+  // Auto-redirect: after showing the reset success screen, sign in and go
+  // straight to the dashboard.
+  useEffect(() => {
+    if (!resetSuccess) return;
+    const t = window.setTimeout(() => {
+      const res = resetResultRef.current;
+      if (res) {
+        setToken(res.token);
+        onAuthSuccess(res.student);
+      }
+    }, 2200);
+    return () => clearTimeout(t);
+  }, [resetSuccess, onAuthSuccess]);
 
   // Countdown timer
   useEffect(() => {
@@ -60,10 +77,6 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     const t = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
     return () => clearTimeout(t);
   }, [cooldown]);
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  type OtpStage = 'idle' | 'success' | 'failure';
-  const [otpStage, setOtpStage] = useState<OtpStage>('idle');
 
   // Sign In fields
   const [signInEmailOrRegNo, setSignInEmailOrRegNo] = useState('');
@@ -110,18 +123,16 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         password,
         inviteCode: inviteCode.trim().toUpperCase(),
       });
-      // Push the mail outbox drainer so the OTP email is sent right away.
+      // Push the mail outbox drainer so the verification email is sent right away.
       try {
         await sendVerificationEmail();
       } catch {
         // Email sending is non-fatal for signup.
       }
       soundEffects.playSuccessChime();
-      setOtpScreen({ identity: res.student.regNo, email: res.student.email });
+      setVerifyScreen({ identity: res.student.regNo, email: res.student.email, purpose: 'signup' });
       setCooldown(60);
-      setOtp('');
-      setOtpError(null);
-      setOtpMsg(null);
+      setVerifyMsg(null);
     } catch (err) {
       soundEffects.playError();
       setError(err instanceof ApiError ? err.message : 'Unable to create account');
@@ -130,115 +141,40 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   };
 
-  const handleOtpBoxChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, '').slice(-1);
-    const next = otp.split('');
-    next[index] = digit;
-    setOtp(next.join(''));
-    if (digit && index < 5) otpRefs.current[index + 1]?.focus();
-  };
-
-  const handleOtpBoxKeyDown = (
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>,
-  ) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      otpRefs.current[index - 1]?.focus();
-    }
-    if (e.key === 'ArrowLeft' && index > 0) otpRefs.current[index - 1]?.focus();
-    if (e.key === 'ArrowRight' && index < 5) otpRefs.current[index + 1]?.focus();
-  };
-
-  const handleOtpBoxPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (!digits) return;
-    const filled = digits;
-    setOtp(filled);
-    otpRefs.current[Math.min(filled.length, 5)]?.focus();
-  };
-
-  const [shakeKey, setShakeKey] = useState(0);
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpScreen || otp.length !== 6) return;
-    setOtpError(null);
-    setOtpMsg(null);
-    setOtpBusy(true);
-
-    // For password reset, just verify the OTP via reset-password endpoint... 
-    // Actually we need a separate verify endpoint. For now, verify via the existing
-    // flow then route to reset screen on success.
-    if (otpScreen.purpose === 'reset') {
-      try {
-        // Verify the OTP by calling forgot-password won't work — we need to just
-        // store the OTP and pass it to the reset-password form.
-        setResetScreen({ identity: otpScreen.identity, otp });
-        setOtpBusy(false);
-        return;
-      } catch {
-        // fallthrough
-      }
-    }
-
-    const apiPromise = authApi.verifyOtp(otpScreen.identity, otp);
-
-    let ok = false;
-    let res: Awaited<ReturnType<typeof authApi.verifyOtp>> | null = null;
-    let err: unknown = null;
-    try {
-      res = await apiPromise;
-      ok = true;
-    } catch (caught) {
-      err = caught;
-    }
-
-    if (ok && res) {
-      setOtpStage('success');
-      setToken(res.token);
-      onAuthSuccess(res.student);
-    } else {
-      setOtpStage('failure');
-      soundEffects.playError();
-      setOtpError(
-        err instanceof ApiError ? err.message : 'Verification failed. Try again.',
-      );
-      // Show the red X briefly, then slide the boxes back in with a shake.
-      window.setTimeout(() => {
-        setOtpStage('idle');
-        setOtp('');
-        setOtpBusy(false);
-        setShakeKey((k) => k + 1);
-        otpRefs.current[0]?.focus();
-      }, 1500);
-    }
-  };
-
-  const handleResendOtp = async () => {
-    if (!otpScreen) return;
+  const handleResendVerification = async () => {
+    if (!verifyScreen) return;
     setResending(true);
-    setOtpError(null);
-    setOtpMsg(null);
+    setVerifyMsg(null);
     try {
-      const res = await authApi.resendOtp(otpScreen.identity);
-      if (res.cooldown) {
-        setCooldown(res.cooldown);
-        setOtpMsg(`Please wait ${res.cooldown}s before resending.`);
-      } else if (res.sent) {
+      if (verifyScreen.purpose === 'signup') {
+        const res = await authApi.resendVerification(verifyScreen.identity);
+        if (res.cooldown) {
+          setCooldown(res.cooldown);
+          setVerifyMsg(`Please wait ${res.cooldown}s before resending.`);
+        } else if (res.sent) {
+          setCooldown(60);
+          try {
+            await sendVerificationEmail();
+          } catch {
+            // ignore
+          }
+          setVerifyMsg('A new verification link has been sent to your inbox.');
+        } else {
+          setVerifyMsg('No pending signup found for this account. Please sign up again.');
+        }
+      } else {
+        // Reset: forgot-password regenerates + emails a fresh reset link.
+        await authApi.forgotPassword(verifyScreen.identity);
         setCooldown(60);
         try {
           await sendVerificationEmail();
         } catch {
           // ignore
         }
-        setOtpMsg('A new code has been sent to your inbox.');
-        setOtp('');
-      } else {
-        setOtpMsg('No pending signup found for this account. Please sign up again.');
+        setVerifyMsg('A new reset link has been sent to your inbox.');
       }
     } catch (err) {
-      setOtpError(err instanceof ApiError ? err.message : 'Could not resend the code.');
+      setVerifyMsg(err instanceof ApiError ? err.message : 'Could not resend the link.');
     } finally {
       setResending(false);
     }
@@ -246,13 +182,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
   const handleSignInResend = async () => {
     if (!signInEmailOrRegNo.trim()) {
-      setError('Enter your email or registration number to resend the code.');
+      setError('Enter your email or registration number to resend the link.');
       return;
     }
     setResending(true);
     setError(null);
     try {
-      const res = await authApi.resendOtp(signInEmailOrRegNo.trim());
+      const res = await authApi.resendVerification(signInEmailOrRegNo.trim());
       if (res.cooldown) {
         setCooldown(res.cooldown);
         setError(`Please wait ${res.cooldown}s before resending.`);
@@ -263,12 +199,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         } catch {
           // ignore
         }
-        setError('A new verification code has been sent to your inbox.');
+        setError('A new verification link has been sent to your inbox.');
       } else {
         setError('No pending signup found for this account. Please sign up first.');
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not resend the code.');
+      setError(err instanceof ApiError ? err.message : 'Could not resend the link.');
     } finally {
       setResending(false);
     }
@@ -285,14 +221,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     try {
       await authApi.forgotPassword(identity);
       soundEffects.playSuccessChime();
-      setOtpScreen({ identity, email: identity, purpose: 'reset' });
+      setVerifyScreen({ identity, email: identity, purpose: 'reset' });
       setCooldown(60);
-      setOtp('');
-      setOtpError(null);
-      setOtpMsg('A password reset code has been sent to your email.');
+      setVerifyMsg('A password reset link has been sent to your email.');
     } catch (err) {
       soundEffects.playError();
-      setError(err instanceof ApiError ? err.message : 'Could not send reset code');
+      setError(err instanceof ApiError ? err.message : 'Could not send reset link');
     } finally {
       setBusy(false);
     }
@@ -300,7 +234,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!resetScreen) return;
+    if (!resetToken) return;
     setResetError(null);
     if (newPassword !== confirmPassword) {
       setResetError('Passwords do not match.');
@@ -308,11 +242,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
     setResetBusy(true);
     try {
-      await authApi.resetPassword(resetScreen.identity, resetScreen.otp, newPassword);
+      const res = await authApi.resetPassword(resetToken, newPassword);
       soundEffects.playSuccessChime();
+      resetResultRef.current = { token: res.token, student: res.student };
       setResetSuccess(true);
-      setResetScreen(null);
-      setOtpScreen(null);
+      onResetCleared?.();
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
@@ -323,8 +257,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     }
   };
 
-  // ---- New Password Screen (after OTP verified in reset mode) ----
-  if (resetScreen) {
+  // ---- New Password Screen (from the emailed reset link) ----
+  if (resetToken) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
         <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
@@ -382,7 +316,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
 
             <button
               type="button"
-              onClick={() => { setResetScreen(null); setOtpScreen(null); setNewPassword(''); setConfirmPassword(''); setResetError(null); }}
+              onClick={() => { setNewPassword(''); setConfirmPassword(''); setResetError(null); onResetCleared?.(); }}
               className="w-full text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
             >
               <RotateCcw className="w-3 h-3 inline mr-1 -mt-0.5" />
@@ -394,133 +328,76 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     );
   }
 
-  if (otpScreen) {
+  // ---- Check your inbox Screen (signup verification or password reset) ----
+  if (verifyScreen) {
     return (
       <div className="min-h-dvh bg-slate-100 dark:bg-black flex flex-col items-center justify-center p-4 sm:p-6 text-slate-900 dark:text-slate-100">
         <div className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden">
-          <div className="p-6 bg-slate-900 text-white space-y-1">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-black text-lg shadow-sm">
-              W
+          <div className="p-6 bg-slate-900 text-white space-y-3 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center mx-auto">
+              <Mail className="w-7 h-7 text-indigo-400" />
             </div>
-            <h3 className="text-xl font-extrabold tracking-tight mt-2">
-              {otpScreen.purpose === 'reset' ? 'Password reset code' : 'Enter verification code'}
+            <h3 className="text-xl font-extrabold tracking-tight">
+              {verifyScreen.purpose === 'reset' ? 'Check your email' : 'Almost there!'}
             </h3>
-            <p className="text-xs text-slate-400">
-              {otpScreen.purpose === 'reset'
-                ? <>We sent a 6-digit code to <strong className="text-slate-200">{otpScreen.email}</strong>. It expires in 10 minutes.</>
-                : <>We sent a 6-digit code to <strong className="text-slate-200">{otpScreen.email}</strong>. It expires in 10 minutes.</>}
+            <p className="text-xs text-slate-400 leading-relaxed">
+              {verifyScreen.purpose === 'reset'
+                ? <>We sent a password reset link to <strong className="text-slate-200">{verifyScreen.email}</strong>. Click it to set a new password.</>
+                : <>We sent a verification link to <strong className="text-slate-200">{verifyScreen.email}</strong>. Click it to activate your account.</>}
             </p>
           </div>
 
-          <form onSubmit={handleVerifyOtp} className="p-6 space-y-4">
-            {otpStage === 'idle' && otpError && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs font-semibold">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{otpError}</span>
-              </div>
-            )}
-            {otpStage === 'idle' && otpMsg && (
-              <div className="flex items-start gap-2 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+          <div className="p-6 space-y-4">
+            {verifyMsg && (
+              <div className={`flex items-start gap-2 p-3 rounded-xl border text-xs font-semibold ${
+                verifyMsg.includes('sent')
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300'
+              }`}>
                 <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" />
-                <span>{otpMsg}</span>
+                <span>{verifyMsg}</span>
               </div>
             )}
 
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-3">
-                Verification code
-              </label>
-
-              <div className="relative">
-                <motion.div
-                  key={shakeKey}
-                  initial={false}
-                  animate={shakeKey > 0 ? { x: [0, -10, 10, -6, 6, 0] } : { x: 0 }}
-                  transition={{ duration: 0.45, ease: 'easeInOut' }}
-                  className="relative"
-                >
-                  <div className="flex justify-between gap-1.5 sm:gap-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <input
-                        key={i}
-                        ref={(el) => { otpRefs.current[i] = el; }}
-                        type="text"
-                        inputMode="numeric"
-                        required
-                        autoFocus={i === 0}
-                        maxLength={1}
-                        disabled={otpBusy || otpStage !== 'idle'}
-                        value={otp[i] ?? ''}
-                        onChange={(e) => handleOtpBoxChange(i, e.target.value)}
-                        onKeyDown={(e) => handleOtpBoxKeyDown(i, e)}
-                        onPaste={handleOtpBoxPaste}
-                        aria-label={`Digit ${i + 1}`}
-                        className={`flex-1 min-w-0 h-12 sm:h-14 rounded-xl border text-center text-xl sm:text-2xl font-mono font-black focus:outline-indigo-600 focus:border-indigo-500 bg-slate-50 dark:bg-neutral-800 dark:text-slate-100 ${
-                          otpStage === 'success'
-                            ? 'border-emerald-500 dark:border-emerald-500 text-emerald-600 dark:text-emerald-400'
-                            : otpStage === 'failure'
-                              ? 'border-rose-500 dark:border-rose-500 text-rose-600 dark:text-rose-400'
-                              : 'border-slate-200 dark:border-neutral-700'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              </div>
-
-              {otpStage !== 'idle' ? (
-                <p className="mt-3 text-center text-xs font-semibold text-indigo-600 dark:text-indigo-400">
-                  {otpStage === 'success'
-                    ? 'Account activated — taking you in…'
-                    : otpStage === 'failure'
-                      ? 'Incorrect code — try again'
-                      : 'Verifying your code…'}
-                </p>
-              ) : (
-                <p className="mt-2 text-[10px] text-slate-400 dark:text-slate-500 text-center">
-                  Didn't receive it? Tap "Resend code" below.
-                </p>
-              )}
+            <div className="rounded-xl bg-slate-50 dark:bg-neutral-800 border border-slate-200 dark:border-neutral-700 p-3.5 text-center">
+              <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                {verifyScreen.purpose === 'reset'
+                  ? 'The link opens a secure page to choose a new password.'
+                  : 'The link activates your account and signs you straight in.'}
+              </p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">The link expires in 24 hours.</p>
             </div>
 
-            {otpStage === 'idle' && (
-              <>
-                <button
-                  type="submit"
-                  disabled={otpBusy || otp.length !== 6}
-                  className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
-                >
-                  <ShieldCheck className="w-4 h-4" />
-                  <span>{otpScreen.purpose === 'reset' ? 'Verify Code' : 'Verify & Activate Account'}</span>
-                </button>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending || cooldown > 0}
+              className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
+            >
+              {resending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : cooldown > 0 ? (
+                `Resend link in ${cooldown}s`
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4" />
+                  Resend verification link
+                </>
+              )}
+            </button>
 
-                <button
-                  type="button"
-                  onClick={otpScreen.purpose === 'reset' ? handleForgotPassword : handleResendOtp}
-                  disabled={resending || cooldown > 0}
-                  className="w-full text-center text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  {cooldown > 0
-                    ? `Resend in ${cooldown}s`
-                    : resending
-                      ? 'Sending…'
-                      : "Didn't get it? Resend code"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpScreen(null);
-                    setError(null);
-                  }}
-                  className="w-full text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3 inline mr-1 -mt-0.5" />
-                  Change details
-                </button>
-              </>
-            )}
-          </form>
+            <button
+              type="button"
+              onClick={() => {
+                setVerifyScreen(null);
+                setError(null);
+                setVerifyMsg(null);
+              }}
+              className="w-full text-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer"
+            >
+              {verifyScreen.purpose === 'reset' ? 'Back to sign in' : 'Change details'}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -536,15 +413,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({
           </div>
           <h3 className="text-xl font-extrabold tracking-tight">Password reset successful</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Your password has been updated. You can now sign in with your new password.
+            Your password has been updated. Redirecting you to your dashboard…
           </p>
-          <button
-            onClick={() => { setResetSuccess(false); setSignInPassword(''); }}
-            className="w-full py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer"
-          >
-            Sign In
-            <ArrowRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center justify-center gap-2 text-slate-400">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-[11px] font-semibold">Taking you there now</span>
+          </div>
         </div>
       </div>
     );
@@ -683,7 +557,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                   ? `Resend in ${cooldown}s`
                   : resending
                     ? 'Sending…'
-                    : 'Resend verification code'}
+                    : 'Resend verification link'}
               </button>
             </form>
           ) : (
@@ -800,11 +674,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
                 disabled={busy}
                 className="w-full py-3.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-indigo-200 transition-all cursor-pointer mt-2"
               >
-                <span>{busy ? 'Creating account…' : 'Create Account & Get Code'}</span>
+                <span>{busy ? 'Creating account…' : 'Create Account'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
               <p className="text-[10px] text-slate-400 dark:text-slate-500 text-center">
-                We'll email you a 6-digit code to activate your account.
+                We'll email you a link to activate your account.
               </p>
             </form>
           )}

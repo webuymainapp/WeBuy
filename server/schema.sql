@@ -217,13 +217,13 @@ alter table pending_signups add column if not exists class_id uuid references cl
 -- Self-heal: add the used_at column to databases created before this migration.
 alter table pending_signups add column if not exists used_at timestamptz;
 
--- OTP signup: the 6-digit code is stored hashed, with an attempt counter so a
--- wrong guess eventually forces a fresh code (never a lockout — it's public data).
+-- Email-link signup: the one-time verification token is stored hashed in
+-- token_hash. (Legacy OTP columns kept for databases created before the switch.)
 alter table pending_signups add column if not exists otp_hash text;
 alter table pending_signups add column if not exists attempts int not null default 0;
 alter table pending_signups alter column token_hash drop not null;
 
--- Cooldown: track when the last OTP email was sent so we can throttle resends.
+-- Cooldown: track when the last verification email was sent so we can throttle resends.
 alter table pending_signups add column if not exists last_otp_sent_at timestamptz;
 
 -- One-time email verification tokens (hashed at rest; only the plain token is
@@ -319,3 +319,7 @@ create table if not exists secret_purchases (
   unique (student_id, product_id)
 );
 create index if not exists idx_secret_purchases_student on secret_purchases(student_id, paid_at desc);
+
+-- Email-link verification: password resets use a one-time hashed token instead
+-- of a 6-digit code. The plain token is only ever emailed via the link.
+alter table password_resets add column if not exists token_hash text;

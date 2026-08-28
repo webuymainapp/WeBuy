@@ -123,7 +123,7 @@ export const authApi = {
     phone?: string;
     password: string;
     inviteCode: string;
-  }) => request<SignupResult>('/api/auth/signup', json('POST', body)),
+  }) => request<SignupResult>('/api/auth/signup', json('POST', { ...body, origin: window.location.origin })),
 
   signin: (body: { emailOrRegNo: string; password: string }) =>
     request<SigninResult>('/api/auth/signin', json('POST', body)),
@@ -136,20 +136,20 @@ export const authApi = {
   updateMe: (body: { department?: string; level?: string; regNo?: string }) =>
     request<{ student: AuthStudent; points: number }>('/api/auth/me', json('PATCH', body)),
 
-  resendOtp: (emailOrRegNo: string) =>
+  resendVerification: (emailOrRegNo: string) =>
     request<{ ok: boolean; sent: boolean; email?: string; cooldown?: number }>(
-      '/api/auth/resend-otp',
-      json('POST', { emailOrRegNo }),
+      '/api/auth/resend-verification',
+      json('POST', { emailOrRegNo, origin: window.location.origin }),
     ),
 
-  verifyOtp: (emailOrRegNo: string, otp: string) =>
-    request<SigninResult>('/api/auth/verify-otp', json('POST', { emailOrRegNo, otp })),
+  verifyEmail: (token: string) =>
+    request<SigninResult>('/api/auth/verify-email', json('POST', { token })),
 
   forgotPassword: (emailOrRegNo: string) =>
-    request<{ ok: boolean }>('/api/auth/forgot-password', json('POST', { emailOrRegNo })),
+    request<{ ok: boolean }>('/api/auth/forgot-password', json('POST', { emailOrRegNo, origin: window.location.origin })),
 
-  resetPassword: (emailOrRegNo: string, otp: string, newPassword: string) =>
-    request<{ ok: boolean }>('/api/auth/reset-password', json('POST', { emailOrRegNo, otp, newPassword })),
+  resetPassword: (token: string, newPassword: string) =>
+    request<SigninResult>('/api/auth/reset-password', json('POST', { token, newPassword })),
 };
 
 // ---- Vercel serverless email sender ---------------------------------------

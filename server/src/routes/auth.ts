@@ -7,16 +7,15 @@ import {
   hashPassword,
   verifyPassword,
   stagePendingSignup,
-  reissuePendingOtp,
-  consumePendingSignupOtp,
-  generateOtp,
-  OTP_LENGTH,
+  reissuePendingToken,
+  consumePendingSignupToken,
+  generateToken,
+  hashToken,
   OTP_TTL_MINUTES,
-  OTP_MAX_ATTEMPTS,
 } from '../lib/security';
 import { signAuthToken, newSessionToken } from '../lib/jwt';
-import { enqueueVerificationEmail, enqueueMail } from '../lib/mail';
-import { createHash } from 'node:crypto';
+import { enqueueVerificationEmail, enqueuePasswordResetEmail } from '../lib/mail';
+import { config } from '../config';
 import { requireAuth } from '../middleware/auth';
 import { rateLimit } from '../lib/rateLimit';
 import { makeDepositReference } from '../lib/pocketfi';
@@ -25,6 +24,21 @@ const router = Router();
 
 const authLimiter = rateLimit({ windowMs: 60_000, max: 10 });
 const verificationLimiter = rateLimit({ windowMs: 60_000, max: 5 });
+
+/** Strip a single trailing slash from a base URL so links never read /?verify=. */
+function trimSlash(url: string): string {
+  return url.replace(/\/+$/, '');
+}
+
+/** Build a frontend link for a given query route, e.g. ?verify=abc123. */
+function appLink(query: string, origin?: string): string {
+  // Only trust an origin the frontend hands us if it's on the configured
+  // allowlist — never embed arbitrary URLs in emailed links (phishing vector).
+  const provided = origin?.trim() ? trimSlash(origin) : '';
+  const trusted = config.frontendUrls.find((u) => trimSlash(u) === provided);
+  const base = trusted ?? trimSlash(config.frontendUrl);
+  return `${base}/?${query}`;
+}
 
 const signupSchema = z.object({
   regNo: regNoSchema,
@@ -36,6 +50,9 @@ const signupSchema = z.object({
   password: passwordSchema,
   // Required: the invite code joins the student to their class.
   inviteCode: inviteCodeSchema,
+  // The frontend's own origin, so emailed verification links point at the SPA
+  // the user is actually on (avoids hardcoding a frontend URL in server env).
+  origin: z.string().trim().url().max(200).optional(),
   // NOTE: no role field here. Public signups are ALWAYS students.
   // Course reps are seeded directly into the DB (see server/seed.sql).
 });
@@ -45,7 +62,7 @@ router.post(
   authLimiter,
   validateBody(signupSchema),
   asyncHandler(async (req, res) => {
-    const { regNo, fullName, email, phone, password, inviteCode } =
+    const { regNo, fullName, email, phone, password, inviteCode, origin } =
       req.body;
 
     // Normalise phone: +234XXXXXXXXXX → 0XXXXXXXXXX, enforce 11 digits.
@@ -81,8 +98,8 @@ router.post(
 
     const passwordHash = await hashPassword(password);
     // Store the signup WITHOUT touching `students`. It gets promoted into
-    // `students` only when the emailed 6-digit code is verified.
-    const otp = await stagePendingSignup({
+    // `students` only when the emailed verification link is followed.
+    const token = await stagePendingSignup({
       regNo,
       fullName,
       email,
@@ -92,9 +109,9 @@ router.post(
       passwordHash,
       classId,
     });
-    // Queue the OTP email for the frontend mail sender. Sending is best-effort
-    // — the user can always request another code later.
-    await enqueueVerificationEmail(email, otp).catch(() => undefined);
+    // Queue the verification-link email for the frontend mail sender. Sending is
+    // best-effort — the user can always request another link later.
+    await enqueueVerificationEmail(email, appLink(`verify=${token}`, origin)).catch(() => undefined);
 
     res.status(201).json({
       email,
@@ -230,22 +247,25 @@ router.get(
   }),
 );
 
-const otpSchema = z.object({
-  emailOrRegNo: z.string().trim().min(2).max(120),
-  otp: z.string().trim().length(6),
+const verifyEmailSchema = z.object({
+  token: z.string().trim().min(32).max(128),
 });
 
-/** Resend a signup verification code (no login required). Never reveals if the
+/** Resend a signup verification link (no login required). Never reveals if the
  *  signup exists — a "sent" response is given either way. */
 router.post(
-  '/resend-otp',
+  '/resend-verification',
   verificationLimiter,
-  validateBody(z.object({ emailOrRegNo: z.string().trim().min(2).max(120) })),
+  validateBody(z.object({
+    emailOrRegNo: z.string().trim().min(2).max(120),
+    origin: z.string().trim().url().max(200).optional(),
+  })),
   asyncHandler(async (req, res) => {
     const value = req.body.emailOrRegNo.toLowerCase();
-    const result = await reissuePendingOtp(value);
+    const origin = req.body.origin as string | undefined;
+    const result = await reissuePendingToken(value);
     if (result && result.ok) {
-      await enqueueVerificationEmail(result.email, result.otp).catch(() => undefined);
+      await enqueueVerificationEmail(result.email, appLink(`verify=${result.token}`, origin)).catch(() => undefined);
       res.json({ ok: true, sent: true, email: result.email });
       return;
     }
@@ -257,16 +277,16 @@ router.post(
   }),
 );
 
-/** Verify the emailed 6-digit code and activate the pending signup. On success
- *  the account is promoted into `students` (email_verified = true) and an auth
+/** Verify a one-time email link and activate the pending signup. On success the
+ *  account is promoted into `students` (email_verified = true) and an auth
  *  token is issued so the student lands straight in the portal. */
 router.post(
-  '/verify-otp',
+  '/verify-email',
   verificationLimiter,
-  validateBody(otpSchema),
+  validateBody(verifyEmailSchema),
   asyncHandler(async (req, res) => {
-    const { emailOrRegNo, otp } = req.body;
-    const studentId = await consumePendingSignupOtp(emailOrRegNo.toLowerCase(), otp);
+    const { token } = req.body;
+    const studentId = await consumePendingSignupToken(token);
 
     const result = await query(
       `select id, reg_no, full_name, email, phone, department, level,
@@ -280,18 +300,18 @@ router.post(
     const row = result.rows[0];
 
     const sess = newSessionToken();
-    const token = signAuthToken({
+    const token2 = signAuthToken({
       sub: row.id,
       role: row.role,
       reg_no: row.reg_no,
       sess,
     });
 
-    // Single-session: this OTP login is also a sign-in, so rotate the session.
+    // Single-session: this link login is also a sign-in, so rotate the session.
     await query('update students set session_token = $1 where id = $2', [sess, row.id]);
 
     res.json({
-      token,
+      token: token2,
       student: {
         id: row.id,
         regNo: row.reg_no,
@@ -484,21 +504,20 @@ router.patch(
 
 // ---- Forgot / Reset Password ---------------------------------------------
 
-function sha256(v: string): string {
-  return createHash('sha256').update(v).digest('hex');
-}
+const forgotPasswordSchema = z.object({
+  emailOrRegNo: z.string().trim().min(2),
+  origin: z.string().trim().url().max(200).optional(),
+});
 
-const forgotPasswordSchema = z.object({ emailOrRegNo: z.string().trim().min(2) });
-
-/** Request a password-reset OTP. Finds the student by email or reg_no, generates
- *  a 6-digit code, stores its hash in `password_resets`, and emails it. Always
- *  returns 200 to avoid leaking whether the account exists. */
+/** Request a password-reset link. Finds the student by email or reg_no,
+ *  generates a one-time token, stores its hash in `password_resets`, and emails
+ *  a reset link. Always returns 200 to avoid leaking whether the account exists. */
 router.post(
   '/forgot-password',
   authLimiter,
   validateBody(forgotPasswordSchema),
   asyncHandler(async (req, res) => {
-    const { emailOrRegNo } = req.body;
+    const { emailOrRegNo, origin } = req.body;
     const value = emailOrRegNo.toLowerCase();
 
     const student = await query(
@@ -513,90 +532,100 @@ router.post(
     }
 
     const email = student.rows[0].email as string;
-    const otp = generateOtp();
-    const otpHash = sha256(otp);
+    const token = generateToken();
+    const tokenHash = hashToken(token);
 
-    // Upsert: replace any previous unverified reset for this email.
+    // Upsert: replace any previous unused reset for this email.
     await query('delete from password_resets where lower(email) = lower($1)', [email]);
     await query(
-      `insert into password_resets (email, otp_hash, expires_at)
+      `insert into password_resets (email, token_hash, expires_at)
        values ($1, $2, now() + make_interval(mins => $3))`,
-      [email, otpHash, OTP_TTL_MINUTES],
+      [email, tokenHash, OTP_TTL_MINUTES],
     );
 
     // Queue email — best-effort.
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto">
-        <h2 style="color:#111827">Password Reset</h2>
-        <p style="color:#374151">Use the code below to reset your password.</p>
-        <div style="margin:24px 0;padding:20px;background:#eef2ff;border-radius:12px;text-align:center">
-          <span style="font-size:32px;font-weight:800;letter-spacing:8px;color:#4f46e5">${otp}</span>
-        </div>
-        <p style="color:#6b7280;font-size:13px">This code expires in 10 minutes. If you did not request a password reset, ignore this email.</p>
-      </div>`;
-    await enqueueMail({
-      to: email,
-      subject: 'Your Webuy password reset code',
-      text: `Your password reset code is ${otp}. It expires in 10 minutes.`,
-      html,
-    }).catch(() => undefined);
+    await enqueuePasswordResetEmail(email, appLink(`reset=${token}`, origin)).catch(() => undefined);
 
     res.json({ ok: true });
   }),
 );
 
 const resetPasswordSchema = z.object({
-  emailOrRegNo: z.string().trim().min(2),
-  otp: z.string().length(OTP_LENGTH),
+  token: z.string().trim().min(32).max(128),
   newPassword: passwordSchema,
 });
 
-/** Verify the password-reset OTP and set the new password. */
+/** Consume a one-time password-reset token and set the new password. */
 router.post(
   '/reset-password',
   authLimiter,
   validateBody(resetPasswordSchema),
   asyncHandler(async (req, res) => {
-    const { emailOrRegNo, otp, newPassword } = req.body;
-    const value = emailOrRegNo.toLowerCase();
+    const { token, newPassword } = req.body;
 
     const row = await query(
-      `select id, otp_hash, attempts, expires_at, email
+      `select id, token_hash, used_at, expires_at, email
          from password_resets
-        where lower(email) = (select lower(email) from students where email = $1 or lower(reg_no) = $1 limit 1)
+        where token_hash = $1
         order by created_at desc limit 1`,
-      [value],
+      [hashToken(token)],
     );
     if (row.rowCount === 0) {
-      throw new HttpError(400, 'No reset request found. Tap "Forgot Password" first.');
+      throw new HttpError(400, 'This reset link is invalid. Request a new one.');
     }
     const r = row.rows[0];
 
     if (new Date(r.expires_at) <= new Date()) {
-      throw new HttpError(400, 'This code has expired. Request a new one.');
+      throw new HttpError(400, 'This reset link has expired. Request a new one.');
     }
-    const attempts = Number(r.attempts ?? 0);
-    if (attempts >= OTP_MAX_ATTEMPTS) {
-      throw new HttpError(400, 'Too many wrong attempts. Request a new code.');
-    }
-
-    if (sha256(otp) !== r.otp_hash) {
-      await query('update password_resets set attempts = $1 where id = $2', [attempts + 1, r.id]);
-      const left = OTP_MAX_ATTEMPTS - attempts - 1;
-      throw new HttpError(
-        400,
-        left <= 0
-          ? 'Too many wrong attempts. Request a new code.'
-          : `Incorrect code. ${left} attempt${left === 1 ? '' : 's'} left.`,
-      );
+    if (r.used_at) {
+      throw new HttpError(400, 'This reset link has already been used. Request a new one.');
     }
 
-    // OTP valid — update the password and clean up.
+    // Token valid — update the password and clean up.
     const passwordHash = await hashPassword(newPassword);
     await query('update students set password_hash = $1 where lower(email) = $2', [passwordHash, r.email]);
     await query('delete from password_resets where lower(email) = lower($1)', [r.email]);
 
-    res.json({ ok: true });
+    const studentRes = await query(
+      `select id, reg_no, full_name, email, phone, department, level,
+              password_hash, role, email_verified, avatar_url, created_at
+         from students where lower(email) = lower($1)`,
+      [r.email],
+    );
+    if (studentRes.rowCount === 0) {
+      throw new HttpError(404, 'Account not found');
+    }
+    const stu = studentRes.rows[0];
+
+    // Resetting the password also signs the user in — rotate the session so the
+    // frontend can drop them straight onto their dashboard.
+    const sess = newSessionToken();
+    const token2 = signAuthToken({
+      sub: stu.id,
+      role: stu.role,
+      reg_no: stu.reg_no,
+      sess,
+    });
+    await query('update students set session_token = $1 where id = $2', [sess, stu.id]);
+
+    res.json({
+      ok: true,
+      token: token2,
+      student: {
+        id: stu.id,
+        regNo: stu.reg_no,
+        fullName: stu.full_name,
+        email: stu.email,
+        phone: stu.phone,
+        department: stu.department,
+        level: stu.level,
+        role: stu.role,
+        emailVerified: stu.email_verified,
+        avatarUrl: stu.avatar_url,
+        createdAt: stu.created_at,
+      },
+    });
   }),
 );
 

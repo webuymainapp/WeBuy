@@ -12,6 +12,10 @@ interface PasswordInputProps {
   leftIcon?: React.ReactNode;
 }
 
+/**
+ * Password field with a standard show/hide toggle: an eye/eye-off icon button
+ * placed inside the input's right edge and vertically centered.
+ */
 export const PasswordInput: React.FC<PasswordInputProps> = ({
   value,
   onChange,
@@ -24,7 +28,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   return (
-    <div className="relative">
+    <div className="relative w-full">
       {leftIcon && (
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500">
           {leftIcon}
@@ -38,15 +42,16 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className={`${leftIcon ? 'pl-9' : ''} pr-10 ${className}`}
+        className={`w-full ${leftIcon ? 'pl-9' : 'pl-4'} pr-14 ${className}`}
       />
       <button
         type="button"
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? 'Hide password' : 'Show password'}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors cursor-pointer"
+        aria-pressed={visible}
+        className="absolute right-0 top-0 bottom-0 flex items-center justify-center rounded-r-xl bg-indigo-600 text-white shadow-none hover:bg-indigo-500 active:scale-[0.98] transition-all cursor-pointer px-2.5"
       >
-        {visible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+        {visible ? <EyeOff size={16} /> : <Eye size={16} />}
       </button>
     </div>
   );
