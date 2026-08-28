@@ -847,6 +847,8 @@ export interface SecretProduct {
   id: string;
   name: string;
   price: number;
+  basePrice?: number;
+  purchaseCount?: number;
 }
 export interface SecretPurchase {
   id: string;
@@ -856,6 +858,17 @@ export interface SecretPurchase {
   paidAt: string;
   name: string;
 }
+export interface SecretOrder {
+  id: string;
+  price: number;
+  status: string;
+  paidAt: string;
+  studentId: string;
+  fullName: string;
+  regNo: string;
+  productId: string;
+  productName: string;
+}
 
 export const secretApi = {
   access: () => request<{ access: boolean }>('/api/secret/access'),
@@ -863,10 +876,16 @@ export const secretApi = {
   products: () =>
     request<{ products: SecretProduct[]; points: number }>(
       '/api/secret/products',
-    ),
+    ).then((r) => ({
+      points: r.points,
+      products: r.products.map((p) => ({ ...p, basePrice: p.basePrice })),
+    })),
 
   purchases: () =>
     request<{ purchases: SecretPurchase[] }>('/api/secret/purchases'),
+
+  orders: () =>
+    request<{ orders: SecretOrder[] }>('/api/secret/orders'),
 
   buy: (productId: string) =>
     request<{ ok: boolean; points: number; product: SecretProduct }>(

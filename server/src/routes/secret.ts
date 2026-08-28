@@ -11,10 +11,22 @@ import { requireAuth, requireChiefAdmin } from '../middleware/auth';
  * wallet points but writes NO row to `wallet_transactions` or `transactions`, so
  * a secret purchase leaves no trace on the normal transactions page — the only
  * record is a `secret_purchases` row (status 'paid').
+ *
+ * Pricing: the chief enters a base selling price. Webuy folds a 2% + ₦100 charge
+ * on top so it stays ahead of PocketFi's funding fee (1% capped at ₦500) even on
+ * the large (₦15k+) items sold here. Buyers only ever see the single all-inclusive
+ * total — the fee is never shown as a breakdown.
  */
 
 const router = Router();
 router.use(requireAuth);
+
+const FEE_PCT = 0.02;
+const FEE_FLAT = 100;
+
+function applySecretFee(base: number): number {
+  return base + Math.ceil(base * FEE_PCT) + FEE_FLAT;
+}
 
 const productSchema = z.object({
   name: z.string().trim().min(1).max(160),
@@ -54,13 +66,15 @@ router.get(
       throw new HttpError(403, 'No access to the secret marketplace');
     }
     const products = await query(
-      `select p.id, p.name, p.price,
+      `select p.id, p.name, p.base_price, p.price,
               (select point_balance from student_wallets w
                 where w.student_id = $1) as points,
               exists(
                 select 1 from secret_purchases sp
                 where sp.student_id = $1 and sp.product_id = p.id
-              ) as purchased
+              ) as purchased,
+              (select count(*) from secret_purchases pc
+                where pc.product_id = p.id) as purchase_count
          from secret_products p
         order by p.created_at desc`,
       [req.student.sub],
@@ -69,7 +83,9 @@ router.get(
   }),
 );
 
-/** My secret purchases (revealed after buying). */
+/** My secret purchases (revealed after buying). Items fade from the buyer's view
+ *  24h after purchase (one-time per item — the `purchased` flag stays permanent so
+ *  they can't re-buy). The chief's full history is on /orders. */
 router.get(
   '/purchases',
   asyncHandler(async (req, res) => {
@@ -84,10 +100,32 @@ router.get(
          from secret_purchases sp
          join secret_products p on p.id = sp.product_id
         where sp.student_id = $1
+          and sp.paid_at >= now() - interval '24 hours'
         order by sp.paid_at desc`,
       [req.student.sub],
     );
     res.json({ purchases: rows.rows });
+  }),
+);
+
+/**
+ * Chief-only: every secret sale across all buyers — who bought what, when, and
+ * for how many points. This is the hidden "orders" ledger.
+ */
+router.get(
+  '/orders',
+  requireChiefAdmin,
+  asyncHandler(async (_req, res) => {
+    const rows = await query(
+      `select sp.id, sp.price, sp.status, sp.paid_at,
+              sp.student_id, s.full_name, s.reg_no,
+              sp.product_id, p.name as product_name
+         from secret_purchases sp
+         join secret_products p on p.id = sp.product_id
+         join students s on s.id = sp.student_id
+        order by sp.paid_at desc`,
+    );
+    res.json({ orders: rows.rows });
   }),
 );
 
@@ -183,19 +221,23 @@ router.post(
   }),
 );
 
-/** Create a secret product — chief admin only. */
+/** Create a secret product — chief admin only. The posted `price` is the base
+ *  selling price; Webuy folds the 2% + ₦100 charge into the stored `price` (total)
+ *  that buyers pay. */
 router.post(
   '/products',
   requireChiefAdmin,
   validateBody(productSchema),
   asyncHandler(async (req, res) => {
-    const { name, price } = req.body;
-    await query(
-      `insert into secret_products (name, price, created_by)
-       values ($1, $2, $3)`,
-      [name, price, req.student.sub],
+    const { name, price: base } = req.body;
+    const total = applySecretFee(base);
+    const result = await query(
+      `insert into secret_products (name, base_price, price, created_by)
+       values ($1, $2, $3, $4)
+       returning id, name, base_price, price`,
+      [name, base, total, req.student.sub],
     );
-    res.status(201).json({ ok: true });
+    res.status(201).json({ ok: true, product: result.rows[0] });
   }),
 );
 

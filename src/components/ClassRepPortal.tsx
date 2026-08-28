@@ -448,10 +448,10 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
 
           {/* Right Metrics Cards */}
           <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3 min-w-0">
-            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
+            <div className="min-w-0 bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Paid Students</span>
-                <Users className="w-4 h-4 text-indigo-600" />
+                <Users className="w-4 h-4 text-indigo-600 shrink-0" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 font-mono">{totalPaidCount}</p>
@@ -459,10 +459,10 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
+            <div className="min-w-0 bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Collected</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl sm:text-3xl font-black text-emerald-700 dark:text-emerald-300 font-mono">{collectedCount}</p>
@@ -470,10 +470,10 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
+            <div className="min-w-0 bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Pending</span>
-                <Clock className="w-4 h-4 text-amber-500" />
+                <Clock className="w-4 h-4 text-amber-500 shrink-0" />
               </div>
               <div className="mt-2">
                 <p className="text-2xl sm:text-3xl font-black text-amber-600 dark:text-amber-300 font-mono">{pendingCount}</p>
@@ -481,13 +481,13 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
               </div>
             </div>
 
-            <div className="bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
+            <div className="min-w-0 bg-white dark:bg-neutral-900 p-4 rounded-3xl border border-slate-200 dark:border-neutral-700 shadow-sm flex flex-col justify-between">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
                 <span className="text-[11px] font-bold uppercase tracking-wider">Total Paid</span>
-                <Banknote className="w-4 h-4 text-indigo-600" />
+                <Banknote className="w-4 h-4 text-indigo-600 shrink-0" />
               </div>
-              <div className="mt-2">
-                <p className="text-2xl sm:text-3xl font-black text-indigo-700 dark:text-indigo-300 font-mono">
+              <div className="mt-2 min-w-0">
+                <p className="text-xl sm:text-2xl font-black text-indigo-700 dark:text-indigo-300 font-mono break-words">
                   {formatNaira((activeBook.price - 100) * totalPaidCount)}
                 </p>
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">
@@ -695,7 +695,7 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
                     const canManage = item.addedBy === studentProfile.id;
                     return (
                       <div
-                        key={item.studentTextbookId}
+                        key={`${item.studentTextbookId}-${item.regNo}-${item.courseCode}`}
                         className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                           isCol
                             ? 'bg-emerald-50/40 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs'

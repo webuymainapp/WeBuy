@@ -301,6 +301,9 @@ create table if not exists secret_products (
   created_by uuid references students(id) on delete set null,
   created_at timestamptz not null default now()
 );
+-- Self-heal: base selling price (chief input); `price` holds the all-inclusive
+-- total (base + 2% + ₦100) that buyers pay. Added for existing databases.
+alter table secret_products add column if not exists base_price int;
 create index if not exists idx_secret_products_created on secret_products(created_at desc);
 
 -- Who bought which secret product. Marked paid when points are spent. This is the
