@@ -870,6 +870,18 @@ export interface SecretOrder {
   productName: string;
 }
 
+export interface SecretOrderRaw {
+  id: string;
+  price: number;
+  status: string;
+  paid_at: string;
+  student_id: string;
+  full_name: string;
+  reg_no: string;
+  product_id: string;
+  product_name: string;
+}
+
 export const secretApi = {
   access: () => request<{ access: boolean }>('/api/secret/access'),
 
@@ -885,7 +897,19 @@ export const secretApi = {
     request<{ purchases: SecretPurchase[] }>('/api/secret/purchases'),
 
   orders: () =>
-    request<{ orders: SecretOrder[] }>('/api/secret/orders'),
+    request<{ orders: SecretOrderRaw[] }>('/api/secret/orders').then((r) => ({
+      orders: r.orders.map((o) => ({
+        id: o.id,
+        price: o.price,
+        status: o.status,
+        paidAt: o.paid_at,
+        studentId: o.student_id,
+        fullName: o.full_name,
+        regNo: o.reg_no,
+        productId: o.product_id,
+        productName: o.product_name,
+      })),
+    })),
 
   buy: (productId: string) =>
     request<{ ok: boolean; points: number; product: SecretProduct }>(

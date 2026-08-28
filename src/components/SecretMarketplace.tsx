@@ -57,6 +57,9 @@ export const SecretMarketplace: React.FC<SecretMarketplaceProps> = ({
   const [accessModalOpen, setAccessModalOpen] = useState(false);
   const [accessSearch, setAccessSearch] = useState('');
 
+  // Buyers-list modal (chief only): which individual students paid for a product.
+  const [buyersOpen, setBuyersOpen] = useState<{ id: string; name: string } | null>(null);
+
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -360,10 +363,14 @@ export const SecretMarketplace: React.FC<SecretMarketplaceProps> = ({
                             <p className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate">{p.name}</p>
                             <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">{p.price} pts</p>
                             {isChief && (
-                              <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 mt-0.5 inline-flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => setBuyersOpen({ id: p.id, name: p.name })}
+                                className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 mt-0.5 inline-flex items-center gap-1 hover:underline cursor-pointer"
+                              >
                                 <Users className="w-3 h-3" />
-                                {p.purchaseCount ?? 0} paid
-                              </p>
+                                {p.purchaseCount ?? 0} paid · view
+                              </button>
                             )}
                           </div>
                         </div>
@@ -513,6 +520,78 @@ export const SecretMarketplace: React.FC<SecretMarketplaceProps> = ({
                   <p className="text-xs text-slate-400 py-4 text-center">No accounts match.</p>
                 )}
               </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Buyers list modal (chief only) */}
+      {buyersOpen && (
+        <div className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setBuyersOpen(null)}
+            className="absolute inset-0 bg-black/70 backdrop-blur-xs"
+          />
+          <motion.div
+            initial={{ y: 60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 60, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+            className="relative w-full max-w-md bg-slate-100 dark:bg-black rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-800 overflow-hidden max-h-[88dvh] flex flex-col"
+          >
+            <div className="p-4 sm:p-5 bg-slate-900 flex items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center shrink-0">
+                  <Users className="w-5 h-5 text-indigo-400" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-base text-white leading-tight truncate">{buyersOpen.name}</h3>
+                  <p className="text-[11px] text-slate-400 truncate">Who has paid for this item</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setBuyersOpen(null)}
+                className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-4 sm:p-5">
+              {(() => {
+                const buyers = orders.filter((o) => o.productId === buyersOpen.id);
+                if (buyers.length === 0) {
+                  return (
+                    <p className="text-xs text-slate-400 py-6 text-center">
+                      No one has paid for this item yet.
+                    </p>
+                  );
+                }
+                return (
+                  <div className="space-y-1.5 max-h-[55dvh] overflow-y-auto pr-1">
+                    {buyers.map((b) => (
+                      <div
+                        key={b.id}
+                        className="flex items-center justify-between gap-2 py-1.5 border-b border-slate-200/60 dark:border-neutral-800"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{b.fullName}</p>
+                          <p className="text-[10px] font-mono text-slate-400 truncate">{b.regNo}</p>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">{b.price} pts</p>
+                          <p className="text-[9px] text-slate-400">
+                            {new Date(b.paidAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </motion.div>
         </div>
