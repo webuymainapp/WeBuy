@@ -1,10 +1,9 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Users, ShieldCheck, UserX, Search, Loader2, AlertCircle, Shield, X, UserPlus, Trash2 } from 'lucide-react';
+import { Users, ShieldCheck, UserX, Search, Loader2, AlertCircle, Shield, X, UserPlus, Trash2, Lock, Unlock } from 'lucide-react';
 import { repApi, ApiError } from '../lib/api';
 import type { PortalUser } from '../types';
 import { soundEffects } from '../utils/audio';
-
 interface UsersManagementProps {
   currentUserRegNo: string;
   onToast: (msg: string) => void;
@@ -19,6 +18,7 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [busySecretId, setBusySecretId] = useState<string | null>(null);
   const [confirmDeleteUser, setConfirmDeleteUser] = useState<PortalUser | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -64,6 +64,26 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
       onToast(err instanceof ApiError ? err.message : 'Could not update role');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const toggleSecretAccess = async (u: PortalUser) => {
+    if (busySecretId || u.role === 'chief_admin') return;
+    setBusySecretId(u.id);
+    try {
+      await repApi.setSecretAccess(u.id, !u.marketAccess);
+      soundEffects.playSuccessChime();
+      onToast(
+        u.marketAccess
+          ? `Secret access removed from ${u.fullName}.`
+          : `Secret access granted to ${u.fullName}.`,
+      );
+      await load();
+    } catch (err) {
+      soundEffects.playError();
+      onToast(err instanceof ApiError ? err.message : 'Could not update secret access');
+    } finally {
+      setBusySecretId(null);
     }
   };
 
@@ -273,6 +293,26 @@ export const UsersManagement: React.FC<UsersManagementProps> = ({
                                   <ShieldCheck className="w-3.5 h-3.5" />
                                   Grant Rep
                                 </>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => toggleSecretAccess(u)}
+                              disabled={busySecretId === u.id}
+                              className={`p-2 rounded-xl transition-colors cursor-pointer disabled:opacity-60 ${
+                                u.marketAccess
+                                  ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/40'
+                                  : 'text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40'
+                              }`}
+                              title={
+                                u.marketAccess ? 'Revoke secret marketplace access' : 'Grant secret marketplace access'
+                              }
+                            >
+                              {busySecretId === u.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : u.marketAccess ? (
+                                <Lock className="w-3.5 h-3.5" />
+                              ) : (
+                                <Unlock className="w-3.5 h-3.5" />
                               )}
                             </button>
                             <button

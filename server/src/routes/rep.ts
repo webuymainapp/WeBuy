@@ -117,7 +117,7 @@ router.get(
   asyncHandler(async (_req, res) => {
     const result = await query(
       `select id, reg_no, full_name, email, department, level, role,
-              email_verified, created_at
+              email_verified, market_access, created_at
          from students
         order by created_at desc`,
     );
@@ -234,6 +234,34 @@ router.patch(
       },
       transferredCourses,
     });
+  }),
+);
+
+/** Grant or revoke secret-marketplace access — chief admin only. */
+router.patch(
+  '/users/:id/secret-access',
+  requireChiefAdmin,
+  validateBody(z.object({ access: z.boolean() })),
+  asyncHandler(async (req, res) => {
+    const targetId = String(req.params.id);
+    const { access } = req.body as { access: boolean };
+
+    const target = await query(
+      'select id, full_name from students where id = $1',
+      [targetId],
+    );
+    if (target.rowCount === 0) {
+      throw new HttpError(404, 'User not found');
+    }
+    if (targetId === req.student.sub) {
+      throw new HttpError(400, "You can't change your own secret access here.");
+    }
+
+    await query('update students set market_access = $1 where id = $2', [
+      access,
+      targetId,
+    ]);
+    res.json({ ok: true, access });
   }),
 );
 

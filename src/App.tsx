@@ -26,6 +26,7 @@ import { PwaInstallPrompt } from './components/PwaInstallPrompt';
 import { NotificationIsland } from './components/NotificationIsland';
 import { FloatingCart } from './components/FloatingCart';
 import { CartModal } from './components/CartModal';
+import { SecretMarketplace } from './components/SecretMarketplace';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -168,6 +169,16 @@ export default function App() {
 
   // Modals & Bottom sheets
   const [passBook, setPassBook] = useState<Textbook | null>(null);
+
+  // Secret marketplace
+  const [secretOpen, setSecretOpen] = useState(false);
+  const [secretToast, setSecretToast] = useState<string | null>(null);
+  const secretToastTimer = useRef<number | null>(null);
+  const showSecretToast = (msg: string) => {
+    setSecretToast(msg);
+    if (secretToastTimer.current) window.clearTimeout(secretToastTimer.current);
+    secretToastTimer.current = window.setTimeout(() => setSecretToast(null), 3500);
+  };
 
   // Persist local preferences
   useEffect(() => {
@@ -847,7 +858,23 @@ export default function App() {
             activeTab={activeTab}
             onSelectTab={setActiveTab}
             paidPassesCount={paidPassesCount}
+            onSecretMarket={
+              isChief || currentProfile.marketAccess ? () => setSecretOpen(true) : undefined
+            }
           />
+        )}
+
+        {/* Secret marketplace — reachable only via triple-tap + server-side access */}
+        <SecretMarketplace
+          open={secretOpen}
+          onClose={() => setSecretOpen(false)}
+          isChief={isChief}
+          onToast={showSecretToast}
+        />
+        {secretToast && (
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[90] px-4 py-2.5 rounded-xl bg-slate-900/95 dark:bg-neutral-800 text-white text-xs font-bold shadow-2xl whitespace-nowrap">
+            {secretToast}
+          </div>
         )}
       </div>
     );

@@ -11,6 +11,7 @@ import passesRouter from './routes/passes';
 import notificationsRouter from './routes/notifications';
 import accountRouter from './routes/account';
 import walletRouter from './routes/wallet';
+import secretRouter from './routes/secret';
 import pocketfiRouter from './routes/pocketfi';
 import classesRouter from './routes/classes';
 import { startPayoutReminderJob } from './lib/payoutReminders';
@@ -86,6 +87,7 @@ app.use('/api/passes', passesRouter);
 app.use('/api/notifications', notificationsRouter);
 app.use('/api/account', accountRouter);
 app.use('/api/wallet', walletRouter);
+app.use('/api/secret', secretRouter);
 app.use('/api/pocketfi', pocketfiRouter);
 app.use('/api/classes', classesRouter);
 

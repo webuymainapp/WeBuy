@@ -89,6 +89,7 @@ export interface AuthStudent {
   avatarUrl: string | null;
   freeProfileEditUsed?: boolean;
   phoneEditCount?: number;
+  marketAccess?: boolean;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;
@@ -199,6 +200,7 @@ export function toStudentProfile(s: AuthStudent, settings: AppSettings): Student
     emailVerified: s.emailVerified,
     freeProfileEditUsed: s.freeProfileEditUsed,
     phoneEditCount: s.phoneEditCount,
+    marketAccess: Boolean(s.marketAccess),
     classId: s.classId ?? null,
     className: s.className ?? null,
     inviteCode: s.inviteCode ?? null,
@@ -550,6 +552,7 @@ export const repApi = {
           level: String(u.level),
           role: u.role as PortalUser['role'],
           emailVerified: Boolean(u.email_verified),
+          marketAccess: Boolean(u.market_access),
           createdAt: String(u.created_at),
         }),
       ),
@@ -565,6 +568,12 @@ export const repApi = {
     request<{ ok: boolean; deleted: string }>(
       `/api/rep/users/${id}`,
       { method: 'DELETE' },
+    ),
+
+  setSecretAccess: (id: string, access: boolean) =>
+    request<{ ok: boolean; access: boolean }>(
+      `/api/rep/users/${id}/secret-access`,
+      json('PATCH', { access }),
     ),
 
   getOverview: () =>
@@ -831,4 +840,45 @@ export const accountApi = {
       offset: number;
     }>(`/api/account/transactions${suffix}`);
   },
+};
+
+// ---- Secret Marketplace -----------------------------------------------------
+export interface SecretProduct {
+  id: string;
+  name: string;
+  price: number;
+}
+export interface SecretPurchase {
+  id: string;
+  productId: string;
+  price: number;
+  status: string;
+  paidAt: string;
+  name: string;
+}
+
+export const secretApi = {
+  access: () => request<{ access: boolean }>('/api/secret/access'),
+
+  products: () =>
+    request<{ products: SecretProduct[]; points: number }>(
+      '/api/secret/products',
+    ),
+
+  purchases: () =>
+    request<{ purchases: SecretPurchase[] }>('/api/secret/purchases'),
+
+  buy: (productId: string) =>
+    request<{ ok: boolean; points: number; product: SecretProduct }>(
+      '/api/secret/buy',
+      json('POST', { productId }),
+    ),
+
+  createProduct: (body: { name: string; price: number }) =>
+    request<{ ok: boolean }>('/api/secret/products', json('POST', body)),
+
+  deleteProduct: (id: string) =>
+    request<{ ok: boolean }>(`/api/secret/products/${id}`, {
+      method: 'DELETE',
+    }),
 };

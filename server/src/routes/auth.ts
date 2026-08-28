@@ -129,7 +129,7 @@ router.post(
     const result = await query(
       `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
               s.password_hash, s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used,
-              s.phone_edit_count, s.created_at,
+              s.phone_edit_count, s.market_access, s.created_at,
               c.id as class_id, c.name as class_name, c.invite_code
          from students s
          left join classes c on c.admin_id = s.id
@@ -179,6 +179,7 @@ router.post(
         avatarUrl: row.avatar_url,
         freeProfileEditUsed: row.free_profile_edit_used,
         phoneEditCount: row.phone_edit_count,
+        marketAccess: Boolean(row.market_access),
         createdAt: row.created_at,
         classId: row.class_id ?? null,
         className: row.class_name ?? null,
@@ -195,7 +196,7 @@ router.get(
     const result = await query(
       `select s.id, s.reg_no, s.full_name, s.email, s.phone, s.department, s.level,
               s.role, s.email_verified, s.avatar_url, s.free_profile_edit_used,
-              s.phone_edit_count, s.created_at,
+              s.phone_edit_count, s.market_access, s.created_at,
               c.id as class_id, c.name as class_name, c.invite_code
          from students s
          left join classes c on c.admin_id = s.id
@@ -220,6 +221,7 @@ router.get(
         avatarUrl: r.avatar_url,
         freeProfileEditUsed: r.free_profile_edit_used,
         phoneEditCount: r.phone_edit_count,
+        marketAccess: Boolean(r.market_access),
         classId: r.class_id ?? null,
         className: r.class_name ?? null,
         inviteCode: r.invite_code ?? null,

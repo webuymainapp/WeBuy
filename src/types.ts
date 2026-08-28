@@ -14,6 +14,7 @@ export interface StudentProfile {
   emailVerified?: boolean;
   freeProfileEditUsed?: boolean;
   phoneEditCount?: number;
+  marketAccess?: boolean;
   classId?: string | null;
   className?: string | null;
   inviteCode?: string | null;
@@ -103,6 +104,7 @@ export interface PortalUser {
   level: string;
   role: 'student' | 'class_rep' | 'chief_admin';
   emailVerified: boolean;
+  marketAccess?: boolean;
   createdAt: string;
 }
 

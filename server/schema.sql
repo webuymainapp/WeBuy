@@ -286,3 +286,33 @@ alter table students add column if not exists phone_edit_count int not null defa
 -- Single-session enforcement: the currently-valid session token. On every sign-in
 -- a fresh token is generated, invalidating any other browser/device's session.
 alter table students add column if not exists session_token text;
+
+-- Secret marketplace access. Only students flagged true have the privilege; the
+-- secret entry point (triple-tap on Dashboard) is gated by this flag server-side.
+alter table students add column if not exists market_access boolean not null default false;
+
+-- Secret marketplace products — deliberately only name + price. They are NOT in
+-- the normal catalogue; buying spends wallet points but leaves no trace on the
+-- transactions page (no wallet_transactions row is written).
+create table if not exists secret_products (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  price int not null check (price >= 0),
+  created_by uuid references students(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_secret_products_created on secret_products(created_at desc);
+
+-- Who bought which secret product. Marked paid when points are spent. This is the
+-- ONLY audit of secret purchases — deliberately kept separate from wallet_transactions
+-- so nothing secret ever shows on the student's transactions page.
+create table if not exists secret_purchases (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references students(id) on delete cascade,
+  product_id uuid not null references secret_products(id) on delete cascade,
+  price int not null,
+  status text not null default 'paid' check (status in ('paid')),
+  paid_at timestamptz not null default now(),
+  unique (student_id, product_id)
+);
+create index if not exists idx_secret_purchases_student on secret_purchases(student_id, paid_at desc);
