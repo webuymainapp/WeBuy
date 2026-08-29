@@ -39,11 +39,15 @@ body {
 
 /* Prevent the tiny fixed white strip under the address bar in mobile Chrome:
    100vh includes browser chrome, so the page can overhang the visible area.
-   The dynamic viewport unit (dvh) tracks the actually-visible height. */
-@supports (min-height: 100dvh) {
+   The dynamic viewport unit (dvh) tracks the actually-visible height.
+   We deliberately set 110dvh so the app canvas is always a touch TALLER than the
+   visible screen — this guarantees the (dark/light) app background fully covers
+   the window even when dvh measures a fraction smaller than the real standalone
+   PWA height, leaving no white gap/sliver at the very bottom edge. */
+@supports (min-height: 110dvh) {
   html,
   body,
   #root {
-    min-height: 100dvh;
+    min-height: 110dvh;
   }
 }
