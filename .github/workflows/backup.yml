@@ -2,8 +2,10 @@ name: Daily Database Backup
 
 on:
   schedule:
-    # Every hour — cuts potential data loss to ~1h
-    - cron: '0 * * * *'
+    # Every 3 hours (00, 03, 06, 09, 12, 15, 18, 21 UTC) — ~8 runs/day, ~720
+    # Actions min/month, staying well inside GitHub's free 2,000-min monthly
+    # budget while capping potential data loss to ~3h.
+    - cron: '0 */3 * * *'
   workflow_dispatch:
 
 permissions:
@@ -51,6 +53,17 @@ jobs:
         run: |
           psql "${{ secrets.DATABASE_URL }}" -c \
             "delete from pending_signups where used_at is not null or created_at < now() - interval '7 days';"
+
+      - name: Prune old backups (keep ~1 month of dumps + matching summaries)
+        working-directory: backups
+        run: |
+          keep=28
+          for pat in "webuy_*.sql" "spending_summary_*.csv"; do
+            ls -1 $pat 2>/dev/null | sort | head -n -"$keep" > /tmp/rmlist.txt
+            xargs -r rm -f -- < /tmp/rmlist.txt
+          done
+          echo "Kept newest $keep of each type. Remaining:"
+          ls -1 webuy_*.sql 2>/dev/null | wc -l
 
       - name: Commit and push dump
         working-directory: backups

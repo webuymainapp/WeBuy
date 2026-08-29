@@ -116,9 +116,11 @@ The production database is backed up automatically every day.
   current balance, funds received, wallet spent, secret-marketplace spent, and
   total spent for every student.
 - **How** — a GitHub Actions workflow (`.github/workflows/backup.yml`) runs on a
-  cron schedule (every hour), dumps the DB via `pg_dump`, and pushes the file.
-  It reads `DATABASE_URL` from the `DATABASE_URL` secret and pushes with the
-  `BACKUP_PAT` secret (both set on this repo's Actions settings).
+  cron schedule (every 3 hours), dumps the DB via `pg_dump`, and pushes the file.
+  Old dumps/summaries are pruned to keep only the most recent ~28 (about a
+  month) so the backup repo stays small. It reads `DATABASE_URL` from the
+  `DATABASE_URL` secret and pushes with the `BACKUP_PAT` secret (both set on
+  this repo's Actions settings).
 - **Trigger manually** — run the `Daily Database Backup` workflow from the
   Actions tab, or push a new workflow: `repository_dispatch`/`workflow_dispatch`
   are enabled.
@@ -133,8 +135,8 @@ The production database is backed up automatically every day.
 3. Point the backend at the new DB — update `DATABASE_URL` in `server/.env`
    (local) and in the Render environment variables, then redeploy.
 
-Backups are as-of the dump time, so expect up to ~1h of potential data loss
-(mainline dumps run every hour). Non-DB secrets (Gmail app password, PocketFi keys) live in
+Backups are as-of the dump time, so expect up to ~3h of potential data loss
+(mainline dumps run every 3 hours). Non-DB secrets (Gmail app password, PocketFi keys) live in
 `server/.env` / Render env vars and are **not** in the dumps — back those up
 separately.
 
