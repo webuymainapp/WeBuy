@@ -26,6 +26,17 @@ body {
   min-height: 100vh;
 }
 
+/* Installed PWA (mobile web-app mode) can paint under the home-indicator / safe
+   areas only with viewport-fit=cover. Without padding the app to the bottom
+   safe-area inset, the browser fills that strip with its own default (often
+   white), which shows as a thin horizontal line at the very bottom. Extend the
+   app's own background (dark in dark mode) into that inset instead. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  #root {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
 /* Prevent the tiny fixed white strip under the address bar in mobile Chrome:
    100vh includes browser chrome, so the page can overhang the visible area.
    The dynamic viewport unit (dvh) tracks the actually-visible height. */
