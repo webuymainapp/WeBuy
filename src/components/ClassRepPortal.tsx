@@ -81,6 +81,9 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
   // Roster modal state
   const [rosterOpen, setRosterOpen] = useState(false);
 
+  // Export/dowload choice modal state
+  const [downloadOpen, setDownloadOpen] = useState(false);
+
   const bumpRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
   const showToast = (msg: string) => {
@@ -237,56 +240,71 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
   const collectionPercentage =
     totalPaidCount > 0 ? Math.round((collectedCount / totalPaidCount) * 100) : 0;
 
-  // Export CSV Handler
-  const handleExportCSV = (courseCode: string = selectedCourse) => {
+  // Shared CSV generation: 'all' exports everything for the course, 'paid'
+  // exports everyone who is not unpaid, 'unpaid' exports only unpaid students.
+  const triggerDownload = (kind: 'paid' | 'unpaid' | 'all') => {
     soundEffects.playTap();
-    const rosterData = courseCode === selectedCourse ? roster : [];
-    const headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Reference', 'Collection Status', 'Collected At'];
-    const rows = rosterData.map((item) => [
-      item.courseCode,
-      `"${item.fullName}"`,
-      item.regNo,
-      `"${item.department}"`,
-      item.transactionRef ?? 'N/A',
-      item.isCollected ? 'COLLECTED' : 'PENDING PICKUP',
-      item.collectedAt ? new Date(item.collectedAt).toLocaleString() : 'N/A',
-    ]);
-    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Distribution_Roster_${courseCode}_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+    const courseCode = selectedCourse;
+    const dateStr = new Date().toISOString().split('T')[0];
+    let headers: string[];
+    let rows: string[][];
+    let filename: string;
 
-  // Export CSV of only the unpaid students for the selected course.
-  const handleExportUnpaidCSV = (courseCode: string = selectedCourse) => {
-    soundEffects.playTap();
-    const rows = roster
-      .filter((item) => item.status === 'unpaid')
-      .map((item) => [
+    if (kind === 'unpaid') {
+      headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Level', 'Book', 'Pickup Location', 'Collected'];
+      rows = roster
+        .filter((item) => item.status === 'unpaid')
+        .map((item) => [
+          item.courseCode,
+          `"${item.fullName}"`,
+          item.regNo,
+          `"${item.department}"`,
+          item.level,
+          item.bookTitle,
+          item.pickupLocation,
+          item.isCollected ? '✓' : '',
+        ]);
+      filename = `Unpaid_Students_${courseCode}_${dateStr}.csv`;
+    } else if (kind === 'paid') {
+      headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Reference', 'Collected', 'Collected At'];
+      rows = roster
+        .filter((item) => item.status !== 'unpaid')
+        .map((item) => [
+          item.courseCode,
+          `"${item.fullName}"`,
+          item.regNo,
+          `"${item.department}"`,
+          item.transactionRef ?? 'N/A',
+          item.isCollected ? '✓' : '',
+          item.collectedAt ? new Date(item.collectedAt).toLocaleString() : 'N/A',
+        ]);
+      filename = `Paid_Students_${courseCode}_${dateStr}.csv`;
+    } else {
+      headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Reference', 'Collected', 'Collected At'];
+      rows = (courseCode === selectedCourse ? roster : []).map((item) => [
         item.courseCode,
         `"${item.fullName}"`,
         item.regNo,
         `"${item.department}"`,
-        item.level,
-        item.bookTitle,
-        item.pickupLocation,
+        item.transactionRef ?? 'N/A',
+        item.isCollected ? '✓' : '',
+        item.collectedAt ? new Date(item.collectedAt).toLocaleString() : 'N/A',
       ]);
-    const headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Level', 'Book', 'Pickup Location'];
+      filename = `Distribution_Roster_${courseCode}_${dateStr}.csv`;
+    }
+
     const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `Unpaid_Students_${courseCode}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    showToast(`${rows.length} unpaid student${rows.length === 1 ? '' : 's'} downloaded`);
+    showToast(
+      `${rows.length} ${kind === 'unpaid' ? 'unpaid student' : kind === 'paid' ? 'paid student' : 'roster row'}${rows.length === 1 ? '' : 's'} downloaded`,
+    );
   };
 
   return (
@@ -439,19 +457,14 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
             </div>
 
             <button
-              onClick={() => handleExportCSV(selectedCourse)}
+              onClick={() => {
+                soundEffects.playTap();
+                setDownloadOpen(true);
+              }}
               className="shrink-0 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-700 dark:text-slate-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
             >
               <Download className="w-3.5 h-3.5" />
-              Export CSV
-            </button>
-
-            <button
-              onClick={() => handleExportUnpaidCSV(selectedCourse)}
-              className="shrink-0 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-amber-500/30"
-            >
-              <Download className="w-3.5 h-3.5" />
-              Download Unpaid
+              Download
             </button>
           </div>
         )}
@@ -842,6 +855,100 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
         onClose={() => setIsScanOpen(false)}
         onDecoded={handleScanDecoded}
       />
+
+      {/* Download choice modal */}
+      <AnimatePresence>
+        {downloadOpen && (
+          <div className="fixed inset-0 z-[85] flex items-end sm:items-center justify-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDownloadOpen(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 28 }}
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 dark:border-neutral-700 overflow-hidden"
+            >
+              <div className="p-4 sm:p-5 bg-slate-900 dark:bg-neutral-800 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                    <Download className="w-5 h-5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-base text-white leading-tight">
+                      Download Roster
+                    </h3>
+                    <p className="text-[11px] text-slate-400">
+                      {selectedCourse} — pick a list to download as CSV
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setDownloadOpen(false)}
+                  className="p-2 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-5 space-y-2.5">
+                <button
+                  onClick={() => {
+                    setDownloadOpen(false);
+                    triggerDownload('all');
+                  }}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 border border-slate-200 dark:border-neutral-700 text-left transition-colors cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-neutral-700 flex items-center justify-center shrink-0">
+                    <Users className="w-5 h-5 text-slate-600 dark:text-slate-300" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100">Full List</p>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">Everyone for this course</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setDownloadOpen(false);
+                    triggerDownload('paid');
+                  }}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/80 text-left transition-colors cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-emerald-800 dark:text-emerald-300">Paid</p>
+                    <p className="text-[11px] text-emerald-600/80 dark:text-emerald-400/70">Students who have paid</p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setDownloadOpen(false);
+                    triggerDownload('unpaid');
+                  }}
+                  className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/40 border border-amber-200/80 dark:border-amber-800/80 text-left transition-colors cursor-pointer"
+                >
+                  <div className="w-9 h-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0">
+                    <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-amber-800 dark:text-amber-300">Unpaid</p>
+                    <p className="text-[11px] text-amber-600/80 dark:text-amber-400/70">Students who have not paid</p>
+                  </div>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
