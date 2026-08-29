@@ -537,7 +537,7 @@ export default function App() {
   const currentProfile = profile as StudentProfile;
 
   return (
-    <div className={`min-h-[110dvh] bg-slate-100 dark:bg-black text-slate-900 dark:text-slate-100 font-sans overflow-x-clip ${
+    <div className={`min-h-dvh bg-slate-100 dark:bg-black text-slate-900 dark:text-slate-100 font-sans overflow-x-clip ${
       activeRole === 'class_rep' ? 'pb-8' : 'pb-24 md:pb-12'
     }`}>
       {/* Dynamic Island-style notification popup */}
