@@ -445,12 +445,12 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
       {/* Add / Edit Form Modal */}
       <AnimatePresence>
         {isFormOpen && (
-          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end lg:items-center justify-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-t-3xl lg:rounded-3xl overflow-hidden shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <h3 className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">
@@ -523,12 +523,12 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
       {/* Transfer Course Modal */}
       <AnimatePresence>
         {transferBook && (
-          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end lg:items-center justify-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-t-3xl lg:rounded-3xl overflow-hidden shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <div>
@@ -609,12 +609,12 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
       {/* Recycle Bin Modal */}
       <AnimatePresence>
         {recycleOpen && (
-          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-end lg:items-center justify-center">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-3xl overflow-hidden shadow-2xl"
+              initial={{ y: 60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 60, opacity: 0 }}
+              className="relative max-w-lg w-full bg-white dark:bg-neutral-900 rounded-t-3xl lg:rounded-3xl overflow-hidden shadow-2xl"
             >
               <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-100 dark:border-neutral-800">
                 <div>
