@@ -262,6 +262,33 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
     document.body.removeChild(link);
   };
 
+  // Export CSV of only the unpaid students for the selected course.
+  const handleExportUnpaidCSV = (courseCode: string = selectedCourse) => {
+    soundEffects.playTap();
+    const rows = roster
+      .filter((item) => item.status === 'unpaid')
+      .map((item) => [
+        item.courseCode,
+        `"${item.fullName}"`,
+        item.regNo,
+        `"${item.department}"`,
+        item.level,
+        item.bookTitle,
+        item.pickupLocation,
+      ]);
+    const headers = ['Course Code', 'Student Name', 'Reg Number', 'Department', 'Level', 'Book', 'Pickup Location'];
+    const csvContent = [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Unpaid_Students_${courseCode}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast(`${rows.length} unpaid student${rows.length === 1 ? '' : 's'} downloaded`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Toast Alert Banner */}
@@ -417,6 +444,14 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
             >
               <Download className="w-3.5 h-3.5" />
               Export CSV
+            </button>
+
+            <button
+              onClick={() => handleExportUnpaidCSV(selectedCourse)}
+              className="shrink-0 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm shadow-amber-500/30"
+            >
+              <Download className="w-3.5 h-3.5" />
+              Download Unpaid
             </button>
           </div>
         )}
