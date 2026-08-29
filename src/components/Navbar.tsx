@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NotificationItem } from '../types';
-import { BookOpen, ShieldCheck, User, ArrowLeft, Bell, CheckCheck } from 'lucide-react';
+import { BookOpen, ShieldCheck, User, ArrowLeft, Bell, CheckCheck, RefreshCw } from 'lucide-react';
 
 interface NavbarProps {
   activeRole: 'student' | 'class_rep';
@@ -111,6 +111,16 @@ export const Navbar: React.FC<NavbarProps> = ({
               )}
             </button>
           )}
+
+          {/* Refresh (hard reload) button */}
+          <button
+            onClick={() => window.location.reload()}
+            className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800 transition-colors"
+            aria-label="Refresh data"
+            title="Refresh data"
+          >
+            <RefreshCw className="w-4.5 h-4.5" />
+          </button>
 
           {/* Notifications Button */}
           <div className="relative">
