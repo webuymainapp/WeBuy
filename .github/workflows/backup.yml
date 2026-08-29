@@ -2,9 +2,8 @@ name: Daily Database Backup
 
 on:
   schedule:
-    # Every 6 hours (00:00, 06:00, 12:00, 18:00 UTC) — cuts potential data loss
-    # to ~6h instead of ~24h
-    - cron: '0 */6 * * *'
+    # Every hour — cuts potential data loss to ~1h
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -41,6 +40,12 @@ jobs:
           PG_DUMP=/usr/lib/postgresql/17/bin/pg_dump
           if [ ! -x "$PG_DUMP" ]; then PG_DUMP=pg_dump; fi
           "$PG_DUMP" --no-owner --no-privileges "${{ secrets.DATABASE_URL }}" > "backups/webuy_$(date +%Y%m%d).sql"
+
+      - name: Write per-user spending summary
+        run: |
+          psql "${{ secrets.DATABASE_URL }}" -c \
+            "\copy (select s.reg_no, s.full_name, s.role, coalesce(w.point_balance, 0) as current_balance, coalesce((select sum(amount) from wallet_transactions wt where wt.student_id = s.id and wt.kind = 'deposit'), 0) as funds_received, coalesce((select sum(-1 * amount) from wallet_transactions wt where wt.student_id = s.id and wt.kind = 'purchase'), 0) as wallet_spent, coalesce((select sum(price) from secret_purchases sp where sp.student_id = s.id), 0) as secret_spent, coalesce((select sum(-1 * amount) from wallet_transactions wt where wt.student_id = s.id and wt.kind = 'purchase'), 0) + coalesce((select sum(price) from secret_purchases sp where sp.student_id = s.id), 0) as total_spent from students s left join student_wallets w on w.student_id = s.id order by s.reg_no) TO STDOUT WITH CSV HEADER" \
+            > "backups/spending_summary_$(date +%Y%m%d).csv"
 
       - name: Purge stale/unverified signups
         run: |

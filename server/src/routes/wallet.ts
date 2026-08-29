@@ -266,6 +266,27 @@ router.post(
     );
     const totalFund = mine?.totalFund ?? 0;
 
+    // The chief admin's wallet is an operator/test account, not a spendable
+    // student wallet. Skip auto-reconcile entirely so its ledger stays exactly
+    // as the operator has set it (e.g. test funding stays at 0).
+    if (req.student.role === 'chief_admin') {
+      const fresh = await ensureWallet(req.student);
+      const txns = await query(
+        `select id, kind, amount, reference, note, created_at
+           from wallet_transactions where student_id = $1
+          order by created_at desc limit 50`,
+        [req.student.sub],
+      );
+      res.json({
+        ok: true,
+        credited: 0,
+        totalFund,
+        ...toWalletJson(fresh),
+        transactions: txns.rows,
+      });
+      return;
+    }
+
     let credited = 0;
     try {
       await query('begin');
@@ -278,19 +299,28 @@ router.post(
          on conflict (student_id) do nothing`,
         [req.student.sub],
       );
-      await query(
+      const locked = await query(
         'select point_balance from student_wallets where student_id = $1 for update',
         [req.student.sub],
       );
+      const balance = locked.rows[0]?.point_balance as number ?? 0;
 
-      const creditedRes = await query(
-        `select coalesce(sum(amount), 0)::int as credited
-           from wallet_transactions
-          where student_id = $1 and kind = 'deposit'`,
+      // What the user's points SHOULD equal: every naira ever funded into their
+      // VA (totalFund, authoritative lifetime total) minus every naira they've
+      // already SPENT. We credit only the shortfall to that target, never more.
+      // This guarantees money already spent can never be re-credited — even if
+      // a wallet's deposit rows were ever wiped, only the genuinely-unspent
+      // remainder is topped up, not the spent portion.
+      const reconciled = await query(
+        `select
+           coalesce(sum(amount) filter (where kind = 'deposit'), 0)::int as funded,
+           coalesce(sum(amount) filter (where kind = 'purchase'), 0)::int as spent
+           from wallet_transactions where student_id = $1`,
         [req.student.sub],
       );
-      const alreadyCredited = creditedRes.rows[0].credited as number;
-      const delta = totalFund - alreadyCredited;
+      const spent = reconciled.rows[0].spent as number; // negative (debits)
+      const target = totalFund + spent; // totalFund - |spent|
+      const delta = target - balance;
 
       if (delta > 0) {
         const reference = makeDepositReference();

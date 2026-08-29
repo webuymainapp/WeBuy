@@ -111,9 +111,12 @@ See `server/README.md` for API endpoints and security rules.
 The production database is backed up automatically every day.
 
 - **Where** — the private repo `webuymainapp/WeBuy-backups`, containing a plain
-  SQL dump (`webuy_YYYYMMDD.sql`) per day (schema + all data).
+  SQL dump (`webuy_YYYYMMDD.sql`) per day (schema + all data) plus a per-user
+  spending summary (`spending_summary_YYYYMMDD.csv`): reg number, name, role,
+  current balance, funds received, wallet spent, secret-marketplace spent, and
+  total spent for every student.
 - **How** — a GitHub Actions workflow (`.github/workflows/backup.yml`) runs on a
-  cron schedule (03:00 UTC), dumps the DB via `pg_dump`, and pushes the file.
+  cron schedule (every hour), dumps the DB via `pg_dump`, and pushes the file.
   It reads `DATABASE_URL` from the `DATABASE_URL` secret and pushes with the
   `BACKUP_PAT` secret (both set on this repo's Actions settings).
 - **Trigger manually** — run the `Daily Database Backup` workflow from the
@@ -130,8 +133,8 @@ The production database is backed up automatically every day.
 3. Point the backend at the new DB — update `DATABASE_URL` in `server/.env`
    (local) and in the Render environment variables, then redeploy.
 
-Backups are as-of the dump time, so expect up to ~6h of potential data loss with
-hourly dumps (dumps run every 6 hours). Non-DB secrets (Gmail app password, PocketFi keys) live in
+Backups are as-of the dump time, so expect up to ~1h of potential data loss
+(mainline dumps run every hour). Non-DB secrets (Gmail app password, PocketFi keys) live in
 `server/.env` / Render env vars and are **not** in the dumps — back those up
 separately.
 
