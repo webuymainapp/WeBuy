@@ -193,6 +193,10 @@ export default function App() {
       // ignore
     }
     document.documentElement.classList.toggle('dark', settings.theme === 'dark');
+    // Match the browser/PWA chrome color (top status bar + bottom nav area) with
+    // the app theme so it blends with the page: white in light mode, black in dark.
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', settings.theme === 'dark' ? '#000000' : '#ffffff');
     soundEffects.setEnabled(settings.soundEnabled);
   }, [settings]);
 
