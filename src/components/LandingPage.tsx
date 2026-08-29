@@ -791,8 +791,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ profile, textbooks, on
           </div>
         </div>
 
-        <div className="border-t border-slate-200 dark:border-neutral-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
-          © 2026 Webuy. All rights reserved.
+        <div className="border-t border-slate-200 dark:border-neutral-800 py-6 text-center text-xs text-indigo-500 dark:text-indigo-400">
+          © 2026 cypher.dev
         </div>
       </footer>
     </div>
