@@ -854,6 +854,7 @@ const textbookSchema = z.object({
   courseCode: z.string().trim().min(1).max(20),
   courseTitle: z.string().trim().min(1).max(200),
   price: z.number().int().min(0),
+  paymentsPaused: z.boolean().optional(),
 });
 
 /** Create a textbook (catalog) — the adding rep owns it. Only course code,
