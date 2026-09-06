@@ -411,7 +411,7 @@ export default function App() {
 
   // ---- Cart helpers ------------------------------------------------------
   const cartItems = textbooks.filter(
-    (b) => cartIds.includes(b.id) && b.status === 'unpaid',
+    (b) => cartIds.includes(b.id) && b.status === 'unpaid' && !b.paymentsPaused,
   );
   const addToCart = useCallback((tb: Textbook) => {
     setCartIds((prev) => (prev.includes(tb.id) ? prev : [...prev, tb.id]));
@@ -604,8 +604,12 @@ export default function App() {
               textbooks={textbooks}
               onPayAll={() => {
                 soundEffects.playTap();
-                // Pay All = add every unpaid book to the cart, then open it.
-                setCartIds(unpaidBooks.map((b) => b.id));
+                // Pay All = add every unpaid (non-paused) book to the cart, then open it.
+                setCartIds(
+                  unpaidBooks
+                    .filter((b) => !b.paymentsPaused)
+                    .map((b) => b.id),
+                );
                 setCartOpen(true);
               }}
               onFilterChange={setActiveFilter}

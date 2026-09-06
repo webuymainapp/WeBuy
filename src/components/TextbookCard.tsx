@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Textbook } from '../types';
-import { CheckCircle2, Clock, MapPin, QrCode, ShoppingCart, Check, Info, X } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, QrCode, ShoppingCart, Check, Info, X, Pause } from 'lucide-react';
 
 interface TextbookCardProps {
   textbook: Textbook;
@@ -154,6 +154,14 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
       );
     }
     if (textbook.status === 'unpaid') {
+      if (textbook.paymentsPaused) {
+        return (
+          <span className="px-2 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200 text-[10px] font-bold flex items-center gap-1 whitespace-nowrap">
+            <Pause className="w-3 h-3" />
+            Payments paused
+          </span>
+        );
+      }
       if (isInCart(textbook.id)) {
         return (
           <button
@@ -190,6 +198,13 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
     { label: 'Class Rep', value: textbook.classRepName || '—' },
     { label: 'Status', value: textbook.status },
   ];
+
+  if (textbook.status === 'unpaid' && textbook.paymentsPaused) {
+    details.push({
+      label: 'Payments',
+      value: 'Paused by rep — payment temporarily disabled',
+    });
+  }
 
   return (
     <>

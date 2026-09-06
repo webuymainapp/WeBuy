@@ -61,7 +61,9 @@ router.get(
     const withdrawals = (payRes.rows as { status: string; d: number }[])
       .filter((r) => r.status === 'completed' || r.status === 'processing')
       .reduce((s, r) => s + r.d, 0);
-    const balance = textbookValue - withdrawals;
+    // Deleted textbooks no longer contribute to textbookValue, so an offset
+    // can momentarily dip below zero; clamp so the UI never shows a negative.
+    const balance = Math.max(textbookValue - withdrawals, 0);
 
     // Live PocketFi merchant balance — only surfaced to the chief admin.
     let livePocketFi: number | null = null;

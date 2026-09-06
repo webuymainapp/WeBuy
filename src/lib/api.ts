@@ -223,6 +223,7 @@ interface MyTextbookRow {
   pickup_location: string;
   class_rep_name: string | null;
   cover_url: string | null;
+  payments_paused: boolean;
   status: 'unpaid' | 'paid' | 'collected' | null;
   paid_at: string | null;
   collected_at: string | null;
@@ -252,6 +253,7 @@ export function toTextbook(r: MyTextbookRow): Textbook {
     collectedAt: r.collected_at ?? undefined,
     transactionRef: r.transaction_reference ?? undefined,
     passToken: r.pass_token ?? undefined,
+    paymentsPaused: Boolean(r.payments_paused),
   };
 }
 
@@ -271,6 +273,7 @@ interface CatalogRow {
   class_rep_name: string | null;
   cover_url: string | null;
   added_by?: string | null;
+  payments_paused?: boolean;
 }
 
 export function toCatalogTextbook(r: CatalogRow): Textbook {
@@ -291,6 +294,7 @@ export function toCatalogTextbook(r: CatalogRow): Textbook {
     pickupLocation: r.pickup_location,
     classRepName: r.class_rep_name ?? '',
     addedBy: r.added_by ?? null,
+    paymentsPaused: Boolean(r.payments_paused),
   };
 }
 
@@ -644,6 +648,12 @@ export const repApi = {
 
   updateTextbook: (id: string, body: Record<string, unknown>) =>
     request<{ ok: boolean }>(`/api/rep/textbooks/${id}`, json('PATCH', body)),
+
+  setTextbookPaymentsPaused: (id: string, paused: boolean) =>
+    request<{ ok: boolean }>(
+      `/api/rep/textbooks/${id}`,
+      json('PATCH', { paymentsPaused: paused }),
+    ),
 
   transferTextbook: (id: string, repId: string) =>
     request<{ ok: boolean }>(

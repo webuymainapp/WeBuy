@@ -13,6 +13,8 @@ import {
   AlertCircle,
   BookPlus,
   ArrowLeftRight,
+  Pause,
+  Play,
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { repApi, ApiError } from '../lib/api';
@@ -69,6 +71,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
   const [transferRepId, setTransferRepId] = useState('');
   const [busyTransfer, setBusyTransfer] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
+  const [busyPauseId, setBusyPauseId] = useState<string | null>(null);
 
   // This rep's own revenue (their share of the PocketFi balance), refreshed
   // whenever the manage modal opens. Chief admin sees the platform-wide total.
@@ -124,6 +127,35 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
     } catch (err) {
       soundEffects.playError();
       onToast(err instanceof ApiError ? err.message : 'Delete failed');
+    }
+  };
+
+  const handleTogglePause = async (book: Textbook) => {
+    const next = !book.paymentsPaused;
+    if (
+      !window.confirm(
+        next
+          ? `Pause payments for "${book.bookTitle}" (${book.courseCode})? Students won't be able to pay until you resume.`
+          : `Resume payments for "${book.bookTitle}" (${book.courseCode})? Students can pay again.`,
+      )
+    ) {
+      return;
+    }
+    setBusyPauseId(book.id);
+    try {
+      await repApi.setTextbookPaymentsPaused(book.id, next);
+      soundEffects.playTap();
+      onToast(
+        next
+          ? `Payments paused for ${book.courseCode}.`
+          : `Payments resumed for ${book.courseCode}.`,
+      );
+      onChanged();
+    } catch (err) {
+      soundEffects.playError();
+      onToast(err instanceof ApiError ? err.message : 'Could not update payment status');
+    } finally {
+      setBusyPauseId(null);
     }
   };
 
@@ -390,6 +422,12 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                           <span className="text-[10px] font-extrabold font-mono px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">
                             {book.courseCode}
                           </span>
+                          {book.paymentsPaused && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300">
+                              <Pause className="w-3 h-3 inline mr-0.5" />
+                              Paused
+                            </span>
+                          )}
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-neutral-700 text-slate-600 dark:text-slate-300">
                             {formatNaira(book.price)}
                           </span>
@@ -412,6 +450,28 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                                 <ArrowLeftRight className="w-4 h-4" />
                               </button>
                             )}
+                            <button
+                              onClick={() => handleTogglePause(book)}
+                              disabled={busyPauseId === book.id}
+                              title={
+                                book.paymentsPaused
+                                  ? 'Resume payments'
+                                  : 'Pause payments'
+                              }
+                              className={`p-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 ${
+                                book.paymentsPaused
+                                  ? 'text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                                  : 'text-amber-600 dark:text-amber-300 hover:bg-amber-50 dark:hover:bg-amber-950/40'
+                              }`}
+                            >
+                              {busyPauseId === book.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : book.paymentsPaused ? (
+                                <Play className="w-4 h-4" />
+                              ) : (
+                                <Pause className="w-4 h-4" />
+                              )}
+                            </button>
                             <button
                               onClick={() => openEdit(book)}
                               title="Edit"

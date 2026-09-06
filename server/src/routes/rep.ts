@@ -97,12 +97,17 @@ async function assertCanManageAssignment(
  * Called lazily (never awaited) on reads so expired rows are swept even when
  * no background scheduler is running — the next request after the window
  * closes does the cleanup.
+ *
+ * "Removal" is a soft purge: paid/collected student assignments and their
+ * money records survive, only the textbook stops being visible anywhere.
  */
 async function purgeExpiredDeletes(): Promise<void> {
   try {
     await query(
-      `delete from textbooks
+      `update textbooks
+          set purged_at = now()
         where deleted_at is not null
+          and purged_at is null
           and deleted_at < now() - interval '24 hours'`,
     );
   } catch {
@@ -915,6 +920,7 @@ router.patch(
       courseCode: 'course_code',
       courseTitle: 'course_title',
       price: 'price',
+      paymentsPaused: 'payments_paused',
     };
     const fields = req.body as Record<string, unknown>;
     const entries = Object.entries(fields)
@@ -1034,7 +1040,7 @@ router.delete(
   }),
 );
 
-/** Recycle bin — textbooks soft-deleted within the last 24 hours. */
+/** Recycle bin — textbooks soft-deleted (not yet purged) within the last 24 hours. */
 router.get(
   '/textbooks/deleted',
   asyncHandler(async (_req, res) => {
@@ -1045,20 +1051,22 @@ router.get(
               class_rep_name, cover_url, created_at, added_by, deleted_at
          from textbooks
         where deleted_at is not null
+          and purged_at is null
         order by deleted_at desc`,
     );
     res.json({ textbooks: result.rows });
   }),
 );
 
-/** Restore a soft-deleted textbook back into the live catalog. */
+/** Restore a soft-deleted (not purged) textbook back into the live catalog. */
 router.post(
   '/textbooks/:id/restore',
   asyncHandler(async (req, res) => {
     await assertCanManageTextbook(req.student, req.params.id);
     const result = await query(
-      `update textbooks set deleted_at = null
-        where id = $1 and deleted_at is not null
+      `update textbooks
+          set deleted_at = null, purged_at = null
+        where id = $1 and deleted_at is not null and purged_at is null
         returning id`,
       [req.params.id],
     );
@@ -1070,15 +1078,19 @@ router.post(
   }),
 );
 
-/** Permanently delete a soft-deleted textbook immediately (bypasses the 24h
- * window). Cascades to student assignments. */
+/** Permanently remove a soft-deleted textbook (bypasses the 24h window).
+ *  This is a soft purge: the textbook stops being visible everywhere, but
+ *  paid/collected student assignments and their money records survive so the
+ *  accounting stays honest and students keep their paid history. */
 router.post(
   '/textbooks/:id/purge',
   asyncHandler(async (req, res) => {
     await assertCanManageTextbook(req.student, req.params.id);
     const result = await query(
-      `delete from textbooks
-        where id = $1 and deleted_at is not null`,
+      `update textbooks
+          set purged_at = now()
+        where id = $1 and deleted_at is not null
+        returning id`,
       [req.params.id],
     );
     if (result.rowCount === 0) {

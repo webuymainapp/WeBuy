@@ -53,6 +53,17 @@ create table if not exists textbooks (
   created_at timestamptz not null default now()
 );
 
+-- Purged (permanently removed) textbooks are soft-marked here instead of being
+-- hard-deleted, so paid/collected student assignments and their money records
+-- survive deletion. Purged books disappear from the catalog and recycle bin
+-- but stay in the accounting.
+alter table textbooks add column if not exists purged_at timestamptz;
+
+-- Pause payments: the owning rep can stop NEW point payments on a textbook
+-- (students can't checkout while paused) without hiding it or affecting books
+-- that are already paid/collected.
+alter table textbooks add column if not exists payments_paused boolean not null default false;
+
 -- A student's assigned textbook and its lifecycle (unpaid -> paid -> collected).
 create table if not exists student_textbooks (
   id uuid primary key default gen_random_uuid(),

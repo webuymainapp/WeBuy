@@ -14,7 +14,7 @@ router.get(
     const result = await query(
       `select id, course_code, course_title, book_title, author, edition, price,
               isbn, department, level, lecturer_name, pickup_location,
-              class_rep_name, cover_url, created_at, added_by
+              class_rep_name, cover_url, payments_paused, created_at, added_by
          from textbooks
         where deleted_at is null
         order by course_code asc`,
@@ -62,7 +62,8 @@ router.post(
  * The student's dashboard = the ENTIRE catalog, with their lifecycle status
  * overlaid. A book with no student_textbooks row yet is just 'unpaid'.
  * All books available in the app are visible to every student, regardless of
- * level or department.
+ * level or department. Deleted/purged textbooks are excluded here entirely —
+ * what a student paid for survives only in their transaction history.
  */
 router.get(
   '/me/textbooks',
@@ -72,6 +73,7 @@ router.get(
       `select t.id as textbook_id, t.course_code, t.course_title, t.book_title,
               t.author, t.edition, t.price, t.isbn, t.department, t.level,
               t.lecturer_name, t.pickup_location, t.class_rep_name, t.cover_url,
+              t.payments_paused,
               st.id as student_textbook_id,
               coalesce(st.status, 'unpaid') as status,
               st.paid_at, st.collected_at, st.transaction_reference, st.pass_token

@@ -398,7 +398,7 @@ router.post(
       const balance = wallet.rows[0].point_balance as number;
 
       const books = await query(
-        `select st.id, t.book_title, t.course_code, t.price
+        `select st.id, t.book_title, t.course_code, t.price, t.payments_paused
            from student_textbooks st
            join textbooks t on t.id = st.textbook_id
           where st.student_id = $1 and st.id = any($2::uuid[])
@@ -412,12 +412,28 @@ router.post(
         course_code: string;
         price: number;
         status: string;
+        payments_paused: boolean;
       }>;
       const total = payable.reduce((s, b) => s + b.price, 0);
 
       if (payable.length === 0) {
         await query('rollback');
         throw new HttpError(409, 'No unpaid textbooks to pay.');
+      }
+
+      // A rep can pause payments on a textbook; while paused, students cannot
+      // pay for it (never affects already-paid/collected books). Reject the
+      // whole checkout if ANY selected item is paused so nothing partial slips.
+      const paused = payable.filter((b) => b.payments_paused);
+      if (paused.length > 0) {
+        await query('rollback');
+        const codes = paused.map((b) => b.course_code).join(', ');
+        throw new HttpError(
+          403,
+          paused.length === 1
+            ? `Payments are paused for ${codes}. The rep has temporarily disabled payment for this textbook.`
+            : `Payments are paused for: ${codes}. The rep has temporarily disabled payment for these textbooks.`,
+        );
       }
       if (total > balance) {
         await query('rollback');

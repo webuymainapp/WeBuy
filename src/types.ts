@@ -42,6 +42,7 @@ export interface Textbook {
   passToken?: string;
   studentTextbookId?: string;
   addedBy?: string | null;
+  paymentsPaused?: boolean;
 }
 
 export type PaymentMethod = 'wallet' | 'bank_transfer' | 'card' | 'ussd';

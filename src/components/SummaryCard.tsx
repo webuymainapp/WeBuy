@@ -33,6 +33,8 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
   const [copied, setCopied] = useState(false);
 
   const unpaidBooks = textbooks.filter((b) => b.status === 'unpaid');
+  const payableBooks = unpaidBooks.filter((b) => !b.paymentsPaused);
+  const pausedBooks = unpaidBooks.filter((b) => b.paymentsPaused);
   const paidBooks = textbooks.filter((b) => b.status === 'paid' || b.status === 'collected');
 
   const totalAssigned = textbooks.length;
@@ -129,16 +131,31 @@ export const SummaryCard: React.FC<SummaryCardProps> = ({
       </div>
 
       {/* Pay All button */}
-      {unpaidBooks.length > 0 && (
-        <button
-          onClick={onPayAll}
-          className="self-start flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md shadow-indigo-600/30 cursor-pointer"
-        >
-          <CreditCard className="w-3.5 h-3.5" />
-          <span className="text-[10px]">Pay All ({unpaidBooks.length} due)</span>
-          <ArrowRight className="w-3 h-3" />
-        </button>
-      )}
+      {unpaidBooks.length > 0 &&
+        (payableBooks.length > 0 ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={onPayAll}
+              className="self-start flex items-center gap-1.5 px-2.5 py-1.5 rounded-full transition-all bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-md shadow-indigo-600/30 cursor-pointer"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span className="text-[10px]">
+                Pay All ({payableBooks.length} due)
+              </span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+            {pausedBooks.length > 0 && (
+              <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400">
+                {pausedBooks.length} paused by rep
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1.5 rounded-full self-start">
+            <CreditCard className="w-3.5 h-3.5" />
+            All payments paused by reps
+          </div>
+        ))}
     </div>
   );
 };
