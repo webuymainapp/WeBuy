@@ -13,7 +13,7 @@ router.get(
   asyncHandler(async (_req, res) => {
     const result = await query(
       `select id, course_code, course_title, book_title, author, edition, price,
-              isbn, department, level, lecturer_name, pickup_location,
+              service_fee, isbn, department, level, lecturer_name, pickup_location,
               class_rep_name, cover_url, payments_paused, created_at, added_by
          from textbooks
         where deleted_at is null
@@ -71,7 +71,7 @@ router.get(
   asyncHandler(async (req, res) => {
     const result = await query(
       `select t.id as textbook_id, t.course_code, t.course_title, t.book_title,
-              t.author, t.edition, t.price, t.isbn, t.department, t.level,
+              t.author, t.edition, t.price, t.service_fee, t.isbn, t.department, t.level,
               t.lecturer_name, t.pickup_location, t.class_rep_name, t.cover_url,
               t.payments_paused,
               st.id as student_textbook_id,

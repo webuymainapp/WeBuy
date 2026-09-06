@@ -24,8 +24,15 @@ const router = Router();
 
 // Automatic PocketFi service charge added on top of the price a rep posts. It is
 // baked into the stored `price` so students see a single all-inclusive amount.
-// Only applied when a textbook is CREATED; edits manage the final price directly.
-const POCKETFEE_NGN = 100;
+// Normal textbooks carry ₦100; textbooks whose selling price is ABOVE ₦10,000
+// carry ₦200. The chosen fee is stored per-book in `service_fee` and applied on
+// create AND on price edits, so the fee tracks the selling price.
+const POCKETFEE_LOW = 100;
+const POCKETFEE_HIGH = 200;
+const POCKETFEE_THRESHOLD = 10_000;
+function pocketFeeFor(sellingPrice: number): number {
+  return sellingPrice > POCKETFEE_THRESHOLD ? POCKETFEE_HIGH : POCKETFEE_LOW;
+}
 
 // Rep dashboard reads a bunch of aggregate queries on every visit, but the
 // numbers only change when a rep mutates data. Cache the overview for 30s and
@@ -407,13 +414,13 @@ router.get(
   '/revenue',
   asyncHandler(async (req, res) => {
     const isChief = req.student.role === 'chief_admin';
-    const params: unknown[] = [POCKETFEE_NGN];
-    const scope = isChief ? '' : 'and t.added_by = $2';
+    const params: unknown[] = [];
+    const scope = isChief ? '' : 'and t.added_by = $1';
     if (!isChief) params.push(req.student.sub);
 
     const [earned, payouts] = await Promise.all([
       query(
-        `select coalesce(sum(t.price - $1), 0)::int as earned,
+        `select coalesce(sum(t.price - t.service_fee), 0)::int as earned,
                 count(*)::int as paid_books
            from student_textbooks st
            join textbooks t on t.id = st.textbook_id
@@ -509,7 +516,7 @@ router.post(
     };
 
     const book = await query(
-      `select t.id, t.price, t.course_code, t.added_by, t.deleted_at
+      `select t.id, t.price, t.service_fee, t.course_code, t.added_by, t.deleted_at
          from textbooks t where t.id = $1`,
       [textbookId],
     );
@@ -526,7 +533,10 @@ router.post(
       );
     }
 
-    const perBook = Math.max((book.rows[0].price as number) - POCKETFEE_NGN, 0);
+    const perBook = Math.max(
+      (book.rows[0].price as number) - (book.rows[0].service_fee as number),
+      0,
+    );
     // Reps can only request copies that students have already paid for (via
     // points), MINUS any copies already requested in a payout (pending,
     // processing or settled). A failed payout frees its copies back up. This
@@ -873,19 +883,23 @@ router.post(
     }
     const { full_name, department, level } = rep.rows[0];
 
+    const sellingPrice = req.body.price as number;
+    const serviceFee = pocketFeeFor(sellingPrice);
+
     let result;
     try {
       result = await query(
         `insert into textbooks
-          (course_code, course_title, book_title, price, department, level,
-           pickup_location, class_rep_name, added_by)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          (course_code, course_title, book_title, price, service_fee, department,
+           level, pickup_location, class_rep_name, added_by)
+         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          returning id`,
         [
           req.body.courseCode,
           req.body.courseTitle,
           `Posted by ${full_name}`,
-          req.body.price + POCKETFEE_NGN,
+          sellingPrice + serviceFee,
+          serviceFee,
           department,
           level,
           'Faculty Building - Room 104',
@@ -917,25 +931,36 @@ router.patch(
   validateBody(textbookSchema.partial()),
   asyncHandler(async (req, res) => {
     await assertCanManageTextbook(req.student, req.params.id);
+    const fields = req.body as Record<string, unknown>;
     const columnMap: Record<string, string> = {
       courseCode: 'course_code',
       courseTitle: 'course_title',
-      price: 'price',
       paymentsPaused: 'payments_paused',
     };
-    const fields = req.body as Record<string, unknown>;
-    const entries = Object.entries(fields)
-      .filter(([, v]) => v !== undefined)
-      .map(([key, v]) => [columnMap[key], v] as const)
-      .filter(([col]) => !!col);
-    if (entries.length === 0) {
+    // Columns to write, built in order. `price` is the rep's selling price — the
+    // service fee is derived from it and the all-inclusive `price` + `service_fee`
+    // are written together so edits keep the fee aligned with the threshold.
+    const cols: string[] = [];
+    const values: unknown[] = [];
+    if (fields.price !== undefined) {
+      const sellingPrice = fields.price as number;
+      const serviceFee = pocketFeeFor(sellingPrice);
+      cols.push('"price"', '"service_fee"');
+      values.push(sellingPrice + serviceFee, serviceFee);
+    }
+    for (const key of ['courseCode', 'courseTitle', 'paymentsPaused'] as const) {
+      if (fields[key] !== undefined) {
+        cols.push(`"${columnMap[key]}"`);
+        values.push(fields[key]);
+      }
+    }
+    if (cols.length === 0) {
       throw new HttpError(400, 'No fields to update');
     }
-    const sets = entries.map(([col], i) => `"${col}" = $${i + 1}`);
-    const values = entries.map(([, v]) => v);
+    const sets = cols.map((col, i) => `${col} = $${i + 1}`);
     values.push(req.params.id);
     const result = await query(
-      `update textbooks set ${sets.join(', ')} where id = $${entries.length + 1} returning id`,
+      `update textbooks set ${sets.join(', ')} where id = $${values.length} returning id`,
       values,
     );
     if (result.rowCount === 0) {

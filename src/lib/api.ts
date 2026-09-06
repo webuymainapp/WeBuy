@@ -216,6 +216,7 @@ interface MyTextbookRow {
   author: string | null;
   edition: string | null;
   price: number;
+  service_fee?: number;
   isbn: string | null;
   department: string;
   level: string;
@@ -241,6 +242,7 @@ export function toTextbook(r: MyTextbookRow): Textbook {
     author: r.author ?? '',
     edition: r.edition ?? '',
     price: r.price,
+    serviceFee: r.service_fee ?? 100,
     status: r.status ?? 'unpaid',
     coverUrl: r.cover_url || DEFAULT_COVER,
     department: r.department,
@@ -265,6 +267,7 @@ interface CatalogRow {
   author: string | null;
   edition: string | null;
   price: number;
+  service_fee?: number;
   isbn: string | null;
   department: string;
   level: string;
@@ -285,6 +288,7 @@ export function toCatalogTextbook(r: CatalogRow): Textbook {
     author: r.author ?? '',
     edition: r.edition ?? '',
     price: r.price,
+    serviceFee: r.service_fee ?? 100,
     status: 'unpaid',
     coverUrl: r.cover_url || DEFAULT_COVER,
     department: r.department,

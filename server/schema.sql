@@ -64,6 +64,12 @@ alter table textbooks add column if not exists purged_at timestamptz;
 -- that are already paid/collected.
 alter table textbooks add column if not exists payments_paused boolean not null default false;
 
+-- Per-book service charge (₦100 normally, ₦200 for textbooks whose selling
+-- price is above ₦10,000). Baked into `price` (price = selling + service_fee)
+-- so students see one all-inclusive total and downstream rep/account math can
+-- subtract the exact fee per book instead of assuming a flat amount.
+alter table textbooks add column if not exists service_fee int not null default 100;
+
 -- A student's assigned textbook and its lifecycle (unpaid -> paid -> collected).
 create table if not exists student_textbooks (
   id uuid primary key default gen_random_uuid(),

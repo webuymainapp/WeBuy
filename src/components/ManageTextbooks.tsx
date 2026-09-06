@@ -48,6 +48,8 @@ const formatNaira = (amount: number) =>
     .format(amount)
     .replace('NGN', '₦');
 
+const priceForHint = (raw: string) => Math.max(parseInt(raw, 10) || 0, 0);
+
 export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
   catalog,
   currentUserId,
@@ -109,7 +111,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
     setForm({
       courseCode: book.courseCode,
       courseTitle: book.courseTitle,
-      price: String(book.price),
+      price: String(Math.max(book.price - (book.serviceFee ?? 100), 0)),
     });
     setFormError(null);
     setIsFormOpen(true);
@@ -551,9 +553,18 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                 <div className="flex items-start gap-2 p-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
                   <BookOpen className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
-                    {editingId
-                      ? 'Price already includes the ₦100 PocketFi service charge.'
-                      : 'A ₦100 PocketFi service charge is added automatically to the posted price — students pay the all-inclusive amount.'}
+                    {(() => {
+                      const selling = priceForHint(form.price);
+                      const fee = selling > 10000 ? 200 : 100;
+                      return (
+                        <>
+                          The price you enter is your selling price. A PocketFi
+                          service charge of {fee === 200 ? '₦200' : '₦100'} is
+                          added automatically — students pay the all-inclusive
+                          total of {formatNaira(selling + fee)}.
+                        </>
+                      );
+                    })()}
                   </span>
                 </div>
 

@@ -9,14 +9,11 @@ const router = Router();
 
 router.use(requireAuth, requireClassRep);
 
-// The ₦100 PocketFi charge is the platform's, not a rep's — it funds PocketFi
-// expenses, so it is excluded from every textbook-money figure below.
-const POCKETFEE_NGN = 100;
-
 /**
  * "Total Money for Textbooks in PocketFi" = only what students have ACTUALLY
- * spent on textbooks (paid/collected assignments), minus the ₦100 PocketFi fee
- * (which funds expenses), minus withdrawals. Money a student has merely funded
+ * spent on textbooks (paid/collected assignments), minus the per-book PocketFi
+ * service fee stored on each textbook (which funds expenses), minus withdrawals.
+ * Money a student has merely funded
  * into their wallet but not yet used to buy a textbook is still theirs and is
  * NOT counted. The live PocketFi balance is returned separately for the chief
  * admin only.
@@ -27,11 +24,10 @@ router.get(
     const [bookVal, payRes, recentTx, recentWalletDep] =
       await Promise.all([
         query(
-          `select coalesce(sum(greatest(t.price - $1, 0)), 0)::int as value
+          `select coalesce(sum(greatest(t.price - t.service_fee, 0)), 0)::int as value
              from student_textbooks st
              join textbooks t on t.id = st.textbook_id
             where st.status in ('paid', 'collected')`,
-          [POCKETFEE_NGN],
         ),
         query(
           `select status, coalesce(sum(amount), 0)::int as d
@@ -55,7 +51,7 @@ router.get(
         ),
       ]);
 
-    // Textbook money already committed by students, with the ₦100 fee removed.
+    // Textbook money already committed by students, with the per-book service fee removed.
     const textbookValue = bookVal.rows[0].value as number;
     // Money no longer in the bank: completed or processing payouts.
     const withdrawals = (payRes.rows as { status: string; d: number }[])

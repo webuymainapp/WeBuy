@@ -28,6 +28,7 @@ export interface Textbook {
   author: string;
   edition: string;
   price: number;
+  serviceFee?: number;
   status: TextbookStatus;
   coverUrl: string;
   department: string;
