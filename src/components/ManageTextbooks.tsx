@@ -555,11 +555,11 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                   <span>
                     {(() => {
                       const selling = priceForHint(form.price);
-                      const fee = selling > 10000 ? 200 : 100;
+                      const fee = Math.max(100, Math.ceil(selling / 10000) * 100);
                       return (
                         <>
                           The price you enter is your selling price. A PocketFi
-                          service charge of {fee === 200 ? '₦200' : '₦100'} is
+                          service charge of {formatNaira(fee)} is
                           added automatically — students pay the all-inclusive
                           total of {formatNaira(selling + fee)}.
                         </>

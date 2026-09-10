@@ -64,8 +64,9 @@ alter table textbooks add column if not exists purged_at timestamptz;
 -- that are already paid/collected.
 alter table textbooks add column if not exists payments_paused boolean not null default false;
 
--- Per-book service charge (₦100 normally, ₦200 for textbooks whose selling
--- price is above ₦10,000). Baked into `price` (price = selling + service_fee)
+-- Per-book service charge, graduated by selling price: ₦100, then +₦100 for
+-- every ₦10,000 of selling price (₦100 ≤ 10k, ₦200 ≤ 20k, ₦300 ≤ 30k, …), i.e.
+-- ₦100 × ceil(selling/10_000). Baked into `price` (price = selling + service_fee)
 -- so students see one all-inclusive total and downstream rep/account math can
 -- subtract the exact fee per book instead of assuming a flat amount.
 alter table textbooks add column if not exists service_fee int not null default 100;

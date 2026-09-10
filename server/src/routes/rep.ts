@@ -24,14 +24,18 @@ const router = Router();
 
 // Automatic PocketFi service charge added on top of the price a rep posts. It is
 // baked into the stored `price` so students see a single all-inclusive amount.
-// Normal textbooks carry ₦100; textbooks whose selling price is ABOVE ₦10,000
-// carry ₦200. The chosen fee is stored per-book in `service_fee` and applied on
-// create AND on price edits, so the fee tracks the selling price.
-const POCKETFEE_LOW = 100;
-const POCKETFEE_HIGH = 200;
-const POCKETFEE_THRESHOLD = 10_000;
+// The fee is graduated: ₦100, then +₦100 for every ₦10,000 of selling price
+// (₦100 ≤ 10k, ₦200 ≤ 20k, ₦300 ≤ 30k, …), i.e. ₦100 × ceil(price/10k). The
+// chosen fee is stored per-book in `service_fee` and applied on create AND on
+// price edits, so the fee tracks the selling price.
+const POCKETFEE_MIN = 100;
+const POCKETFEE_STEP_PRICE = 10_000;
+const POCKETFEE_STEP_CHARGE = 100;
 function pocketFeeFor(sellingPrice: number): number {
-  return sellingPrice > POCKETFEE_THRESHOLD ? POCKETFEE_HIGH : POCKETFEE_LOW;
+  return Math.max(
+    POCKETFEE_MIN,
+    POCKETFEE_STEP_CHARGE * Math.ceil(sellingPrice / POCKETFEE_STEP_PRICE)
+  );
 }
 
 // Rep dashboard reads a bunch of aggregate queries on every visit, but the
