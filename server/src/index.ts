@@ -119,6 +119,22 @@ async function runMigrations() {
     add column if not exists last_reminder_at timestamptz`);
   await query(`alter table payouts
     add column if not exists last_email_reminder_at timestamptz`);
+  // The chief admin classifies new funding as either a spendable deposit or a
+  // PocketFi top-up kept out of the wallet; extend the kind constraint so the
+  // top-up records stay auditable in wallet_transactions.
+  await query(`do $$
+    begin
+      if not exists (
+        select 1 from pg_constraint
+        where conrelid = 'wallet_transactions'::regclass
+          and conname = 'wallet_transactions_kind_check'
+          and pg_get_constraintdef(oid) like '%topup_pocketfi%'
+      ) then
+        alter table wallet_transactions drop constraint if exists wallet_transactions_kind_check;
+        alter table wallet_transactions add constraint wallet_transactions_kind_check
+          check (kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi'));
+      end if;
+    end $$`);
 }
 
 runMigrations()

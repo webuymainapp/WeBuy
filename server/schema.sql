@@ -196,7 +196,9 @@ create table if not exists student_wallets (
 create table if not exists wallet_transactions (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references students(id) on delete cascade,
-  kind text not null check (kind in ('deposit', 'purchase', 'refund')),
+  kind text not null check (
+    kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi')
+  ),
   amount int not null check (amount <> 0),
   reference text unique not null,
   note text,

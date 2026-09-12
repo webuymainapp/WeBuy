@@ -217,13 +217,20 @@ router.get(
       created_at: string;
     }>) {
       const isPurchase = w.kind === 'purchase';
+      const isPocketfiTopup = w.kind === 'topup_pocketfi';
       unified.push({
         reference: w.reference,
         amount: Math.abs(w.amount),
         fee: 0,
         total: Math.abs(w.amount),
-        method: w.kind === 'deposit' ? 'points_deposit' : isPurchase ? 'points' : 'points_refund',
-        category: w.kind === 'deposit' ? 'topup' : isPurchase ? 'purchase' : 'refund',
+        method: w.kind === 'deposit'
+          ? 'points_deposit'
+          : isPocketfiTopup
+            ? 'points_topup'
+            : isPurchase ? 'points' : 'points_refund',
+        category: w.kind === 'deposit' || isPocketfiTopup
+          ? 'topup'
+          : isPurchase ? 'purchase' : 'refund',
         direction: isPurchase ? 'out' : 'in',
         status: 'successful',
         createdAt: w.created_at,

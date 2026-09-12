@@ -144,6 +144,10 @@ export default function App() {
     transactions: WalletTransaction[];
   } | null>(null);
   const [verifying, setVerifying] = useState(false);
+  // Chief admin funding classification: amount PocketFi has but the wallet was
+  // never told about — the chief picks "add to dashboard" or "PocketFi top-up".
+  const [classify, setClassify] = useState<{ pending: number } | null>(null);
+  const [classifying, setClassifying] = useState(false);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [islandNotification, setIslandNotification] = useState<NotificationItem | null>(null);
   // IDs already shown via the island popup, so a notification only pops once.
@@ -634,8 +638,15 @@ export default function App() {
                       fundingError: res.fundingError,
                       transactions: res.transactions ?? [],
                     });
-                    if (res.credited > 0) soundEffects.playSuccessChime();
-                    else soundEffects.playTap();
+                    if (res.action === 'classify' && res.pending && res.pending > 0) {
+                      // Chief admin: new money reached PocketFi but wasn't told
+                      // what it's for — ask before crediting the dashboard.
+                      setClassify({ pending: res.pending });
+                      soundEffects.playTap();
+                    } else {
+                      if (res.credited > 0) soundEffects.playSuccessChime();
+                      else soundEffects.playTap();
+                    }
                   })
                   .catch(() => soundEffects.playError())
                   .finally(() => setVerifying(false));
@@ -950,6 +961,111 @@ export default function App() {
             {secretToast}
           </div>
         )}
+
+        {/* Chief admin funding classification modal */}
+        <AnimatePresence>
+          {classify && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+              onClick={() => !classifying && setClassify(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 8 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 8 }}
+                transition={{ type: 'spring', damping: 26, stiffness: 320 }}
+                className="w-full max-w-sm rounded-2xl bg-slate-50 dark:bg-[#161616] border border-slate-200 dark:border-[#2A2A2A] p-5 flex flex-col gap-4 shadow-2xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-start gap-2.5">
+                  <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950/60 shrink-0">
+                    <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      New funds detected
+                    </h3>
+                    <p className="text-xs font-medium text-slate-500 dark:text-gray-400 leading-snug mt-0.5">
+                      ₦{classify.pending.toLocaleString()} was found in your
+                      funding account that hasn't been added yet.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <button
+                    disabled={classifying}
+                    onClick={async () => {
+                      soundEffects.playTap();
+                      setClassifying(true);
+                      try {
+                        const res = await walletApi.resolveVerify('deposit');
+                        setWallet({
+                          points: res.points,
+                          accountNumber: res.accountNumber,
+                          bankName: res.bankName,
+                          accountName: res.accountName,
+                          fundingError: res.fundingError,
+                          transactions: res.transactions ?? [],
+                        });
+                        setClassify(null);
+                        soundEffects.playSuccessChime();
+                      } catch {
+                        soundEffects.playError();
+                      } finally {
+                        setClassifying(false);
+                      }
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    {classifying && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                    Add ₦{classify.pending.toLocaleString()} to dashboard
+                  </button>
+                  <button
+                    disabled={classifying}
+                    onClick={async () => {
+                      soundEffects.playTap();
+                      setClassifying(true);
+                      try {
+                        const res = await walletApi.resolveVerify('pocketfi');
+                        setWallet({
+                          points: res.points,
+                          accountNumber: res.accountNumber,
+                          bankName: res.bankName,
+                          accountName: res.accountName,
+                          fundingError: res.fundingError,
+                          transactions: res.transactions ?? [],
+                        });
+                        setClassify(null);
+                        soundEffects.playTap();
+                      } catch {
+                        soundEffects.playError();
+                      } finally {
+                        setClassifying(false);
+                      }
+                    }}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-300 dark:border-neutral-700 bg-transparent text-slate-700 dark:text-gray-300 font-bold text-sm transition-colors hover:bg-slate-100 dark:hover:bg-neutral-800 disabled:opacity-60 cursor-pointer"
+                  >
+                    PocketFi top-up — keep out of wallet
+                  </button>
+                  <button
+                    disabled={classifying}
+                    onClick={() => {
+                      soundEffects.playTap();
+                      setClassify(null);
+                    }}
+                    className="self-center text-[11px] font-semibold text-slate-400 hover:text-slate-600 dark:hover:text-gray-300 transition-colors disabled:opacity-60 cursor-pointer"
+                  >
+                    Not now
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     );
   }

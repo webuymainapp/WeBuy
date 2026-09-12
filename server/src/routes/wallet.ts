@@ -247,9 +247,14 @@ router.get(
 
 /**
  * Reconcile my points against PocketFi's authoritative per-VA funded total.
- * Credits the difference between `total_fund` and the sum of deposits already
- * recorded — so pressing "Verify" after a transfer tops up the balance even
- * when the webhook never fired. Idempotent: repeating it credits nothing.
+ * Students auto-credit the difference between `total_fund` and the deposits
+ * already recorded — so pressing "Verify" after a transfer tops up the balance
+ * even when the webhook never fired. Idempotent: repeating it credits nothing.
+ *
+ * The chief admin's verify instead DETECTS new funding and asks how to classify
+ * it: spendable wallet points ("deposit") or a PocketFi top-up kept out of the
+ * wallet ("pocketfi"). Nothing is credited here; the POST /verify/resolve route
+ * finalises the choice.
  */
 router.post(
   '/verify',
@@ -266,23 +271,35 @@ router.post(
     );
     const totalFund = mine?.totalFund ?? 0;
 
-    // The chief admin's wallet is an operator/test account, not a spendable
-    // student wallet. Skip auto-reconcile entirely so its ledger stays exactly
-    // as the operator has set it (e.g. test funding stays at 0).
+    const walletTxns = await query(
+      `select id, kind, amount, reference, note, created_at
+         from wallet_transactions where student_id = $1
+        order by created_at desc limit 50`,
+      [req.student.sub],
+    );
+
     if (req.student.role === 'chief_admin') {
-      const fresh = await ensureWallet(req.student);
-      const txns = await query(
-        `select id, kind, amount, reference, note, created_at
-           from wallet_transactions where student_id = $1
-          order by created_at desc limit 50`,
+      // Everything already classified — spendable deposits AND recorded PocketFi
+      // top-ups — is excluded, so the remainder is genuinely "recently added".
+      const recorded = await query(
+        `select coalesce(sum(amount), 0)::int as recorded
+           from wallet_transactions
+          where student_id = $1 and kind in ('deposit', 'topup_pocketfi')`,
         [req.student.sub],
+      );
+      const pending = Math.max(
+        totalFund - (recorded.rows[0].recorded as number),
+        0,
       );
       res.json({
         ok: true,
+        // 'classify' tells the UI to ask the chief what this money is for.
+        action: pending > 0 ? 'classify' : 'none',
+        pending,
         credited: 0,
         totalFund,
-        ...toWalletJson(fresh),
-        transactions: txns.rows,
+        ...toWalletJson(wallet),
+        transactions: walletTxns.rows,
       });
       return;
     }
@@ -342,6 +359,101 @@ router.post(
             [delta, req.student.sub],
           );
           credited = delta;
+        }
+      }
+      await query('commit');
+    } catch (err) {
+      await query('rollback').catch(() => undefined);
+      throw err;
+    }
+
+    const fresh = await ensureWallet(req.student);
+    res.json({
+      ok: true,
+      credited,
+      totalFund,
+      ...toWalletJson(fresh),
+      transactions: walletTxns.rows,
+    });
+  }),
+);
+
+const resolveVerifySchema = z.object({
+  action: z.enum(['deposit', 'pocketfi']),
+});
+
+/**
+ * Chief admin only: finalise the classification prompted by POST /verify.
+ * 'deposit' credits the newly-detected funding to the wallet; 'pocketfi'
+ * records it as a PocketFi top-up that stays out of the wallet. Both are
+ * recorded auditably in wallet_transactions so the same amount is never
+ * prompted again.
+ */
+router.post(
+  '/verify/resolve',
+  validateBody(resolveVerifySchema),
+  asyncHandler(async (req, res) => {
+    if (req.student.role !== 'chief_admin') {
+      throw new HttpError(403, 'Only the chief admin classifies funding.');
+    }
+    const wallet = await ensureWallet(req.student);
+    if (!wallet.virtual_account_no) {
+      res.json({ ok: true, credited: 0, ...toWalletJson(wallet), transactions: [] });
+      return;
+    }
+
+    const funds = await fetchVirtualAccountsFunds();
+    const mine = funds.find(
+      (f) => f.accountNumber === wallet.virtual_account_no,
+    );
+    const totalFund = mine?.totalFund ?? 0;
+
+    let credited = 0;
+    try {
+      await query('begin');
+      await query(
+        `insert into student_wallets (student_id) values ($1)
+         on conflict (student_id) do nothing`,
+        [req.student.sub],
+      );
+      await query(
+        'select point_balance from student_wallets where student_id = $1 for update',
+        [req.student.sub],
+      );
+      const recorded = await query(
+        `select coalesce(sum(amount), 0)::int as recorded
+           from wallet_transactions
+          where student_id = $1 and kind in ('deposit', 'topup_pocketfi')`,
+        [req.student.sub],
+      );
+      const pending = Math.max(
+        totalFund - (recorded.rows[0].recorded as number),
+        0,
+      );
+
+      if (pending > 0) {
+        const isDeposit = req.body.action === 'deposit';
+        await query(
+          `insert into wallet_transactions (student_id, kind, amount, reference, note)
+           values ($1, $2, $3, $4, $5)`,
+          [
+            req.student.sub,
+            isDeposit ? 'deposit' : 'topup_pocketfi',
+            pending,
+            makeDepositReference(),
+            isDeposit
+              ? `Verified funding for ${wallet.virtual_account_no}`
+              : 'PocketFi top-up recorded (kept out of wallet)',
+          ],
+        );
+        if (isDeposit) {
+          await query(
+            `update student_wallets
+                set point_balance = point_balance + $1, updated_at = now()
+              where student_id = $2`,
+            [pending, req.student.sub],
+          );
+          credited = pending;
         }
       }
       await query('commit');

@@ -417,6 +417,8 @@ export const walletApi = {
   verify: () =>
     request<{
       ok: boolean;
+      action?: 'classify' | 'none';
+      pending?: number;
       credited: number;
       totalFund: number;
       points: number;
@@ -426,6 +428,19 @@ export const walletApi = {
       fundingError?: string | null;
       transactions?: WalletTransaction[];
     }>('/api/wallet/verify', json('POST')),
+
+  resolveVerify: (action: 'deposit' | 'pocketfi') =>
+    request<{
+      ok: boolean;
+      credited: number;
+      totalFund: number;
+      points: number;
+      accountNumber: string;
+      bankName: string;
+      accountName: string;
+      fundingError?: string | null;
+      transactions?: WalletTransaction[];
+    }>('/api/wallet/verify/resolve', json('POST', { action })),
 
   checkout: (studentTextbookIds: string[]) =>
     request<{
