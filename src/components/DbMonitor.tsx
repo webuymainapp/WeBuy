@@ -17,6 +17,7 @@ import {
   Clock,
   ChevronRight,
   X,
+  Gauge,
 } from 'lucide-react';
 import { dbApi, ApiError, type DbMonitorData } from '../lib/api';
 
@@ -306,6 +307,92 @@ function DbMonitorContent({
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Egress usage (estimate) */}
+      <div className={card}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Gauge className="w-4 h-4 text-rose-600" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
+              Egress Usage
+            </span>
+          </div>
+          <span className="text-[10px] font-semibold text-slate-400">est. · calendar month</span>
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+                {formatBytes(data.egress.monthBytes)}
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold">
+                of {formatBytes(data.egress.capBytes)} free / month
+              </p>
+            </div>
+            <div className="text-right">
+              <p
+                className={`text-sm font-black font-mono ${
+                  data.egress.usedMonthPercent >= 80
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-indigo-600 dark:text-indigo-400'
+                }`}
+              >
+                {data.egress.usedMonthPercent.toLocaleString()}%
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold">used</p>
+            </div>
+          </div>
+
+          {/* Monthly cap bar */}
+          <div className="h-3 bg-slate-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${
+                data.egress.usedMonthPercent >= 80
+                  ? 'bg-gradient-to-r from-amber-500 to-rose-500'
+                  : 'bg-gradient-to-r from-emerald-500 to-indigo-500'
+              }`}
+              style={{ width: `${Math.min(data.egress.usedMonthPercent, 100)}%` }}
+            />
+          </div>
+
+          {/* Today + 7-day strip */}
+          <div className="flex items-end justify-between gap-2">
+            <div>
+              <p className="text-lg font-black font-mono text-slate-900 dark:text-white">
+                {formatBytes(data.egress.todayBytes)}
+              </p>
+              <p className="text-[10px] text-slate-500 font-semibold">
+                today · {data.egress.requestsToday.toLocaleString()} queries
+              </p>
+            </div>
+            <div className="flex items-end gap-1">
+              {data.egress.days.map((d) => (
+                <div key={d.day} className="flex flex-col items-center gap-1">
+                  <div
+                    className="w-4 sm:w-5 bg-indigo-500/80 dark:bg-indigo-500/60 rounded-t-sm"
+                    style={{
+                      height: `${Math.max(
+                        4,
+                        Math.round(
+                          (d.bytes / Math.max(1, data.egress.monthBytes)) * 28,
+                        ),
+                      )}px`,
+                    }}
+                    title={`${d.day}: ${formatBytes(d.bytes)}`}
+                  />
+                  <span className="text-[8px] font-mono text-slate-400">{d.day.slice(5)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-[10px] text-slate-400 dark:text-slate-500">
+            Estimate of shared-pooler bytes this server pulled from Supabase. The
+            authoritative meter is supabase.com → Dashboard → Organization →
+            Usage → Egress GB.
+          </p>
         </div>
       </div>
 

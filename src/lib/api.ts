@@ -735,6 +735,16 @@ export interface DbMonitorData {
     expired_password_resets: number;
     stale_signups: number;
   };
+  egress: {
+    todayBytes: number;
+    requestsToday: number;
+    monthBytes: number;
+    requestsMonth: number;
+    rowsMonth: number;
+    capBytes: number;
+    usedMonthPercent: number;
+    days: { day: string; bytes: number }[];
+  };
 }
 
 export const dbApi = {

@@ -345,6 +345,17 @@ create table if not exists secret_purchases (
 alter table secret_purchases add column if not exists settled boolean not null default false;
 create index if not exists idx_secret_purchases_student on secret_purchases(student_id, paid_at desc);
 
+-- Daily egress usage estimator. Approximates the "Shared Pooler Egress" Supabase
+-- charges on the free plan (pooler -> server bytes). Accumulated in memory by
+-- the backend and flushed once a minute. NOT the authoritative meter — compare
+-- against supabase.com → Organization → Usage → Egress GB.
+create table if not exists egress_daily (
+  day date primary key,
+  requests int not null default 0,
+  rows_returned bigint not null default 0,
+  bytes bigint not null default 0
+);
+
 -- Email-link verification: password resets use a one-time hashed token instead
 -- of a 6-digit code. The plain token is only ever emailed via the link.
 alter table password_resets add column if not exists token_hash text;

@@ -15,6 +15,7 @@ import secretRouter from './routes/secret';
 import pocketfiRouter from './routes/pocketfi';
 import classesRouter from './routes/classes';
 import { startPayoutReminderJob } from './lib/payoutReminders';
+import { startEgressFlush, flushEgressNow } from './lib/egress';
 
 const app = express();
 
@@ -135,13 +136,30 @@ async function runMigrations() {
           check (kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi'));
       end if;
     end $$`);
+  // Daily egress usage estimator — aggregated once a minute from in-memory
+  // counters so the metric itself adds almost no write traffic.
+  await query(`create table if not exists egress_daily (
+    day date primary key,
+    requests int not null default 0,
+    rows_returned bigint not null default 0,
+    bytes bigint not null default 0
+  )`);
 }
 
 runMigrations()
   .catch((err) => console.error(`[migrate] failed: ${err.message}`))
   .finally(() => {
     startPayoutReminderJob();
+    startEgressFlush();
     app.listen(config.port, () => {
       console.log(`[webuy-api] listening on port ${config.port}`);
     });
   });
+
+// Persist any un-flushed egress counters when Render stops the service.
+process.on('SIGTERM', () => {
+  void flushEgressNow().finally(() => process.exit(0));
+});
+process.on('SIGINT', () => {
+  void flushEgressNow().finally(() => process.exit(0));
+});

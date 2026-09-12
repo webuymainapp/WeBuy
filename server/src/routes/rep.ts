@@ -12,6 +12,7 @@ import {
 import type { AuthTokenPayload } from '../lib/jwt';
 import { createTtlCache } from '../lib/ttlCache';
 import { verifyBankAccount, listPocketFiBanks } from '../lib/pocketfi';
+import { getEgressSummary } from '../lib/egress';
 import { disturbChiefs } from '../lib/payoutReminders';
 
 function makePayoutReference(): string {
@@ -1210,6 +1211,7 @@ router.get(
       transactions: transactions.rows,
       mail: mail.rows,
       notifications: notifs.rows[0],
+      egress: await getEgressSummary(),
     });
   }),
 );

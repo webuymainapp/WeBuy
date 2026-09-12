@@ -2,6 +2,7 @@
 // input can never be interpolated into SQL.
 import pg from 'pg';
 import { config } from '../config';
+import { recordEgress } from '../lib/egress';
 
 const MAX_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 300;
@@ -45,7 +46,11 @@ export async function query<T extends pg.QueryResultRow = pg.QueryResultRow>(
 ): Promise<pg.QueryResult<T>> {
   for (let attempt = 1; ; attempt++) {
     try {
-      return await pool.query<T>(text, params as never[]);
+      const result = await pool.query<T>(text, params as never[]);
+      // Feed the egress estimator (bytes of the rows this server just pulled
+      // down from Supabase) — the pooler egress Webuy generates.
+      recordEgress(result);
+      return result;
     } catch (err) {
       if (!isConnectionDrop(err) || attempt >= MAX_ATTEMPTS) throw err;
       await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
