@@ -59,7 +59,30 @@ import {
 
 const SETTINGS_KEY = 'webuy_settings_v1';
 const CART_KEY = 'webuy_cart_v1';
+const NAV_KEY = 'webuy_nav_v1';
 const defaultSettings: AppSettings = { theme: 'light', soundEnabled: true };
+const defaultNav = { activeRole: 'student' as const, activeTab: 'dashboard' as const };
+
+type ActiveRole = 'student' | 'class_rep';
+type ActiveTab = 'dashboard' | 'history' | 'class_rep' | 'settings';
+
+function readNav(): { activeRole: ActiveRole; activeTab: ActiveTab } {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(NAV_KEY) ?? 'null');
+    if (!parsed || typeof parsed !== 'object') return defaultNav;
+    return {
+      activeRole: parsed.activeRole === 'class_rep' ? 'class_rep' : 'student',
+      activeTab:
+        parsed.activeTab === 'history' ||
+        parsed.activeTab === 'class_rep' ||
+        parsed.activeTab === 'settings'
+          ? parsed.activeTab
+          : 'dashboard',
+    };
+  } catch {
+    return defaultNav;
+  }
+}
 
 function readSettings(): AppSettings {
   try {
@@ -165,8 +188,8 @@ export default function App() {
   const [verifySuccess, setVerifySuccess] = useState<{ token: string; student: AuthStudent } | null>(null);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  const [activeRole, setActiveRole] = useState<'student' | 'class_rep'>('student');
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'class_rep' | 'settings'>('dashboard');
+  const [activeRole, setActiveRole] = useState<ActiveRole>(() => readNav().activeRole);
+  const [activeTab, setActiveTab] = useState<ActiveTab>(() => readNav().activeTab);
   const [activeFilter, setActiveFilter] = useState<'all' | 'unpaid' | 'paid' | 'collected'>('all');
   const [filterOpen, setFilterOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -212,6 +235,17 @@ export default function App() {
       // ignore
     }
   }, [cartIds]);
+
+  // Persist the active tab/role so a page refresh keeps the user where they
+  // were instead of dumping them back on the dashboard. sessionStorage (not
+  // localStorage) so a fresh browser session still starts clean on dashboard.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(NAV_KEY, JSON.stringify({ activeRole, activeTab }));
+    } catch {
+      // ignore
+    }
+  }, [activeRole, activeTab]);
 
   const loadData = useCallback(async (regNo: string) => {
     try {
@@ -316,6 +350,13 @@ export default function App() {
         const student = res.student;
         setProfile(toStudentProfile(student, readSettings()));
         setUserRole(student.role);
+        // Guard against a stale saved tab/role (e.g. a previous session's rep
+        // view): a plain student can never sit on the rep portal.
+        const isRepUser = student.role === 'class_rep' || student.role === 'chief_admin';
+        if (!isRepUser) {
+          if (activeRole === 'class_rep') setActiveRole('student');
+          if (activeTab === 'class_rep') setActiveTab('dashboard');
+        }
         setBooting(false);
         await loadData(student.regNo);
       })
