@@ -15,6 +15,7 @@ import {
   ArrowLeftRight,
   Pause,
   Play,
+  RotateCcw,
 } from 'lucide-react';
 import { soundEffects } from '../utils/audio';
 import { repApi, ApiError } from '../lib/api';
@@ -74,6 +75,7 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
   const [busyTransfer, setBusyTransfer] = useState(false);
   const [transferError, setTransferError] = useState<string | null>(null);
   const [busyPauseId, setBusyPauseId] = useState<string | null>(null);
+  const [busyRefundsId, setBusyRefundsId] = useState<string | null>(null);
 
   // This rep's own revenue (their share of the PocketFi balance), refreshed
   // whenever the manage modal opens. Chief admin sees the platform-wide total.
@@ -158,6 +160,35 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
       onToast(err instanceof ApiError ? err.message : 'Could not update payment status');
     } finally {
       setBusyPauseId(null);
+    }
+  };
+
+  const handleToggleRefunds = async (book: Textbook) => {
+    const next = !book.refundsOpen;
+    if (
+      !window.confirm(
+        next
+          ? `Open refunds for "${book.bookTitle}" (${book.courseCode})? Students who paid can request a refund until you close it.`
+          : `Close refunds for "${book.bookTitle}" (${book.courseCode})? Students can no longer request refunds.`,
+      )
+    ) {
+      return;
+    }
+    setBusyRefundsId(book.id);
+    try {
+      await repApi.updateTextbook(book.id, { refundsOpen: next });
+      soundEffects.playTap();
+      onToast(
+        next
+          ? `Refunds opened for ${book.courseCode}.`
+          : `Refunds closed for ${book.courseCode}.`,
+      );
+      onChanged();
+    } catch (err) {
+      soundEffects.playError();
+      onToast(err instanceof ApiError ? err.message : 'Could not update refunds status');
+    } finally {
+      setBusyRefundsId(null);
     }
   };
 
@@ -472,6 +503,26 @@ export const ManageTextbooks: React.FC<ManageTextbooksProps> = ({
                                 <Play className="w-4 h-4" />
                               ) : (
                                 <Pause className="w-4 h-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleToggleRefunds(book)}
+                              disabled={busyRefundsId === book.id}
+                              title={
+                                book.refundsOpen
+                                  ? 'Close refunds (students can no longer request)'
+                                  : 'Open refunds for this textbook'
+                              }
+                              className={`p-2 rounded-xl transition-colors cursor-pointer disabled:opacity-50 ${
+                                book.refundsOpen
+                                  ? 'text-emerald-600 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40'
+                                  : 'text-slate-400 dark:text-slate-500 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-600 dark:hover:text-amber-300'
+                              }`}
+                            >
+                              {busyRefundsId === book.id ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <RotateCcw className="w-4 h-4" />
                               )}
                             </button>
                             <button

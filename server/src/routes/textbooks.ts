@@ -14,7 +14,7 @@ router.get(
     const result = await query(
       `select id, course_code, course_title, book_title, author, edition, price,
               service_fee, isbn, department, level, lecturer_name, pickup_location,
-              class_rep_name, cover_url, payments_paused, created_at, added_by
+              class_rep_name, cover_url, payments_paused, refunds_open, created_at, added_by
          from textbooks
         where deleted_at is null
         order by course_code asc`,
@@ -73,10 +73,13 @@ router.get(
       `select t.id as textbook_id, t.course_code, t.course_title, t.book_title,
               t.author, t.edition, t.price, t.service_fee, t.isbn, t.department, t.level,
               t.lecturer_name, t.pickup_location, t.class_rep_name, t.cover_url,
-              t.payments_paused,
+              t.payments_paused, t.refunds_open,
               st.id as student_textbook_id,
               coalesce(st.status, 'unpaid') as status,
-              st.paid_at, st.collected_at, st.transaction_reference, st.pass_token
+              st.paid_at, st.collected_at, st.transaction_reference, st.pass_token,
+              (select rr.status from refund_requests rr
+                where rr.student_textbook_id = st.id
+                order by rr.created_at desc limit 1) as refund_status
          from textbooks t
          left join student_textbooks st
            on st.textbook_id = t.id and st.student_id = $1

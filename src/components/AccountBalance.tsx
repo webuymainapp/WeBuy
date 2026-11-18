@@ -29,6 +29,7 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
     balance: number;
     textbookValue: number;
     withdrawals: number;
+    untraceableWithdrawals: number;
     livePocketFi: number | null;
     userWallets: number;
     recent: AccountEntry[];
@@ -42,7 +43,13 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
   const [revealChief, setRevealChief] = useState(false);
   const tapTimer = useRef<number | null>(null);
   const tapCount = useRef(0);
-  const [revenue, setRevenue] = useState<{ revenue: number; paidBooks: number } | null>(null);
+  const [revenue, setRevenue] = useState<{
+    revenue: number;
+    earned: number;
+    settled: number;
+    settledUntraceable: number;
+    paidBooks: number;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -144,9 +151,19 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
                 <p className="text-2xl sm:text-3xl font-black font-mono mt-1">
                   {formatNaira(data.balance)}
                 </p>
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Textbook purchases − withdrawals
+                <p className="text-[10px] text-slate-400 mt-1 font-mono">
+                  Textbooks {formatNaira(data.textbookValue)} − withdrawn {formatNaira(data.withdrawals)}
                 </p>
+                {data.withdrawals > data.textbookValue && (
+                  <p className="text-[10px] text-rose-300 mt-1 font-semibold">
+                    Over-withdrawn by {formatNaira(data.withdrawals - data.textbookValue)} — payouts exceed textbook money.
+                  </p>
+                )}
+                {data.untraceableWithdrawals > 0 && (
+                  <p className="text-[10px] text-amber-300/90 mt-1">
+                    + {formatNaira(data.untraceableWithdrawals)} paid out for courses no longer in the catalog (not counted).
+                  </p>
+                )}
                 <p className="text-[10px] text-slate-500 mt-0.5 max-w-xs">
                   Money students have actually spent on textbooks. Unspent points in students&apos; wallets aren&apos;t counted yet.
                 </p>
@@ -177,6 +194,19 @@ export const AccountBalance: React.FC<AccountBalanceProps> = ({ onToast, isChief
               <p className="text-lg font-black font-mono text-emerald-700 dark:text-emerald-300 mt-1">
                 {formatNaira(revenue.revenue)}
               </p>
+              <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5 font-mono">
+                Earned {formatNaira(revenue.earned)} − settled {formatNaira(revenue.settled)}
+              </p>
+              {revenue.settled > revenue.earned && (
+                <p className="text-[10px] text-rose-600 dark:text-rose-400 mt-0.5 font-semibold">
+                  Payouts exceed earnings by {formatNaira(revenue.settled - revenue.earned)}.
+                </p>
+              )}
+              {revenue.settledUntraceable > 0 && (
+                <p className="text-[10px] text-amber-600 dark:text-amber-400 mt-0.5">
+                  + {formatNaira(revenue.settledUntraceable)} settled for removed courses (not counted).
+                </p>
+              )}
               <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">
                 From your {revenue.paidBooks} paid book{revenue.paidBooks === 1 ? '' : 's'}
               </p>

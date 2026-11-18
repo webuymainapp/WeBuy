@@ -14,6 +14,7 @@ import walletRouter from './routes/wallet';
 import secretRouter from './routes/secret';
 import pocketfiRouter from './routes/pocketfi';
 import classesRouter from './routes/classes';
+import refundsRouter from './routes/refunds';
 import { startPayoutReminderJob } from './lib/payoutReminders';
 import { startEgressFlush, flushEgressNow } from './lib/egress';
 
@@ -91,6 +92,7 @@ app.use('/api/wallet', walletRouter);
 app.use('/api/secret', secretRouter);
 app.use('/api/pocketfi', pocketfiRouter);
 app.use('/api/classes', classesRouter);
+app.use('/api/refunds', refundsRouter);
 
 // 404 for unknown API routes.
 app.use('/api', (_req, res) => {
@@ -136,6 +138,25 @@ async function runMigrations() {
           check (kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi'));
       end if;
     end $$`);
+  // Refunds: per-book "refunds open" flag + the refund_requests table, so
+  // databases created before the refund scheme self-heal on boot.
+  await query(`alter table textbooks
+    add column if not exists refunds_open boolean not null default false`);
+  await query(`create table if not exists refund_requests (
+    id uuid primary key default gen_random_uuid(),
+    student_id uuid not null references students(id) on delete cascade,
+    student_textbook_id uuid not null references student_textbooks(id) on delete cascade,
+    textbook_id uuid not null references textbooks(id) on delete cascade,
+    amount int not null check (amount > 0),
+    reason text,
+    status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+    reviewed_by uuid references students(id) on delete set null,
+    reviewed_at timestamptz,
+    review_note text,
+    created_at timestamptz not null default now()
+  )`);
+  await query(`create index if not exists idx_refund_requests_assignment
+    on refund_requests(student_textbook_id)`);
   // Daily egress usage estimator — aggregated once a minute from in-memory
   // counters so the metric itself adds almost no write traffic.
   await query(`create table if not exists egress_daily (

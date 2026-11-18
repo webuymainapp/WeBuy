@@ -208,6 +208,32 @@ create table if not exists wallet_transactions (
 create index if not exists idx_wallet_tx_student on wallet_transactions(student_id, created_at desc);
 create index if not exists idx_wallet_tx_reference on wallet_transactions(reference);
 
+-- Refunds: the owning rep can open a textbook to refunds ("open" = students may
+-- request). Defaults to CLOSED for every book — reps must explicitly enable it.
+alter table textbooks add column if not exists refunds_open boolean not null default false;
+
+-- Refund requests. A student asks for their points back on a textbook they PAID
+-- for (never collected). Only the rep who added the book (or the chief admin)
+-- approves or rejects it. On approval the assignment reverts to 'unpaid' and
+-- (price − service_fee) points are credited back with a wallet_transactions
+-- 'refund' journal row.
+create table if not exists refund_requests (
+  id uuid primary key default gen_random_uuid(),
+  student_id uuid not null references students(id) on delete cascade,
+  student_textbook_id uuid not null references student_textbooks(id) on delete cascade,
+  textbook_id uuid not null references textbooks(id) on delete cascade,
+  amount int not null check (amount > 0),
+  reason text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  reviewed_by uuid references students(id) on delete set null,
+  reviewed_at timestamptz,
+  review_note text,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_refund_requests_student on refund_requests(student_id, created_at desc);
+create index if not exists idx_refund_requests_textbook on refund_requests(textbook_id, status) where status = 'pending';
+create index if not exists idx_refund_requests_assignment on refund_requests(student_textbook_id);
+
 -- Unverified signups. An account's email does NOT occupy the students table
 -- until the verification link is clicked — it lives here first. This means a
 -- signup that was never verified can be re-attempted or resent without hitting

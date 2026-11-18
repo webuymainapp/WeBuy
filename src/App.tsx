@@ -882,6 +882,9 @@ export default function App() {
                       soundEffects.playTap();
                       setPassBook(b);
                     }}
+                    onRefundSubmitted={() => {
+                      if (profile) loadData(profile.regNo);
+                    }}
                   />
                 ))
               )}

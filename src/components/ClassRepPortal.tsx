@@ -30,6 +30,7 @@ import { UsersManagement } from './UsersManagement';
 import { AccountBalance } from './AccountBalance';
 import { RepTransactions } from './RepTransactions';
 import { Payouts } from './Payouts';
+import { Refunds } from './Refunds';
 import { ClassesManagement } from './ClassesManagement';
 import { DbMonitor } from './DbMonitor';
 import { repApi, passesApi, dataApi, ApiError, type RosterItem } from '../lib/api';
@@ -380,6 +381,16 @@ export const ClassRepPortal: React.FC<ClassRepPortalProps> = ({
             ? catalog
             : catalog.filter((t) => t.addedBy === studentProfile.id)
         }
+        onToast={showToast}
+        onChanged={() => {
+          loadCatalog();
+          onDataChanged();
+        }}
+      />
+
+      {/* Refund requests — reps approve/reject students' refunds for their books */}
+      <Refunds
+        isChief={isChief}
         onToast={showToast}
         onChanged={() => {
           loadCatalog();

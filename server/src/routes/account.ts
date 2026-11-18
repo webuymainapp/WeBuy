@@ -17,23 +17,78 @@ router.use(requireAuth, requireClassRep);
  * into their wallet but not yet used to buy a textbook is still theirs and is
  * NOT counted. The live PocketFi balance is returned separately for the chief
  * admin only.
+ *
+ * Scoping: a non-chief rep only ever sees the textbook value and withdrawals for
+ * books THEY added (matching /revenue). The chief admin sees the platform-wide
+ * totals. This prevents a rep from seeing or calculating other reps' money.
  */
 router.get(
   '/',
-  asyncHandler(async (_req, res) => {
-    const [bookVal, payRes, recentTx, recentWalletDep] =
-      await Promise.all([
-        query(
-          `select coalesce(sum(greatest(t.price - t.service_fee, 0)), 0)::int as value
-             from student_textbooks st
-             join textbooks t on t.id = st.textbook_id
-            where st.status in ('paid', 'collected')`,
-        ),
-        query(
-          `select status, coalesce(sum(amount), 0)::int as d
-             from payouts
-            group by status`,
-        ),
+  asyncHandler(async (req, res) => {
+    const isChief = req.student.role === 'chief_admin';
+    const repScopeParams: unknown[] = isChief ? [] : [req.student.sub];
+    const bookScope = isChief ? '' : 'and t.added_by = $1';
+    const payScope = isChief ? '' : 'and rep_id = $1';
+
+    const [bookVal, payRes] = await Promise.all([
+      query(
+        `select coalesce(sum(greatest(t.price - t.service_fee, 0)), 0)::int as value
+           from student_textbooks st
+           join textbooks t on t.id = st.textbook_id
+          where st.status in ('paid', 'collected')
+            ${bookScope}`,
+        repScopeParams,
+      ),
+      query(
+        `select
+           coalesce(sum(amount) filter (where textbook_id is not null), 0)::int as linked,
+           coalesce(sum(amount) filter (where textbook_id is null), 0)::int as unlinked
+           from payouts
+          where status in ('completed', 'processing')
+            ${payScope}`,
+        repScopeParams,
+      ),
+    ]);
+
+    // Textbook money already committed by students, with the per-book service fee removed.
+    const textbookValue = bookVal.rows[0].value as number;
+    // Withdrawals only reduce the balance when they can be matched to a course
+    // that still exists (textbook_id set) — that keeps the net apples-to-apples.
+    // Payouts with textbook_id NULL are untraceable: the course was hard-deleted
+    // (its paid assignments cascade-deleted, so their earnings aren't in
+    // textbookValue either) or the payout predates the link. Netting those would
+    // fabricate an "over-withdrawal", so they're reported separately instead.
+    const withdrawals = (payRes.rows[0].linked as number) ?? 0;
+    const untraceableWithdrawals = (payRes.rows[0].unlinked as number) ?? 0;
+    const balance = Math.max(textbookValue - withdrawals, 0);
+
+    // Live PocketFi merchant balance — only surfaced to the chief admin.
+    let livePocketFi: number | null = null;
+    if (isChief && config.pocketfiSecret) {
+      try {
+        livePocketFi = await getPocketFiBalance();
+      } catch {
+        livePocketFi = null;
+      }
+    }
+
+    // Total unspent points across every student's wallet — how much of the
+    // money funded in is still sitting in student wallets, not yet spent on
+    // textbooks. Chief admin only.
+    let userWallets = 0;
+    if (isChief) {
+      const wallets = await query(
+        'select coalesce(sum(point_balance), 0)::int as total from student_wallets',
+      );
+      userWallets = wallets.rows[0].total as number;
+    }
+
+    // Recent deposit feed is platform-wide (student names + amounts), so only
+    // the chief admin gets it — skip the queries entirely for reps (privacy +
+    // egress saving).
+    let recent: { type: string; amount: number; note: string; created_at: string }[] = [];
+    if (isChief) {
+      const [recentTx, recentWalletDep] = await Promise.all([
         query(
           `select 'deposit' as type, total as amount, '' as note, created_at
              from transactions where status = 'success'
@@ -50,49 +105,22 @@ router.get(
             limit 10`,
         ),
       ]);
-
-    // Textbook money already committed by students, with the per-book service fee removed.
-    const textbookValue = bookVal.rows[0].value as number;
-    // Money no longer in the bank: completed or processing payouts.
-    const withdrawals = (payRes.rows as { status: string; d: number }[])
-      .filter((r) => r.status === 'completed' || r.status === 'processing')
-      .reduce((s, r) => s + r.d, 0);
-    // Deleted textbooks no longer contribute to textbookValue, so an offset
-    // can momentarily dip below zero; clamp so the UI never shows a negative.
-    const balance = Math.max(textbookValue - withdrawals, 0);
-
-    // Live PocketFi merchant balance — only surfaced to the chief admin.
-    let livePocketFi: number | null = null;
-    if (config.pocketfiSecret) {
-      try {
-        livePocketFi = await getPocketFiBalance();
-      } catch {
-        livePocketFi = null;
-      }
+      recent = [
+        ...(recentTx.rows as { type: string; amount: number; note: string; created_at: string }[]),
+        ...(recentWalletDep.rows as { type: string; amount: number; note: string; created_at: string }[]),
+      ]
+        .sort(
+          (a, b) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+        )
+        .slice(0, 12);
     }
-
-    // Total unspent points across every student's wallet — how much of the
-    // money funded in is still sitting in student wallets, not yet spent on
-    // textbooks. Chief admin only.
-    let userWallets = 0;
-    if (_req.student.role === 'chief_admin') {
-      const wallets = await query(
-        'select coalesce(sum(point_balance), 0)::int as total from student_wallets',
-      );
-      userWallets = wallets.rows[0].total as number;
-    }
-
-    const recent = [...recentTx.rows, ...recentWalletDep.rows]
-      .sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-      )
-      .slice(0, 12);
 
     res.json({
       balance,
       textbookValue,
       withdrawals,
+      untraceableWithdrawals,
       livePocketFi,
       userWallets,
       recent,

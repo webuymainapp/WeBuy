@@ -230,6 +230,8 @@ interface MyTextbookRow {
   collected_at: string | null;
   transaction_reference: string | null;
   pass_token: string | null;
+  refunds_open: boolean;
+  refund_status: 'pending' | 'approved' | 'rejected' | null;
 }
 
 export function toTextbook(r: MyTextbookRow): Textbook {
@@ -256,6 +258,8 @@ export function toTextbook(r: MyTextbookRow): Textbook {
     transactionRef: r.transaction_reference ?? undefined,
     passToken: r.pass_token ?? undefined,
     paymentsPaused: Boolean(r.payments_paused),
+    refundsOpen: Boolean(r.refunds_open),
+    refundStatus: r.refund_status ?? undefined,
   };
 }
 
@@ -277,6 +281,7 @@ interface CatalogRow {
   cover_url: string | null;
   added_by?: string | null;
   payments_paused?: boolean;
+  refunds_open?: boolean;
 }
 
 export function toCatalogTextbook(r: CatalogRow): Textbook {
@@ -299,6 +304,7 @@ export function toCatalogTextbook(r: CatalogRow): Textbook {
     classRepName: r.class_rep_name ?? '',
     addedBy: r.added_by ?? null,
     paymentsPaused: Boolean(r.payments_paused),
+    refundsOpen: Boolean(r.refunds_open),
   };
 }
 
@@ -450,6 +456,82 @@ export const walletApi = {
       reference: string;
       paidIds: string[];
     }>('/api/wallet/checkout', json('POST', { studentTextbookIds })),
+};
+
+// ---- Refunds ---------------------------------------------------------------
+export interface RefundRequest {
+  id: string;
+  amount: number;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  reviewNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  courseCode: string;
+  courseTitle: string;
+  bookTitle: string;
+  studentId?: string;
+  studentTextbookId?: string;
+  textbookId?: string;
+  studentName?: string | null;
+  studentRegNo?: string | null;
+  price?: number;
+  serviceFee?: number;
+}
+
+interface RefundRequestRow {
+  id: string;
+  amount: number;
+  reason: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  review_note: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+  course_code: string;
+  course_title: string;
+  book_title: string;
+  student_id?: string;
+  student_textbook_id?: string;
+  textbook_id?: string;
+  student_name?: string | null;
+  student_reg_no?: string | null;
+  price?: number;
+  service_fee?: number;
+}
+
+function toRefund(r: RefundRequestRow): RefundRequest {
+  return {
+    id: r.id,
+    amount: r.amount,
+    reason: r.reason,
+    status: r.status,
+    reviewNote: r.review_note,
+    reviewedAt: r.reviewed_at,
+    createdAt: r.created_at,
+    courseCode: r.course_code,
+    courseTitle: r.course_title,
+    bookTitle: r.book_title,
+    studentId: r.student_id,
+    studentTextbookId: r.student_textbook_id,
+    textbookId: r.textbook_id,
+    studentName: r.student_name ?? null,
+    studentRegNo: r.student_reg_no ?? null,
+    price: r.price,
+    serviceFee: r.service_fee,
+  };
+}
+
+export const refundsApi = {
+  request: (studentTextbookId: string, reason?: string) =>
+    request<{ ok: boolean; refund: RefundRequestRow }>(
+      '/api/refunds',
+      json('POST', { studentTextbookId, reason }),
+    ),
+
+  getMine: () =>
+    request<{ refunds: RefundRequestRow[] }>('/api/refunds').then((r) =>
+      r.refunds.map(toRefund),
+    ),
 };
 
 // ---- Passes ----------------------------------------------------------------
@@ -619,7 +701,13 @@ export const repApi = {
     }>('/api/rep/overview'),
 
   getRevenue: () =>
-    request<{ revenue: number; paidBooks: number }>('/api/rep/revenue'),
+    request<{
+      revenue: number;
+      earned: number;
+      settled: number;
+      settledUntraceable: number;
+      paidBooks: number;
+    }>('/api/rep/revenue'),
 
   createPayout: (body: {
     textbookId: string;
@@ -650,6 +738,20 @@ export const repApi = {
     request<{ ok: boolean; payout: { id: string; amount: number; status: string } }>(
       `/api/rep/payouts/${id}/settle`,
       json('POST'),
+    ),
+
+  getRefunds: () =>
+    request<{ refunds: RefundRequestRow[] }>('/api/rep/refunds').then((r) =>
+      r.refunds.map(toRefund),
+    ),
+
+  approveRefund: (id: string) =>
+    request<{ ok: boolean }>(`/api/rep/refunds/${id}/approve`, json('POST')),
+
+  rejectRefund: (id: string, note?: string) =>
+    request<{ ok: boolean }>(
+      `/api/rep/refunds/${id}/reject`,
+      json('POST', { note }),
     ),
 
   getPaidCopies: (textbookId: string) =>
@@ -849,6 +951,7 @@ export const accountApi = {
       balance: number;
       textbookValue: number;
       withdrawals: number;
+      untraceableWithdrawals: number;
       livePocketFi: number | null;
       userWallets: number;
       recent: AccountEntry[];

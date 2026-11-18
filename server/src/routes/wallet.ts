@@ -331,11 +331,11 @@ router.post(
       const reconciled = await query(
         `select
            coalesce(sum(amount) filter (where kind = 'deposit'), 0)::int as funded,
-           coalesce(sum(amount) filter (where kind = 'purchase'), 0)::int as spent
+           coalesce(sum(amount) filter (where kind in ('purchase', 'refund')), 0)::int as spent
            from wallet_transactions where student_id = $1`,
         [req.student.sub],
       );
-      const spent = reconciled.rows[0].spent as number; // negative (debits)
+      const spent = reconciled.rows[0].spent as number; // negative (net debits)
       const target = totalFund + spent; // totalFund - |spent|
       const delta = target - balance;
 

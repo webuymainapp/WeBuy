@@ -21,6 +21,12 @@ function makePayoutReference(): string {
     .toUpperCase()}`;
 }
 
+function makeRefundReference(): string {
+  return `REF-${Date.now().toString(36).toUpperCase()}-${randomBytes(4)
+    .toString('hex')
+    .toUpperCase()}`;
+}
+
 const router = Router();
 
 // Automatic PocketFi service charge added on top of the price a rep posts. It is
@@ -413,7 +419,11 @@ router.get(
  * and minus any payouts they have had SETTLED (money withdrawn from PocketFi).
  * Non-chief reps only ever see their own books' revenue — they can't trace or
  * calculate other reps' earnings. The chief admin sees the platform-wide total.
- * Revenue = sum over every paid/collected assignment of (price − fee) − settled payouts.
+ * Revenue = sum over every paid/collected assignment of (price − fee) − settled
+ * payouts that are still linked to an existing course. Settled payouts whose
+ * textbook was hard-deleted (textbook_id null) are untraceable — their paid
+ * assignments were cascade-deleted too — so they're returned separately as
+ * `settledUntraceable` rather than distorting the net.
  */
 router.get(
   '/revenue',
@@ -434,7 +444,9 @@ router.get(
         params,
       ),
       query(
-        `select coalesce(sum(amount), 0)::int as settled
+        `select
+           coalesce(sum(amount) filter (where textbook_id is not null), 0)::int as linked,
+           coalesce(sum(amount) filter (where textbook_id is null), 0)::int as unlinked
            from payouts
           where status = 'completed'
             ${isChief ? '' : 'and rep_id = $1'}`,
@@ -442,12 +454,18 @@ router.get(
       ),
     ]);
 
-    const revenue = Math.max(
-      (earned.rows[0].earned as number) - (payouts.rows[0].settled as number),
-      0,
-    );
+    const earnedValue = earned.rows[0].earned as number;
+    // Only settled payouts still linked to an existing course reduce the net;
+    // payouts for hard-deleted courses are untraceable (their assignments, and
+    // thus their earnings, are gone too) and are reported separately.
+    const settled = payouts.rows[0].linked as number;
+    const settledUntraceable = payouts.rows[0].unlinked as number;
+    const revenue = Math.max(earnedValue - settled, 0);
     res.json({
       revenue,
+      earned: earnedValue,
+      settled,
+      settledUntraceable,
       paidBooks: earned.rows[0].paid_books,
     });
   }),
@@ -695,6 +713,224 @@ router.post(
   }),
 );
 
+/**
+ * Refund requests for textbooks this rep owns. A non-chief rep only sees
+ * requests for books THEY added — they have no visibility (or control) over
+ * another rep's textbooks. The chief admin sees the platform-wide list.
+ */
+router.get(
+  '/refunds',
+  asyncHandler(async (req, res) => {
+    const isChief = req.student.role === 'chief_admin';
+    const result = await query(
+      `select rr.id, rr.student_id, rr.student_textbook_id, rr.textbook_id,
+              rr.amount, rr.reason, rr.status, rr.review_note,
+              rr.reviewed_at, rr.created_at,
+              s.full_name as student_name, s.reg_no as student_reg_no,
+              t.course_code, t.course_title, t.book_title, t.price, t.service_fee
+         from refund_requests rr
+         join students s on s.id = rr.student_id
+         join textbooks t on t.id = rr.textbook_id
+        ${isChief ? '' : 'where t.added_by = $1'}
+        order by rr.created_at desc
+        limit 200`,
+      isChief ? [] : [req.student.sub],
+    );
+    res.json({ refunds: result.rows });
+  }),
+);
+
+/**
+ * Approve a refund request. Only the rep who added the book (or the chief
+ * admin) can approve it. The (price − service_fee) points are credited back to
+ * the student's wallet with a 'refund' journal row, and the assignment reverts
+ * to 'unpaid' so the QR pass stops working. Atomic + locked so a request can
+ * never be double-approved or approved after the book was collected.
+ */
+router.post(
+  '/refunds/:id/approve',
+  asyncHandler(async (req, res) => {
+    const refundId = String(req.params.id);
+
+    const found = await query(
+      `select rr.student_id, rr.student_textbook_id, rr.textbook_id, rr.amount,
+              rr.status, t.added_by, t.course_code
+         from refund_requests rr
+         join textbooks t on t.id = rr.textbook_id
+        where rr.id = $1`,
+      [refundId],
+    );
+    if (found.rowCount === 0) {
+      throw new HttpError(404, 'Refund request not found');
+    }
+    const reqRow = found.rows[0] as {
+      student_id: string;
+      student_textbook_id: string;
+      textbook_id: string;
+      amount: number;
+      status: string;
+      added_by: string | null;
+      course_code: string;
+    };
+
+    await assertCanManageTextbook(req.student, reqRow.textbook_id)
+
+    try {
+      await query('begin');
+      const locked = await query(
+        'select status from refund_requests where id = $1 for update',
+        [refundId],
+      );
+      if (locked.rowCount === 0) {
+        await query('rollback');
+        throw new HttpError(404, 'Refund request not found');
+      }
+      if ((locked.rows[0].status as string) !== 'pending') {
+        await query('rollback');
+        throw new HttpError(
+          409,
+          'This refund request has already been reviewed.',
+        );
+      }
+
+      // The book must still be owned by this rep right now (checked above) and
+      // the student must still have it marked 'paid' (not yet picked up) for
+      // the refund to apply.
+      const order = await query(
+        `select st.id
+           from student_textbooks st
+          where st.id = $1 and st.status = 'paid'
+          for update of st`,
+        [reqRow.student_textbook_id],
+      );
+      if (order.rowCount === 0) {
+        await query('rollback');
+        throw new HttpError(
+          409,
+          `This textbook is no longer marked paid (it may have been collected) and can no longer be refunded. You can reject the request instead.`,
+        );
+      }
+
+      await query(
+        `insert into student_wallets (student_id) values ($1)
+         on conflict (student_id) do nothing`,
+        [reqRow.student_id],
+      );
+      // Lock the wallet row so concurrent approvals serialize; the positive
+      // credit below can never violate the point_balance >= 0 constraint.
+      await query(
+        `select point_balance from student_wallets
+          where student_id = $1 for update`,
+        [reqRow.student_id],
+      );
+
+      const reference = makeRefundReference();
+      await query(
+        `update student_wallets
+            set point_balance = point_balance + $1, updated_at = now()
+          where student_id = $2`,
+        [reqRow.amount, reqRow.student_id],
+      );
+      await query(
+        `insert into wallet_transactions (student_id, kind, amount, reference, note)
+         values ($1, 'refund', $2, $3, $4)`,
+        [
+          reqRow.student_id,
+          reqRow.amount,
+          reference,
+          `Refund for ${reqRow.course_code}`,
+        ],
+      );
+      await query(
+        `update student_textbooks
+            set status = 'unpaid', paid_at = null, collected_at = null,
+                transaction_reference = null, pass_token = null
+          where id = $1`,
+        [reqRow.student_textbook_id],
+      );
+      await query(
+        `update refund_requests
+            set status = 'approved', reviewed_by = $1, reviewed_at = now(),
+                review_note = coalesce(review_note, $2)
+          where id = $3`,
+        [req.student.sub, null, refundId],
+      );
+      await query('commit');
+    } catch (err) {
+      await query('rollback').catch(() => undefined);
+      throw err;
+    }
+
+    await query(
+      `insert into notifications (student_id, type, title, body)
+       values ($1, 'refund', 'Refund approved', $2)`,
+      [
+        reqRow.student_id,
+        `Your refund of ${reqRow.amount}pts for ${reqRow.course_code} was approved and credited to your wallet. The textbook is unpaid again.`,
+      ],
+    );
+    overviewCache.del('overview');
+    res.json({ ok: true });
+  }),
+);
+
+/**
+ * Reject a refund request. Only the rep who added the book (or the chief
+ * admin) can reject it. No money changes hands; the student keeps the paid
+ * book and is notified.
+ */
+router.post(
+  '/refunds/:id/reject',
+  asyncHandler(async (req, res) => {
+    const refundId = String(req.params.id);
+    const note = String(req.body?.note ?? '').trim().slice(0, 500) || null;
+
+    const found = await query(
+      `select rr.student_id, rr.textbook_id
+         from refund_requests rr
+        where rr.id = $1`,
+      [refundId],
+    );
+    if (found.rowCount === 0) {
+      throw new HttpError(404, 'Refund request not found');
+    }
+    const reqRow = found.rows[0] as { student_id: string; textbook_id: string };
+
+    await assertCanManageTextbook(req.student, reqRow.textbook_id);
+
+    const updated = await query(
+      `update refund_requests
+          set status = 'rejected', reviewed_by = $1, reviewed_at = now(),
+              review_note = coalesce($2, review_note)
+        where id = $3 and status = 'pending'
+        returning id`,
+      [req.student.sub, note, refundId],
+    );
+    if (updated.rowCount === 0) {
+      const exists = await query('select status from refund_requests where id = $1', [
+        refundId,
+      ]);
+      if (exists.rowCount === 0) {
+        throw new HttpError(404, 'Refund request not found');
+      }
+      throw new HttpError(
+        409,
+        'This refund request has already been reviewed.',
+      );
+    }
+
+    await query(
+      `insert into notifications (student_id, type, title, body)
+       values ($1, 'refund', 'Refund request declined', $2)`,
+      [
+        reqRow.student_id,
+        `Your refund request was declined${note ? ` — ${note}` : ''}.`,
+      ],
+    );
+    res.json({ ok: true });
+  }),
+);
+
 const grantSchema = z.object({
   copies: z.number().int().min(1).max(100000),
 });
@@ -870,6 +1106,7 @@ const textbookSchema = z.object({
   courseTitle: z.string().trim().min(1).max(200),
   price: z.number().int().min(0),
   paymentsPaused: z.boolean().optional(),
+  refundsOpen: z.boolean().optional(),
 });
 
 /** Create a textbook (catalog) — the adding rep owns it. Only course code,
@@ -941,6 +1178,7 @@ router.patch(
       courseCode: 'course_code',
       courseTitle: 'course_title',
       paymentsPaused: 'payments_paused',
+      refundsOpen: 'refunds_open',
     };
     // Columns to write, built in order. `price` is the rep's selling price — the
     // service fee is derived from it and the all-inclusive `price` + `service_fee`
@@ -953,7 +1191,7 @@ router.patch(
       cols.push('"price"', '"service_fee"');
       values.push(sellingPrice + serviceFee, serviceFee);
     }
-    for (const key of ['courseCode', 'courseTitle', 'paymentsPaused'] as const) {
+    for (const key of ['courseCode', 'courseTitle', 'paymentsPaused', 'refundsOpen'] as const) {
       if (fields[key] !== undefined) {
         cols.push(`"${columnMap[key]}"`);
         values.push(fields[key]);

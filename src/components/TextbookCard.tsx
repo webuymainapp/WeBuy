@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Textbook } from '../types';
-import { CheckCircle2, Clock, MapPin, QrCode, ShoppingCart, Check, Info, X, Pause } from 'lucide-react';
+import { CheckCircle2, Clock, MapPin, QrCode, ShoppingCart, Check, Info, X, Pause, RotateCcw } from 'lucide-react';
+import { RefundModal } from './RefundModal';
+import { soundEffects } from '../utils/audio';
 
 interface TextbookCardProps {
   textbook: Textbook;
@@ -8,6 +10,7 @@ interface TextbookCardProps {
   onRemoveFromCart: (textbook: Textbook) => void;
   isInCart: (id: string) => boolean;
   onViewPass?: (textbook: Textbook) => void;
+  onRefundSubmitted?: () => void;
 }
 
 /** Cover palettes — a book's cover color is picked deterministically from its
@@ -109,8 +112,10 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
   onRemoveFromCart,
   isInCart,
   onViewPass,
+  onRefundSubmitted,
 }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [refundOpen, setRefundOpen] = useState(false);
   const title = textbook.courseTitle?.trim() || textbook.bookTitle;
 
   const statusBadge = (large = false) => {
@@ -186,6 +191,31 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
     return null;
   };
 
+  const refundAction = () => {
+    if (textbook.status !== 'paid' || !textbook.studentTextbookId) return null;
+    if (textbook.refundStatus === 'pending') {
+      return (
+        <span className="px-2 py-1.5 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-200 text-[10px] font-bold flex items-center gap-1 whitespace-nowrap">
+          <Clock className="w-3 h-3" />
+          Refund pending
+        </span>
+      );
+    }
+    if (!textbook.refundsOpen) return null;
+    return (
+      <button
+        onClick={() => {
+          soundEffects.playTap();
+          setRefundOpen(true);
+        }}
+        className="px-2 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-slate-900 text-[10px] font-bold flex items-center gap-1 shadow-sm shadow-amber-200 whitespace-nowrap transition-all"
+      >
+        <RotateCcw className="w-3 h-3" />
+        Request Refund
+      </button>
+    );
+  };
+
   const details = [
     { label: 'Course', value: `${textbook.courseCode} — ${title}` },
     { label: 'Price', value: formatNaira(textbook.price) },
@@ -239,6 +269,7 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
               Details
             </button>
             {primaryAction()}
+            {refundAction()}
           </div>
         </div>
       </div>
@@ -289,11 +320,20 @@ export const TextbookCard: React.FC<TextbookCardProps> = ({
               {statusBadge(true)}
               <div className="flex items-center gap-2">
                 {primaryAction()}
+                {refundAction()}
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* Refund request modal — for paid (not yet collected) textbooks */}
+      <RefundModal
+        textbook={refundOpen ? textbook : null}
+        onClose={() => setRefundOpen(false)}
+        onRefunded={onRefundSubmitted ?? (() => undefined)}
+        onToast={() => undefined}
+      />
     </>
   );
 };

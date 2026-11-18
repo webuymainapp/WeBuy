@@ -44,6 +44,8 @@ export interface Textbook {
   studentTextbookId?: string;
   addedBy?: string | null;
   paymentsPaused?: boolean;
+  refundsOpen?: boolean;
+  refundStatus?: 'pending' | 'approved' | 'rejected';
 }
 
 export type PaymentMethod = 'wallet' | 'bank_transfer' | 'card' | 'ussd';
