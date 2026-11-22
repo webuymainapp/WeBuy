@@ -146,7 +146,7 @@ export const authApi = {
     request<SigninResult>('/api/auth/verify-email', json('POST', { token })),
 
   forgotPassword: (emailOrRegNo: string) =>
-    request<{ ok: boolean }>('/api/auth/forgot-password', json('POST', { emailOrRegNo, origin: window.location.origin })),
+    request<{ ok: boolean; sent: boolean }>('/api/auth/forgot-password', json('POST', { emailOrRegNo, origin: window.location.origin })),
 
   resetPassword: (token: string, newPassword: string) =>
     request<SigninResult>('/api/auth/reset-password', json('POST', { token, newPassword })),

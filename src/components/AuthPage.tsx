@@ -26,6 +26,15 @@ const DEPARTMENTS = [
   'General Studies',
 ];
 
+function authErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof ApiError) {
+    if (err.status === 429) return 'Too many attempts. Please wait a moment and try again.';
+    if (err.status === 0 || err.status >= 500) return fallback;
+    return err.message;
+  }
+  return fallback;
+}
+
 export const AuthPage: React.FC<AuthPageProps> = ({
   onClose,
   onAuthSuccess,
@@ -104,7 +113,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       onAuthSuccess(res.student);
     } catch (err) {
       soundEffects.playError();
-      setError(err instanceof ApiError ? err.message : 'Unable to sign in');
+      setError(authErrorMessage(err, 'Unable to sign in'));
     } finally {
       setBusy(false);
     }
@@ -135,7 +144,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       setVerifyMsg(null);
     } catch (err) {
       soundEffects.playError();
-      setError(err instanceof ApiError ? err.message : 'Unable to create account');
+      setError(authErrorMessage(err, 'Unable to create account'));
     } finally {
       setBusy(false);
     }
@@ -164,17 +173,21 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         }
       } else {
         // Reset: forgot-password regenerates + emails a fresh reset link.
-        await authApi.forgotPassword(verifyScreen.identity);
+        const res = await authApi.forgotPassword(verifyScreen.identity);
         setCooldown(60);
         try {
           await sendVerificationEmail();
         } catch {
           // ignore
         }
-        setVerifyMsg('A new reset link has been sent to your inbox.');
+        setVerifyMsg(
+          res.sent
+            ? 'A new reset link has been sent to your inbox.'
+            : 'If an account matches that email or registration number, a reset link has been sent.',
+        );
       }
     } catch (err) {
-      setVerifyMsg(err instanceof ApiError ? err.message : 'Could not resend the link.');
+      setVerifyMsg(authErrorMessage(err, 'Could not resend the link. Please try again.'));
     } finally {
       setResending(false);
     }
@@ -204,7 +217,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setError('No pending signup found for this account. Please sign up first.');
       }
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Could not resend the link.');
+      setError(authErrorMessage(err, 'Could not resend the link. Please try again.'));
     } finally {
       setResending(false);
     }
@@ -219,7 +232,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setError(null);
     setBusy(true);
     try {
-      await authApi.forgotPassword(identity);
+      const res = await authApi.forgotPassword(identity);
       try {
         await sendVerificationEmail();
       } catch {
@@ -228,10 +241,14 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       soundEffects.playSuccessChime();
       setVerifyScreen({ identity, email: identity, purpose: 'reset' });
       setCooldown(60);
-      setVerifyMsg('A password reset link has been sent to your email.');
+      setVerifyMsg(
+        res.sent
+          ? 'A password reset link has been sent to your email.'
+          : 'If an account matches that email or registration number, a reset link has been sent.',
+      );
     } catch (err) {
       soundEffects.playError();
-      setError(err instanceof ApiError ? err.message : 'Could not send reset link');
+      setError(authErrorMessage(err, 'We couldn’t send the reset link. Please try again.'));
     } finally {
       setBusy(false);
     }
@@ -256,7 +273,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       setConfirmPassword('');
     } catch (err) {
       soundEffects.playError();
-      setResetError(err instanceof ApiError ? err.message : 'Could not reset password');
+      setResetError(authErrorMessage(err, 'We couldn’t reset your password. Please try again.'));
     } finally {
       setResetBusy(false);
     }

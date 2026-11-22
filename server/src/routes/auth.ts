@@ -527,7 +527,7 @@ router.post(
 
     // Always return 200 — don't reveal whether the account exists.
     if (student.rowCount === 0) {
-      res.json({ ok: true });
+      res.json({ ok: true, sent: false });
       return;
     }
 
@@ -546,7 +546,7 @@ router.post(
     // Queue email — best-effort.
     await enqueuePasswordResetEmail(email, appLink(`reset=${token}`, origin)).catch(() => undefined);
 
-    res.json({ ok: true });
+    res.json({ ok: true, sent: true });
   }),
 );
 

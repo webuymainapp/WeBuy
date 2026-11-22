@@ -384,4 +384,16 @@ create table if not exists egress_daily (
 
 -- Email-link verification: password resets use a one-time hashed token instead
 -- of a 6-digit code. The plain token is only ever emailed via the link.
-alter table password_resets add column if not exists token_hash text;
+create table if not exists password_resets (
+  id uuid primary key default gen_random_uuid(),
+  email text not null,
+  otp_hash text,
+  attempts int not null default 0,
+  token_hash text,
+  used_at timestamptz,
+  expires_at timestamptz not null,
+  created_at timestamptz not null default now()
+);
+alter table password_resets alter column otp_hash drop not null;
+alter table password_resets add column if not exists used_at timestamptz;
+create index if not exists idx_password_resets_token_hash on password_resets(token_hash);

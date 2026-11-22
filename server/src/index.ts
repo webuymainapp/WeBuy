@@ -157,6 +157,22 @@ async function runMigrations() {
   )`);
   await query(`create index if not exists idx_refund_requests_assignment
     on refund_requests(student_textbook_id)`);
+  // Password resets moved from a 6-digit OTP to a one-time emailed token.
+  // Legacy databases still have otp_hash NOT NULL and no used_at column.
+  await query(`create table if not exists password_resets (
+    id uuid primary key default gen_random_uuid(),
+    email text not null,
+    otp_hash text,
+    attempts int not null default 0,
+    token_hash text,
+    used_at timestamptz,
+    expires_at timestamptz not null,
+    created_at timestamptz not null default now()
+  )`);
+  await query(`alter table password_resets alter column otp_hash drop not null`);
+  await query(`alter table password_resets add column if not exists used_at timestamptz`);
+  await query(`create index if not exists idx_password_resets_token_hash
+    on password_resets(token_hash)`);
   // Daily egress usage estimator — aggregated once a minute from in-memory
   // counters so the metric itself adds almost no write traffic.
   await query(`create table if not exists egress_daily (
