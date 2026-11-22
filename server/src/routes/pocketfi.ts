@@ -44,79 +44,8 @@ function verifySignature(rawBody: Buffer, signature: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/**
- * Credit a student's points when a deposit lands in their virtual account.
- * Idempotent: the wallet_transactions.reference unique constraint means a
- * retried webhook can never double-credit. Returns true if a student matched.
- */
-async function applyDeposit(data: Record<string, unknown>): Promise<boolean> {
-  // Wherever PocketFi puts the funding account — defensive across shapes.
-  const accountNo = String(
-    data.account ??
-      (data.order as Record<string, unknown> | undefined)?.account ??
-      (data.data as Record<string, unknown> | undefined)?.account ??
-      (data.virtual_account as Record<string, unknown> | undefined)?.account_number ??
-      '',
-  ).trim();
-  const reference = String(
-    (data.transaction as Record<string, unknown> | undefined)?.reference ??
-      data.reference ??
-      '',
-  ).trim();
-  // amount in naira (they send floats, e.g. 5000.00). settlement_amount is what
-  // actually landed after their fee.
-  const amountRaw =
-    (data.order as Record<string, unknown> | undefined)?.settlement_amount ??
-    (data.order as Record<string, unknown> | undefined)?.amount ??
-    data.amount ??
-    0;
-  const points = Math.floor(Number(amountRaw));
-
-  if (!accountNo || !reference || !points || points <= 0) return false;
-
-  const wallet = await query(
-    'select student_id from student_wallets where virtual_account_no = $1',
-    [accountNo],
-  );
-  if (wallet.rowCount === 0) return false;
-  const studentId = wallet.rows[0].student_id as string;
-
-  try {
-    await query('begin');
-    // Unique reference makes this idempotent across retries.
-    const ins = await query(
-      `insert into wallet_transactions (student_id, kind, amount, reference, note)
-       values ($1, 'deposit', $2, $3, $4)`,
-      [studentId, points, reference, `Funded account ${accountNo}`],
-    );
-    if (ins.rowCount === 1) {
-      await query(
-        `insert into student_wallets (student_id, point_balance)
-         values ($1, $2)
-         on conflict (student_id)
-         do update set point_balance = student_wallets.point_balance + excluded.point_balance,
-                       updated_at = now()`,
-        [studentId, points],
-      );
-    }
-    await query('commit');
-    return true;
-  } catch (err) {
-    await query('rollback').catch(() => undefined);
-    // Unique violation => already processed (retry). Otherwise surface.
-    if (
-      err instanceof Error &&
-      /duplicate key value violates unique constraint/.test(err.message)
-    ) {
-      return true;
-    }
-    throw err;
-  }
-}
-
-// Respond 200 fast, but only after verifying the signature. Two event kinds:
-//  1. payout: reconciles the payouts table by reference.
-//  2. deposit: credits a student's points by their virtual account number.
+// Respond 200 fast, but only after verifying the signature. Deposits are never
+// auto-credited here; manual /api/wallet/verify is the only credit path.
 router.post(
   '/',
   asyncHandler(async (req, res) => {
@@ -138,12 +67,6 @@ router.post(
         data.reference ??
         '',
     );
-
-    // Deposits into a student's virtual account -> points.
-    if (await applyDeposit(data)) {
-      res.json({ status: true });
-      return;
-    }
 
     // Payout status reconciliation by reference.
     if (!reference) {

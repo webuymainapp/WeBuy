@@ -184,6 +184,8 @@ create index if not exists idx_toggle_grants_rep on rep_toggle_grants(rep_id, te
 create table if not exists student_wallets (
   student_id uuid primary key references students(id) on delete cascade,
   point_balance int not null default 0 check (point_balance >= 0),
+  funding_baseline int not null default 0 check (funding_baseline >= 0),
+  funding_baseline_at timestamptz not null default 'epoch',
   virtual_account_no text,
   virtual_bank_name text,
   virtual_account_name text,
@@ -197,7 +199,7 @@ create table if not exists wallet_transactions (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references students(id) on delete cascade,
   kind text not null check (
-    kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi')
+    kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi', 'correction')
   ),
   amount int not null check (amount <> 0),
   reference text unique not null,
@@ -207,6 +209,75 @@ create table if not exists wallet_transactions (
 
 create index if not exists idx_wallet_tx_student on wallet_transactions(student_id, created_at desc);
 create index if not exists idx_wallet_tx_reference on wallet_transactions(reference);
+
+create table if not exists wallet_audit_log (
+  id bigserial primary key,
+  student_id uuid not null,
+  operation text not null,
+  old_balance int,
+  new_balance int,
+  old_baseline int,
+  new_baseline int,
+  old_account text,
+  new_account text,
+  changed_by text not null default current_user,
+  changed_at timestamptz not null default now()
+);
+
+create index if not exists idx_wallet_audit_student on wallet_audit_log(student_id, changed_at desc);
+
+create or replace function audit_wallet_change() returns trigger as $$
+declare
+  audited_student uuid;
+begin
+  if tg_op = 'DELETE' then
+    audited_student := old.student_id;
+  else
+    audited_student := new.student_id;
+  end if;
+  insert into wallet_audit_log (
+    student_id, operation, old_balance, new_balance,
+    old_baseline, new_baseline, old_account, new_account
+  ) values (
+    audited_student,
+    tg_op,
+    old.point_balance,
+    new.point_balance,
+    old.funding_baseline,
+    new.funding_baseline,
+    old.virtual_account_no,
+    new.virtual_account_no
+  );
+  return null;
+end $$ language plpgsql;
+
+create or replace function guard_wallet_baseline() returns trigger as $$
+begin
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  if (
+    new.funding_baseline is distinct from old.funding_baseline
+    or new.funding_baseline_at is distinct from old.funding_baseline_at
+  ) and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
+    raise exception 'Wallet funding baseline can only be changed by the application';
+  end if;
+  if new.virtual_account_no is distinct from old.virtual_account_no
+    and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch') then
+    raise exception 'A new virtual account must reset the funding baseline';
+  end if;
+  return new;
+end $$ language plpgsql;
+
+drop trigger if exists trg_audit_wallet_change on student_wallets;
+create trigger trg_audit_wallet_change
+after update or delete on student_wallets
+for each row execute function audit_wallet_change();
+
+drop trigger if exists trg_guard_wallet_baseline on student_wallets;
+create trigger trg_guard_wallet_baseline
+before update or delete on student_wallets
+for each row execute function guard_wallet_baseline();
 
 -- Refunds: the owning rep can open a textbook to refunds ("open" = students may
 -- request). Defaults to CLOSED for every book — reps must explicitly enable it.

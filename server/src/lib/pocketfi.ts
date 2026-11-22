@@ -105,7 +105,7 @@ export async function createPocketFiVirtualAccount(opts: {
  * (e.g. the API isn't deployed at a public webhook URL yet).
  */
 export async function fetchVirtualAccountsFunds(): Promise<
-  { accountNumber: string; totalFund: number; name: string }[]
+  { accountNumber: string; totalFund: number; name: string; updatedAt: Date | null }[]
 > {
   if (!config.pocketfiSecret) return [];
   const res = await pocketfiFetch(
@@ -116,7 +116,12 @@ export async function fetchVirtualAccountsFunds(): Promise<
   }
   const json = (await res.json()) as {
     status?: unknown;
-    accounts?: Array<{ account?: string | number; total_fund?: string | number; name?: string }>;
+    accounts?: Array<{
+      account?: string | number;
+      total_fund?: string | number;
+      name?: string;
+      updated_at?: string;
+    }>;
   };
   if (json.status !== true || !Array.isArray(json.accounts)) {
     throw new HttpError(502, 'PocketFi virtual accounts failed');
@@ -125,6 +130,7 @@ export async function fetchVirtualAccountsFunds(): Promise<
     accountNumber: String(a.account ?? ''),
     totalFund: Math.floor(Number(a.total_fund ?? 0)),
     name: String(a.name ?? ''),
+    updatedAt: a.updated_at ? new Date(a.updated_at) : null,
   }));
 }
 

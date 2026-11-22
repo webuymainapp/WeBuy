@@ -15,6 +15,10 @@ import type { AuthTokenPayload } from '../lib/jwt';
 const router = Router();
 router.use(requireAuth);
 
+async function allowBaselineUpdate() {
+  await query(`select set_config('webuy.allow_baseline_update', 'on', true)`);
+}
+
 /**
  * Ensure the student's wallet row + virtual account exist. Idempotent. Returns
  * a `fundingError` (instead of throwing) when a funding account can't be
@@ -86,6 +90,7 @@ async function ensureWallet(student: AuthTokenPayload): Promise<WalletResult> {
           `update student_wallets
               set virtual_account_no = $1, virtual_bank_name = $2,
                   virtual_account_name = $3, virtual_customer_id = $4,
+                  funding_baseline = 0, funding_baseline_at = timestamp 'epoch',
                   updated_at = now()
             where student_id = $5`,
           [vac.accountNumber, vac.bankName, vac.accountName, vac.customerId, student.sub],
@@ -270,6 +275,7 @@ router.post(
       (f) => f.accountNumber === wallet.virtual_account_no,
     );
     const totalFund = mine?.totalFund ?? 0;
+    const updatedAt = mine?.updatedAt ?? null;
 
     const walletTxns = await query(
       `select id, kind, amount, reference, note, created_at
@@ -278,24 +284,23 @@ router.post(
       [req.student.sub],
     );
 
+    const baselineRow = await query(
+      `select funding_baseline, funding_baseline_at
+         from student_wallets where student_id = $1`,
+      [req.student.sub],
+    );
+    const baseline = Number(baselineRow.rows[0]?.funding_baseline ?? 0);
+    const baselineAt = new Date(baselineRow.rows[0]?.funding_baseline_at ?? 0);
+    const pending = Math.max(totalFund - baseline, 0);
+    const newer = Boolean(updatedAt && updatedAt >= baselineAt);
+    const stale = pending > 0 && !newer;
+
     if (req.student.role === 'chief_admin') {
-      // Everything already classified — spendable deposits AND recorded PocketFi
-      // top-ups — is excluded, so the remainder is genuinely "recently added".
-      const recorded = await query(
-        `select coalesce(sum(amount), 0)::int as recorded
-           from wallet_transactions
-          where student_id = $1 and kind in ('deposit', 'topup_pocketfi')`,
-        [req.student.sub],
-      );
-      const pending = Math.max(
-        totalFund - (recorded.rows[0].recorded as number),
-        0,
-      );
       res.json({
         ok: true,
-        // 'classify' tells the UI to ask the chief what this money is for.
-        action: pending > 0 ? 'classify' : 'none',
+        action: pending > 0 && newer ? 'classify' : 'none',
         pending,
+        stale,
         credited: 0,
         totalFund,
         ...toWalletJson(wallet),
@@ -307,58 +312,50 @@ router.post(
     let credited = 0;
     try {
       await query('begin');
-      // Lock the wallet row so concurrent reconcile calls serialize. Without
-      // this, two parallel requests can both read the same "already credited"
-      // sum and each insert a deposit for the full delta with a fresh
-      // reference — double-crediting the same funding.
       await query(
         `insert into student_wallets (student_id) values ($1)
          on conflict (student_id) do nothing`,
         [req.student.sub],
       );
       const locked = await query(
-        'select point_balance from student_wallets where student_id = $1 for update',
+        `select point_balance, funding_baseline, funding_baseline_at
+           from student_wallets where student_id = $1 for update`,
         [req.student.sub],
       );
-      const balance = locked.rows[0]?.point_balance as number ?? 0;
+      const lockedBaseline = Number(locked.rows[0]?.funding_baseline ?? 0);
+      const lockedBaselineAt = new Date(locked.rows[0]?.funding_baseline_at ?? 0);
+      const due = Math.max(totalFund - lockedBaseline, 0);
+      const isNewer = Boolean(updatedAt && updatedAt >= lockedBaselineAt);
 
-      // What the user's points SHOULD equal: every naira ever funded into their
-      // VA (totalFund, authoritative lifetime total) minus every naira they've
-      // already SPENT. We credit only the shortfall to that target, never more.
-      // This guarantees money already spent can never be re-credited — even if
-      // a wallet's deposit rows were ever wiped, only the genuinely-unspent
-      // remainder is topped up, not the spent portion.
-      const reconciled = await query(
-        `select
-           coalesce(sum(amount) filter (where kind = 'deposit'), 0)::int as funded,
-           coalesce(sum(amount) filter (where kind in ('purchase', 'refund')), 0)::int as spent
-           from wallet_transactions where student_id = $1`,
-        [req.student.sub],
-      );
-      const spent = reconciled.rows[0].spent as number; // negative (net debits)
-      const target = totalFund + spent; // totalFund - |spent|
-      const delta = target - balance;
-
-      if (delta > 0) {
+      if (due > 0 && isNewer) {
         const reference = makeDepositReference();
         const ins = await query(
           `insert into wallet_transactions (student_id, kind, amount, reference, note)
            values ($1, 'deposit', $2, $3, $4)`,
           [
             req.student.sub,
-            delta,
+            due,
             reference,
             `Verified funding for ${wallet.virtual_account_no}`,
           ],
         );
         if (ins.rowCount === 1) {
+          await allowBaselineUpdate();
           await query(
             `update student_wallets
-                set point_balance = point_balance + $1, updated_at = now()
-              where student_id = $2`,
-            [delta, req.student.sub],
+                set point_balance = point_balance + $1,
+                    funding_baseline = $2,
+                    funding_baseline_at = $3,
+                    updated_at = now()
+              where student_id = $4`,
+            [
+              due,
+              Math.max(lockedBaseline, totalFund),
+              updatedAt ?? lockedBaselineAt,
+              req.student.sub,
+            ],
           );
-          credited = delta;
+          credited = due;
         }
       }
       await query('commit');
@@ -372,6 +369,7 @@ router.post(
       ok: true,
       credited,
       totalFund,
+      stale,
       ...toWalletJson(fresh),
       transactions: walletTxns.rows,
     });
@@ -407,6 +405,7 @@ router.post(
       (f) => f.accountNumber === wallet.virtual_account_no,
     );
     const totalFund = mine?.totalFund ?? 0;
+    const updatedAt = mine?.updatedAt ?? null;
 
     let credited = 0;
     try {
@@ -416,22 +415,17 @@ router.post(
          on conflict (student_id) do nothing`,
         [req.student.sub],
       );
-      await query(
-        'select point_balance from student_wallets where student_id = $1 for update',
+      const locked = await query(
+        `select point_balance, funding_baseline, funding_baseline_at
+           from student_wallets where student_id = $1 for update`,
         [req.student.sub],
       );
-      const recorded = await query(
-        `select coalesce(sum(amount), 0)::int as recorded
-           from wallet_transactions
-          where student_id = $1 and kind in ('deposit', 'topup_pocketfi')`,
-        [req.student.sub],
-      );
-      const pending = Math.max(
-        totalFund - (recorded.rows[0].recorded as number),
-        0,
-      );
+      const baseline = Number(locked.rows[0]?.funding_baseline ?? 0);
+      const baselineAt = new Date(locked.rows[0]?.funding_baseline_at ?? 0);
+      const pending = Math.max(totalFund - baseline, 0);
+      const newer = Boolean(updatedAt && updatedAt >= baselineAt);
 
-      if (pending > 0) {
+      if (pending > 0 && newer) {
         const isDeposit = req.body.action === 'deposit';
         await query(
           `insert into wallet_transactions (student_id, kind, amount, reference, note)
@@ -446,15 +440,22 @@ router.post(
               : 'PocketFi top-up recorded (kept out of wallet)',
           ],
         );
-        if (isDeposit) {
-          await query(
-            `update student_wallets
-                set point_balance = point_balance + $1, updated_at = now()
-              where student_id = $2`,
-            [pending, req.student.sub],
-          );
-          credited = pending;
-        }
+        await allowBaselineUpdate();
+        await query(
+          `update student_wallets
+              set point_balance = point_balance + $1,
+                  funding_baseline = $2,
+                  funding_baseline_at = $3,
+                  updated_at = now()
+            where student_id = $4`,
+          [
+            isDeposit ? pending : 0,
+            Math.max(baseline, totalFund),
+            updatedAt ?? baselineAt,
+            req.student.sub,
+          ],
+        );
+        credited = isDeposit ? pending : 0;
       }
       await query('commit');
     } catch (err) {

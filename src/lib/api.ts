@@ -381,7 +381,7 @@ export const dataApi = {
 // ---- Points wallet ----------------------------------------------------------
 export interface WalletTransaction {
   id: string;
-  kind: 'deposit' | 'purchase' | 'refund';
+  kind: 'deposit' | 'purchase' | 'refund' | 'topup_pocketfi' | 'correction';
   amount: number;
   reference: string;
   note?: string | null;
@@ -427,6 +427,7 @@ export const walletApi = {
       pending?: number;
       credited: number;
       totalFund: number;
+      stale?: boolean;
       points: number;
       accountNumber: string;
       bankName: string;

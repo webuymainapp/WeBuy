@@ -292,6 +292,7 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                   txs.map((t) => {
                     const isPurchase = t.kind === 'purchase';
                     const isDeposit = t.kind === 'deposit';
+                    const isCorrection = t.kind === 'correction';
                     const success =
                       t.status === 'success' || t.status === 'completed';
                     return (
@@ -306,10 +307,18 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                                 ? 'bg-indigo-100 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300'
                                 : isDeposit
                                   ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300'
-                                  : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
+                                  : isCorrection
+                                    ? 'bg-rose-100 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300'
+                                    : 'bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300'
                             }`}
                           >
-                            {isPurchase ? 'Purchase' : isDeposit ? 'Payin' : 'Payout'}
+                            {isPurchase
+                              ? 'Purchase'
+                              : isDeposit
+                                ? 'Payin'
+                                : isCorrection
+                                  ? 'Adjustment'
+                                  : 'Payout'}
                           </span>
                           <span className="text-slate-600 dark:text-slate-300 ml-1.5 font-semibold line-clamp-1">
                             {t.person}
@@ -340,10 +349,12 @@ export const RepTransactions: React.FC<RepTransactionsProps> = ({ isChief }) => 
                                 ? 'text-emerald-600 dark:text-emerald-400'
                                 : isPurchase
                                   ? 'text-indigo-600 dark:text-indigo-300'
-                                  : 'text-amber-600 dark:text-amber-400'
+                                  : isCorrection
+                                    ? 'text-rose-600 dark:text-rose-400'
+                                    : 'text-amber-600 dark:text-amber-400'
                             }`}
                           >
-                            {isDeposit ? '+' : '−'}
+                            {isDeposit || (isCorrection && t.amount > 0) ? '+' : '−'}
                             {formatNaira(t.amount)}
                           </span>
                           <span

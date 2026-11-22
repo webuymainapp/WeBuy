@@ -118,6 +118,10 @@ app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
 async function runMigrations() {
   await query(`alter table student_wallets
     add column if not exists virtual_account_name text`);
+  await query(`alter table student_wallets
+    add column if not exists funding_baseline int not null default 0`);
+  await query(`alter table student_wallets
+    add column if not exists funding_baseline_at timestamptz not null default 'epoch'`);
   await query(`alter table payouts
     add column if not exists last_reminder_at timestamptz`);
   await query(`alter table payouts
@@ -132,12 +136,77 @@ async function runMigrations() {
         where conrelid = 'wallet_transactions'::regclass
           and conname = 'wallet_transactions_kind_check'
           and pg_get_constraintdef(oid) like '%topup_pocketfi%'
+          and pg_get_constraintdef(oid) like '%correction%'
       ) then
         alter table wallet_transactions drop constraint if exists wallet_transactions_kind_check;
         alter table wallet_transactions add constraint wallet_transactions_kind_check
-          check (kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi'));
+          check (kind in ('deposit', 'purchase', 'refund', 'topup_pocketfi', 'correction'));
       end if;
     end $$`);
+  await query(`create table if not exists wallet_audit_log (
+    id bigserial primary key,
+    student_id uuid not null,
+    operation text not null,
+    old_balance int,
+    new_balance int,
+    old_baseline int,
+    new_baseline int,
+    old_account text,
+    new_account text,
+    changed_by text not null default current_user,
+    changed_at timestamptz not null default now()
+  )`);
+  await query(`create index if not exists idx_wallet_audit_student
+    on wallet_audit_log(student_id, changed_at desc)`);
+  await query(`create or replace function audit_wallet_change() returns trigger as $$
+  declare
+    audited_student uuid;
+  begin
+    if tg_op = 'DELETE' then
+      audited_student := old.student_id;
+    else
+      audited_student := new.student_id;
+    end if;
+    insert into wallet_audit_log (
+      student_id, operation, old_balance, new_balance,
+      old_baseline, new_baseline, old_account, new_account
+    ) values (
+      audited_student,
+      tg_op,
+      old.point_balance,
+      new.point_balance,
+      old.funding_baseline,
+      new.funding_baseline,
+      old.virtual_account_no,
+      new.virtual_account_no
+    );
+    return null;
+  end $$ language plpgsql`);
+  await query(`create or replace function guard_wallet_baseline() returns trigger as $$
+  begin
+    if tg_op = 'DELETE' then
+      return old;
+    end if;
+    if (
+      new.funding_baseline is distinct from old.funding_baseline
+      or new.funding_baseline_at is distinct from old.funding_baseline_at
+    ) and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
+      raise exception 'Wallet funding baseline can only be changed by the application';
+    end if;
+    if new.virtual_account_no is distinct from old.virtual_account_no
+      and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch') then
+      raise exception 'A new virtual account must reset the funding baseline';
+    end if;
+    return new;
+  end $$ language plpgsql`);
+  await query(`drop trigger if exists trg_audit_wallet_change on student_wallets`);
+  await query(`create trigger trg_audit_wallet_change
+    after update or delete on student_wallets
+    for each row execute function audit_wallet_change()`);
+  await query(`drop trigger if exists trg_guard_wallet_baseline on student_wallets`);
+  await query(`create trigger trg_guard_wallet_baseline
+    before update or delete on student_wallets
+    for each row execute function guard_wallet_baseline()`);
   // Refunds: per-book "refunds open" flag + the refund_requests table, so
   // databases created before the refund scheme self-heal on boot.
   await query(`alter table textbooks
