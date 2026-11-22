@@ -220,6 +220,11 @@ export const AuthPage: React.FC<AuthPageProps> = ({
     setBusy(true);
     try {
       await authApi.forgotPassword(identity);
+      try {
+        await sendVerificationEmail();
+      } catch {
+        // ignore
+      }
       soundEffects.playSuccessChime();
       setVerifyScreen({ identity, email: identity, purpose: 'reset' });
       setCooldown(60);
