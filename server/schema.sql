@@ -259,11 +259,18 @@ begin
   if (
     new.funding_baseline is distinct from old.funding_baseline
     or new.funding_baseline_at is distinct from old.funding_baseline_at
-  ) and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
+  )
+    and not (
+      old.funding_baseline_at is null
+      and new.funding_baseline = 0
+      and new.funding_baseline_at = timestamp 'epoch'
+    )
+    and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
     raise exception 'Wallet funding baseline can only be changed by the application';
   end if;
   if new.virtual_account_no is distinct from old.virtual_account_no
-    and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch') then
+    and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch')
+    and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
     raise exception 'A new virtual account must reset the funding baseline';
   end if;
   return new;

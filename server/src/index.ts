@@ -122,6 +122,10 @@ async function runMigrations() {
     add column if not exists funding_baseline int not null default 0`);
   await query(`alter table student_wallets
     add column if not exists funding_baseline_at timestamptz not null default 'epoch'`);
+  await query(`update student_wallets
+     set funding_baseline = 0 where funding_baseline is null`);
+  await query(`update student_wallets
+     set funding_baseline_at = timestamp 'epoch' where funding_baseline_at is null`);
   await query(`alter table payouts
     add column if not exists last_reminder_at timestamptz`);
   await query(`alter table payouts
@@ -190,11 +194,18 @@ async function runMigrations() {
     if (
       new.funding_baseline is distinct from old.funding_baseline
       or new.funding_baseline_at is distinct from old.funding_baseline_at
-    ) and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
+    )
+      and not (
+        old.funding_baseline_at is null
+        and new.funding_baseline = 0
+        and new.funding_baseline_at = timestamp 'epoch'
+      )
+      and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
       raise exception 'Wallet funding baseline can only be changed by the application';
     end if;
     if new.virtual_account_no is distinct from old.virtual_account_no
-      and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch') then
+      and (new.funding_baseline <> 0 or new.funding_baseline_at > timestamp 'epoch')
+      and coalesce(current_setting('webuy.allow_baseline_update', true), '') <> 'on' then
       raise exception 'A new virtual account must reset the funding baseline';
     end if;
     return new;
