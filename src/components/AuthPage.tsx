@@ -183,7 +183,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
         setVerifyMsg(
           res.sent
             ? 'A new reset link has been sent to your inbox.'
-            : 'If an account matches that email or registration number, a reset link has been sent.',
+            : 'Mail was not sent. This email is not linked to any Webuy account.',
         );
       }
     } catch (err) {
@@ -244,7 +244,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({
       setVerifyMsg(
         res.sent
           ? 'A password reset link has been sent to your email.'
-          : 'If an account matches that email or registration number, a reset link has been sent.',
+          : 'Mail was not sent. This email is not linked to any Webuy account.',
       );
     } catch (err) {
       soundEffects.playError();

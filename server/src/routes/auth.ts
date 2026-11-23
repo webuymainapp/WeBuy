@@ -155,12 +155,15 @@ router.post(
       [value],
     );
     if (result.rowCount === 0) {
-      throw new HttpError(401, 'Invalid credentials');
+      throw new HttpError(
+        404,
+        'This email or registration number does not exist. Please sign up.',
+      );
     }
     const row = result.rows[0];
     const ok = await verifyPassword(password, row.password_hash);
     if (!ok) {
-      throw new HttpError(401, 'Invalid credentials');
+      throw new HttpError(401, 'WRONG PASSWORD');
     }
     if (!row.email_verified) {
       throw new HttpError(
@@ -509,9 +512,6 @@ const forgotPasswordSchema = z.object({
   origin: z.string().trim().url().max(200).optional(),
 });
 
-/** Request a password-reset link. Finds the student by email or reg_no,
- *  generates a one-time token, stores its hash in `password_resets`, and emails
- *  a reset link. Always returns 200 to avoid leaking whether the account exists. */
 router.post(
   '/forgot-password',
   authLimiter,
@@ -525,10 +525,11 @@ router.post(
       [value],
     );
 
-    // Always return 200 — don't reveal whether the account exists.
     if (student.rowCount === 0) {
-      res.json({ ok: true, sent: false });
-      return;
+      throw new HttpError(
+        404,
+        'Mail was not sent. This email or registration number is not linked to any Webuy account.',
+      );
     }
 
     const email = student.rows[0].email as string;

@@ -1,9 +1,10 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { spawn, type ChildProcess } from 'node:child_process';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, type OutputBundle, type Plugin } from 'vite';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -41,9 +42,44 @@ function mailWorkerPlugin(): Plugin {
   };
 }
 
+function serviceWorkerAssetsPlugin(): Plugin {
+  let assets: string[] = [];
+  return {
+    name: 'weby-sw-assets',
+    generateBundle(_options, bundle: OutputBundle) {
+      assets = Object.values(bundle)
+        .filter(
+          (item) =>
+            item.type === 'chunk' ||
+            (item.type === 'asset' && item.fileName.endsWith('.css')),
+        )
+        .map((item) => `/${item.fileName}`)
+        .filter((fileName) => /\.(js|css)$/.test(fileName))
+        .sort();
+    },
+    async closeBundle() {
+      await writeFile(
+        path.join(rootDir, 'dist', 'sw-assets.json'),
+        JSON.stringify(assets),
+      );
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
-    plugins: [react(), tailwindcss(), mailWorkerPlugin()],
+    plugins: [react(), tailwindcss(), mailWorkerPlugin(), serviceWorkerAssetsPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules/motion')) return 'motion';
+            if (id.includes('node_modules/qrcode')) return 'qrcode';
+            if (id.includes('node_modules/react') || id.includes('node_modules/scheduler')) return 'react';
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
